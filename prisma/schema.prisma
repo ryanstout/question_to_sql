@@ -1,0 +1,61 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id    Int    @id @default(autoincrement())
+  email String @unique
+  name  String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  password       Password?
+  questionGroups QuestionGroup[]
+  Question       Question[]
+
+  fineTuneName String?
+}
+
+model Password {
+  hash String
+
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId Int  @unique
+}
+
+model QuestionGroup {
+  id Int @id @default(autoincrement())
+
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId Int
+
+  correctSql String?
+
+  Question Question[]
+}
+
+model Question {
+  id       Int    @id @default(autoincrement())
+  question String
+
+  userSql      String // the query, starts with the codex model output, then can be updated by the user
+  codexSql     String // the original query generated from openai
+  correctState Int? // null, not set, 0 = incorrect, 1 = correct
+
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId Int
+
+  questionGroup   QuestionGroup @relation(fields: [questionGroupId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  questionGroupId Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([id, userId, questionGroupId])
+}
