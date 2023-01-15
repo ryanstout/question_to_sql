@@ -159,7 +159,6 @@ export async function action({ request }: ActionArgs) {
     } else {
         // actionName === 'create'
         // If there isn't a question, create one
-        console.log('create question: ', q)
         if (q) {
             questions = await findOrCreateQuestion(userId, q, questionGroup.id)
         } else {
@@ -230,17 +229,26 @@ function QueryHeader({ data }: { data: LoaderData }) {
     const urlParams = new URLSearchParams(location.search)
     const q = urlParams.get('q')
 
-    console.log(q, params.questionGroupId)
-
     const questionGroupId = params.questionGroupId
     if (!questionGroupId) { throw new Error("No question group id was provided") }
 
     let currentQuestion: QuestionInBrowser | null
+    let questions: QuestionInBrowser[]
     if (data && q) {
-        const questions = data.questions
-        const currentQuestionIndex = data?.questions?.findIndex(question => question.question === q)
-        currentQuestion = data?.questions.splice(currentQuestionIndex, 1)[0]
+        questions = [...data.questions]
+        if (questions.length === 0) {
+            currentQuestion = null
+        } else {
+            let currentQuestionIndex = questions.findIndex((question) => {
+                return question.question === q
+            })
+            if (currentQuestionIndex === -1) {
+                currentQuestionIndex = questions.length - 1
+            }
+            currentQuestion = questions.splice(currentQuestionIndex, 1)[0]
+        }
     } else {
+        questions = []
         currentQuestion = null
     }
 
@@ -278,8 +286,6 @@ function QueryHeader({ data }: { data: LoaderData }) {
     }
 
     const navigation = useNavigation()
-
-    const questions = data?.questions
 
     let previousQuestions
     if (questions) {
