@@ -3,9 +3,14 @@
 A BI tool that lets you dig into your data using natural language
 
 
-# Run
+# Development
 
+All local installation is documented in:
+
+```shell
+bin/setup.sh
 npm run dev
+```
 
 # Schemas [WIP]
 
