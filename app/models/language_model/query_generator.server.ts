@@ -68,6 +68,7 @@ export async function GenerateSqlQuery(query: string): Promise<string> {
                 console.log('openai api failed with: ', response.status, ' trying again...')
             } else {
                 // Successful request, return
+                console.log('SELECT ' + response.data.choices[0].text + ';')
                 return 'SELECT ' + response.data.choices[0].text + ';'
 
             }

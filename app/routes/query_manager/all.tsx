@@ -97,6 +97,7 @@ export default function QueryAll() {
             <td>
                 <Form method="post">
                     <input type="hidden" name="id" value={query.id} />
+                    <input type="hidden" name="action_name" value="delete" />
                     <Button type="submit">X</Button>
                 </Form>
             </td>

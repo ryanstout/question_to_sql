@@ -1,6 +1,6 @@
 import { AppShell, Box, Button, Flex, Grid, Header, List, Loader, Navbar, Stack, Table, Text, TextInput } from '@mantine/core';
 import { ActionArgs, LoaderFunction, redirect } from "@remix-run/node";
-import { Form, Outlet, useCatch, useLoaderData, useNavigation, useParams, useSubmit } from '@remix-run/react';
+import { Form, Outlet, useCatch, useLoaderData, useLocation, useNavigation, useParams, useSubmit } from '@remix-run/react';
 // import { Connection } from 'postgresql-client';
 import { sql } from '@codemirror/lang-sql';
 import { EditorView } from "@codemirror/view";
@@ -226,38 +226,52 @@ export let loader: LoaderFunction = async ({ params, request }): Promise<LoaderD
 function QueryHeader({ data }: { data: LoaderData }) {
     const params = useParams()
 
+    let location = useLocation()
+    const urlParams = new URLSearchParams(location.search)
+    const q = urlParams.get('q')
+
+    console.log(q, params.questionGroupId)
+
     const questionGroupId = params.questionGroupId
     if (!questionGroupId) { throw new Error("No question group id was provided") }
 
-    const latestQuestion = data?.questions[data?.questions.length - 1]
+    let currentQuestion: QuestionInBrowser | null
+    if (data && q) {
+        const questions = data.questions
+        const currentQuestionIndex = data?.questions?.findIndex(question => question.question === q)
+        currentQuestion = data?.questions.splice(currentQuestionIndex, 1)[0]
+    } else {
+        currentQuestion = null
+    }
 
-    const [question, setQuestion] = useState(latestQuestion?.question || '')
-    const [getQuery, setQuery] = useState(latestQuestion?.userSql || '')
+
+    const [question, setQuestion] = useState(currentQuestion?.question || '')
+    const [getQuery, setQuery] = useState(currentQuestion?.userSql || '')
 
     useEffect(() => {
         // update the userSql when it updates from the backend
-        const userSql = latestQuestion?.userSql
+        const userSql = currentQuestion?.userSql
         if (userSql) {
             setQuery(userSql)
         }
 
-        const loaderQuestion = latestQuestion?.question
+        const loaderQuestion = currentQuestion?.question
         if (loaderQuestion) {
             setQuestion(loaderQuestion)
         }
-    }, [latestQuestion, latestQuestion?.question, latestQuestion?.userSql, data?.questionGroupId])
+    }, [currentQuestion, q, currentQuestion?.question, currentQuestion?.userSql, data?.questionGroupId])
 
     const submitSqlQuery = useSubmit()
 
     // called when the user does SHIFT+Enter, updates the sql in the db
     // which will run the new query
     const updateSqlQuery = () => {
-        if (latestQuestion) {
+        if (currentQuestion) {
             submitSqlQuery({
                 action_name: 'update',
                 questionGroupId: questionGroupId,
-                id: latestQuestion.id.toString(),
-                q: latestQuestion.question,
+                id: currentQuestion.id.toString(),
+                q: currentQuestion.question,
                 userSql: getQuery
             }, { method: 'post' })
         }
@@ -269,9 +283,9 @@ function QueryHeader({ data }: { data: LoaderData }) {
 
     let previousQuestions
     if (questions) {
-        previousQuestions = questions.slice(0, questions.length - 1).reverse().map((q, i) => {
-            return <tr>
-                <td>{q.question}</td>
+        previousQuestions = questions.reverse().map((q, i) => {
+            return <tr key={q.question}>
+                <td key={`td-${q.question}`}>{q.question}</td>
             </tr>
         })
     } else {
@@ -296,11 +310,13 @@ function QueryHeader({ data }: { data: LoaderData }) {
                                     </Flex>
                                 </Form>
 
-                                <Table p="sm" sx={{ height: '90px', overflowY: 'auto' }}>
-                                    <tbody>
-                                        {previousQuestions}
-                                    </tbody>
-                                </Table>
+                                <Box sx={{ height: '90px', overflowY: 'auto' }}>
+                                    <Table p="sm">
+                                        <tbody>
+                                            {previousQuestions}
+                                        </tbody>
+                                    </Table>
+                                </Box>
                             </Box>
 
                             <Flex>
@@ -314,7 +330,7 @@ function QueryHeader({ data }: { data: LoaderData }) {
                                         <input type="hidden" name="action_name" value="mark_correct" />
                                         <input type="hidden" name="questionGroupId" value={questionGroupId} />
                                         <Button w="100%" type="submit" color="green">
-                                            {latestQuestion?.correctState === 1 ? '✓' : ''}
+                                            {currentQuestion?.correctState === 1 ? '✓' : ''}
                                             Mark Correct
                                         </Button>
                                     </Form>
@@ -324,7 +340,7 @@ function QueryHeader({ data }: { data: LoaderData }) {
                                         <input type="hidden" name="action_name" value="mark_incorrect" />
                                         <input type="hidden" name="questionGroupId" value={questionGroupId} />
                                         <Button w="100%" type="submit" color="red">
-                                            {latestQuestion?.correctState === 0 ? '✓' : ''}
+                                            {currentQuestion?.correctState === 0 ? '✓' : ''}
                                             Mark Incorrect
                                         </Button>
                                     </Form>
@@ -367,6 +383,8 @@ function QueryHeader({ data }: { data: LoaderData }) {
 
 export default function QuestionGroup() {
     let data = useLoaderData<LoaderData>()
+    const params = useParams()
+
 
     return (
 
