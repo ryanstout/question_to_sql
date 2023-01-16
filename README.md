@@ -57,3 +57,9 @@ What percent of orders that bought a phone mount spent more than $300?
 
 Future support:
 Sumarize some text field...
+
+# Connections
+
+## Shopify
+
+* [Staff role](https://help.shopify.com/en/manual/your-account/staff-accounts/staff-permissions/staff-permissions-descriptions#apps-and-channels-permissions) does not allow us to create API keys. API keys must be created by generating a private app, which requires a specific permissions set. [More info.](https://help.plytix.com/en/getting-api-credentials-from-your-shopify-store)
