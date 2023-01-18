@@ -29,6 +29,8 @@ type LoaderData = {
 } | null
 
 export async function findOrCreateQuestionGroup(userId: number, questionGroupId: number | null) {
+    // TODO I think we can use `prisma.user.upsert` here instead
+
     // See if the questionGroup already exists
     let questionGroup = questionGroupId ? await prisma.questionGroup.findFirst({
         where: { id: questionGroupId, userId: userId }
