@@ -1,0 +1,16 @@
+# What do we need to run a query?
+
+- Test schema
+  - Filter airbyte stuff using hacky script
+- Snowflake connection connected to user
+- Maybe SQL transforms from OpenAI? We'll need to derisk this
+
+# What do we need so daniel can run a query?
+
+- Deploy
+- User login tied to data source
+
+# What do we need for better queries
+
+- Dynamic test schema generation with column hints
+- Maybe vector search for column names
