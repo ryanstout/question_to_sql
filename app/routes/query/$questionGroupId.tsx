@@ -1,7 +1,7 @@
 // import { Connection } from 'postgresql-client';
 import { sql } from "@codemirror/lang-sql"
 import { EditorView } from "@codemirror/view"
-import type { Question, User } from "@prisma/client"
+import type { Question } from "@prisma/client"
 import CodeMirror from "@uiw/react-codemirror"
 import beautify from "json-beautify"
 import { useEffect, useState } from "react"
@@ -14,9 +14,9 @@ import {
   Outlet,
   useCatch,
   useLoaderData,
-  useLocation,
   useNavigation,
   useParams,
+  useSearchParams,
   useSubmit,
 } from "@remix-run/react"
 
@@ -27,7 +27,6 @@ import {
   Flex,
   Grid,
   Header,
-  List,
   Loader,
   Navbar,
   Stack,
@@ -44,7 +43,6 @@ import {
 import { UserDb } from "~/models/user_db2.server"
 import { Footer } from "~/routes/footer"
 import { requireUserId } from "~/session.server"
-import { toNum } from "~/utils"
 
 type QuestionInBrowser = Pick<
   Question,
@@ -275,9 +273,8 @@ export let loader: LoaderFunction = async ({
 function QueryHeader({ data }: { data: LoaderData }) {
   const params = useParams()
 
-  let location = useLocation()
-  const urlParams = new URLSearchParams(location.search)
-  const q = urlParams.get("q")
+  const [searchParams] = useSearchParams()
+  const q = searchParams.get("q")
 
   const questionGroupId = params.questionGroupId
   if (!questionGroupId) {
@@ -287,13 +284,11 @@ function QueryHeader({ data }: { data: LoaderData }) {
   let currentQuestion: QuestionInBrowser | null
   let questions: QuestionInBrowser[]
   if (data && q) {
-    questions = [...data.questions]
+    questions = [...data.questions] // shallow copy to prevent issues
     if (questions.length === 0) {
       currentQuestion = null
     } else {
-      let currentQuestionIndex = questions.findIndex((question) => {
-        return question.question === q
-      })
+      let currentQuestionIndex = questions.findIndex((qu) => qu.question === q)
       if (currentQuestionIndex === -1) {
         currentQuestionIndex = questions.length - 1
       }
