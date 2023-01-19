@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
 # Description: "node debugger", run a JS file without TS errors in debug (inspect) mode
 
-node inspect -r ts-node/register/transpile-only $@
+node inspect \
+  --debug-port=0 \
+  -r ts-node/register/transpile-only \
+  $@
