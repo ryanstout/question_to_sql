@@ -3,5 +3,20 @@
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": true
-  }
+  },
+  "[prisma]": {
+    "editor.defaultFormatter": "Prisma.prisma"
+  },
+  "cSpell.ignorePaths": [
+    "package.json",
+    "package-lock.json",
+    "node_modules",
+    "vscode-extension",
+    ".git/objects",
+    ".vscode",
+    ".vscode-insiders"
+  ],
+  // https://github.com/streetsidesoftware/vscode-spell-checker/issues/225
+  "cSpell.ignoreRegExpList": ["/from\\s+(['\"]).*\\1/"],
+  "cSpell.words": ["AIRBYTE"]
 }
