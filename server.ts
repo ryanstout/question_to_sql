@@ -1,9 +1,10 @@
-import path from "path";
-import express from "express";
 import compression from "compression";
-import morgan from "morgan";
-import { createRequestHandler } from "@remix-run/express";
+import express from "express";
 import prom from "express-prometheus-middleware";
+import morgan from "morgan";
+import path from "path";
+
+import { createRequestHandler } from "@remix-run/express";
 
 const app = express();
 const metricsApp = express();

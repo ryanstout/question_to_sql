@@ -1,26 +1,35 @@
-import { json, MetaFunction } from '@remix-run/node';
-import { Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration, useCatch } from '@remix-run/react';
-import { MantineProvider, createEmotionCache } from '@mantine/core';
-import { StylesPlaceholder } from '@mantine/remix';
-import { theme } from './theme';
-import { getUser } from './session.server';
+import { getUser } from "./session.server";
+import { theme } from "./theme";
+
+import { MetaFunction, json } from "@remix-run/node";
+import {
+  Links,
+  LiveReload,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+  useCatch,
+} from "@remix-run/react";
+
+import { MantineProvider, createEmotionCache } from "@mantine/core";
+import { StylesPlaceholder } from "@mantine/remix";
 
 export const meta: MetaFunction = () => ({
-  charset: 'utf-8',
-  title: 'New Remix App',
-  viewport: 'width=device-width,initial-scale=1',
+  charset: "utf-8",
+  title: "New Remix App",
+  viewport: "width=device-width,initial-scale=1",
 });
 
-
 // We make the user available in root, then all children can useMatchesData to
-// access it. 
+// access it.
 export async function loader({ request }: LoaderArgs) {
   return json({
     user: await getUser(request),
   });
 }
 
-createEmotionCache({ key: 'mantine' });
+createEmotionCache({ key: "mantine" });
 
 export default function App() {
   return (
@@ -41,8 +50,6 @@ export default function App() {
     </MantineProvider>
   );
 }
-
-
 
 export function CatchBoundary() {
   const caught = useCatch();

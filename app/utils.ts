@@ -1,5 +1,6 @@
-import { useMatches } from "@remix-run/react";
 import { useMemo } from "react";
+
+import { useMatches } from "@remix-run/react";
 
 import type { User } from "~/models/user.server";
 
@@ -71,9 +72,9 @@ export function validateEmail(email: unknown): email is string {
 }
 
 export function toNum(num: string | number) {
-  if (typeof num === 'string') {
-    return parseInt(num, 10)
+  if (typeof num === "string") {
+    return parseInt(num, 10);
   } else {
-    return num
+    return num;
   }
 }
