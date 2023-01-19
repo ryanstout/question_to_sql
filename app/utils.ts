@@ -1,10 +1,10 @@
-import { useMemo } from "react";
+import { useMemo } from "react"
 
-import { useMatches } from "@remix-run/react";
+import { useMatches } from "@remix-run/react"
 
-import type { User } from "~/models/user.server";
+import type { User } from "~/models/user.server"
 
-const DEFAULT_REDIRECT = "/";
+const DEFAULT_REDIRECT = "/"
 
 /**
  * This should be used any time the redirect path is user-provided
@@ -18,14 +18,14 @@ export function safeRedirect(
   defaultRedirect: string = DEFAULT_REDIRECT
 ) {
   if (!to || typeof to !== "string") {
-    return defaultRedirect;
+    return defaultRedirect
   }
 
   if (!to.startsWith("/") || to.startsWith("//")) {
-    return defaultRedirect;
+    return defaultRedirect
   }
 
-  return to;
+  return to
 }
 
 /**
@@ -37,44 +37,44 @@ export function safeRedirect(
 export function useMatchesData(
   id: string
 ): Record<string, unknown> | undefined {
-  const matchingRoutes = useMatches();
+  const matchingRoutes = useMatches()
   const route = useMemo(
     () => matchingRoutes.find((route) => route.id === id),
     [matchingRoutes, id]
-  );
-  return route?.data;
+  )
+  return route?.data
 }
 
 function isUser(user: any): user is User {
-  return user && typeof user === "object" && typeof user.email === "string";
+  return user && typeof user === "object" && typeof user.email === "string"
 }
 
 export function useOptionalUser(): User | undefined {
-  const data = useMatchesData("root");
+  const data = useMatchesData("root")
   if (!data || !isUser(data.user)) {
-    return undefined;
+    return undefined
   }
-  return data.user;
+  return data.user
 }
 
 export function useUser(): User {
-  const maybeUser = useOptionalUser();
+  const maybeUser = useOptionalUser()
   if (!maybeUser) {
     throw new Error(
       "No user found in root loader, but user is required by useUser. If user is optional, try useOptionalUser instead."
-    );
+    )
   }
-  return maybeUser;
+  return maybeUser
 }
 
 export function validateEmail(email: unknown): email is string {
-  return typeof email === "string" && email.length > 3 && email.includes("@");
+  return typeof email === "string" && email.length > 3 && email.includes("@")
 }
 
 export function toNum(num: string | number) {
   if (typeof num === "string") {
-    return parseInt(num, 10);
+    return parseInt(num, 10)
   } else {
-    return num;
+    return num
   }
 }

@@ -1,19 +1,19 @@
-import { useField } from "remix-validated-form";
+import { useField } from "remix-validated-form"
 
-import { TextInput } from "@mantine/core";
+import { TextInput } from "@mantine/core"
 
-export const FieldDefaultAsType = "text" as const;
-export type FieldDefaultAsType = typeof FieldDefaultAsType;
+export const FieldDefaultAsType = "text" as const
+export type FieldDefaultAsType = typeof FieldDefaultAsType
 
 export type FieldOwnInputProps<T extends React.ElementType> = {
-  component?: T;
-  name: string;
-  label: string;
-  placeholder?: string;
-};
+  component?: T
+  name: string
+  label: string
+  placeholder?: string
+}
 
 type FieldInputProps<T extends React.ElementType> = FieldOwnInputProps<T> &
-  Omit<React.ComponentProps<T>, keyof FieldOwnInputProps<T>>;
+  Omit<React.ComponentProps<T>, keyof FieldOwnInputProps<T>>
 
 export const Field = <T extends React.ElementType = FieldDefaultAsType>({
   component,
@@ -22,9 +22,9 @@ export const Field = <T extends React.ElementType = FieldDefaultAsType>({
   placeholder,
   ...otherProps
 }: FieldInputProps<T>) => {
-  const { error, getInputProps } = useField(name);
+  const { error, getInputProps } = useField(name)
 
-  const Component = component || TextInput;
+  const Component = component || TextInput
   return (
     <Component
       withAsterisk
@@ -34,5 +34,5 @@ export const Field = <T extends React.ElementType = FieldDefaultAsType>({
       {...getInputProps({ id: name })}
       {...otherProps}
     />
-  );
-};
+  )
+}

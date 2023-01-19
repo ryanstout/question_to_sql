@@ -1,6 +1,6 @@
-import { IconCheck } from "@tabler/icons";
+import { IconCheck } from "@tabler/icons"
 
-import { Link } from "@remix-run/react";
+import { Link } from "@remix-run/react"
 
 import {
   Button,
@@ -11,7 +11,7 @@ import {
   ThemeIcon,
   Title,
   createStyles,
-} from "@mantine/core";
+} from "@mantine/core"
 
 const useStyles = createStyles((theme) => ({
   inner: {
@@ -66,10 +66,10 @@ const useStyles = createStyles((theme) => ({
     borderRadius: theme.radius.sm,
     padding: "4px 12px",
   },
-}));
+}))
 
 export function Hero() {
-  const { classes } = useStyles();
+  const { classes } = useStyles()
   return (
     <div>
       <Container>
@@ -133,5 +133,5 @@ export function Hero() {
         </div>
       </Container>
     </div>
-  );
+  )
 }

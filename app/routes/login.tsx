@@ -1,10 +1,10 @@
-import { ValidatedForm, validationError } from "remix-validated-form";
-import { z } from "zod";
+import { ValidatedForm, validationError } from "remix-validated-form"
+import { z } from "zod"
 
-import type { ActionArgs, LoaderArgs, MetaFunction } from "@remix-run/node";
-import { json, redirect } from "@remix-run/node";
-import { Link, useSearchParams } from "@remix-run/react";
-import { withZod } from "@remix-validated-form/with-zod";
+import type { ActionArgs, LoaderArgs, MetaFunction } from "@remix-run/node"
+import { json, redirect } from "@remix-run/node"
+import { Link, useSearchParams } from "@remix-run/react"
+import { withZod } from "@remix-validated-form/with-zod"
 
 import {
   Anchor,
@@ -17,17 +17,17 @@ import {
   Text,
   TextInput,
   Title,
-} from "@mantine/core";
+} from "@mantine/core"
 
-import { Field } from "~/components/field";
-import { prisma } from "~/db.server";
-import { verifyLogin } from "~/models/user.server";
-import { createUserSession, getUserId } from "~/session.server";
+import { Field } from "~/components/field"
+import { prisma } from "~/db.server"
+import { verifyLogin } from "~/models/user.server"
+import { createUserSession, getUserId } from "~/session.server"
 
 export async function loader({ request }: LoaderArgs) {
-  const userId = await getUserId(request);
-  if (userId) return redirect("/");
-  return json({});
+  const userId = await getUserId(request)
+  if (userId) return redirect("/")
+  return json({})
 }
 
 export const validator = withZod(
@@ -35,43 +35,43 @@ export const validator = withZod(
     email: z.string().min(1, { message: "Email is required" }),
     password: z.string().min(1, { message: "Password is too short" }),
   })
-);
+)
 
 export async function action({ request }: ActionArgs) {
-  const formData = await request.formData();
-  const data = await validator.validate(formData);
+  const formData = await request.formData()
+  const data = await validator.validate(formData)
   if (data.error) {
-    return validationError(data.error);
+    return validationError(data.error)
   }
 
-  const email = data.data.email;
+  const email = data.data.email
 
   const userExists = await prisma.user.findUnique({
     select: { id: true },
     where: { email },
-  });
+  })
 
   if (!userExists) {
     return validationError({
       fieldErrors: {
         email: "No user with this email was found",
       },
-    });
+    })
   }
-  const user = await verifyLogin(data.data.email, data.data.password);
+  const user = await verifyLogin(data.data.email, data.data.password)
 
   if (!user) {
     return validationError({
       fieldErrors: {
         password: "Password was incorrect",
       },
-    });
+    })
   }
 
-  const redirectTo = formData.get("redirectTo") || "/";
+  const redirectTo = formData.get("redirectTo") || "/"
 
   if (typeof redirectTo !== "string") {
-    throw new Error("Invalid redirect");
+    throw new Error("Invalid redirect")
   }
 
   return createUserSession({
@@ -79,18 +79,18 @@ export async function action({ request }: ActionArgs) {
     userId: user.id,
     redirectTo,
     remember: formData.get("remember") === "on" ? true : false,
-  });
+  })
 }
 
 export const meta: MetaFunction = () => {
   return {
     title: "Login",
-  };
-};
+  }
+}
 
 export default function LoginPage() {
-  const [searchParams] = useSearchParams();
-  const redirectTo = searchParams.get("redirectTo") || "/";
+  const [searchParams] = useSearchParams()
+  const redirectTo = searchParams.get("redirectTo") || "/"
 
   return (
     <Container size={420} my={40}>
@@ -148,5 +148,5 @@ export default function LoginPage() {
         </ValidatedForm>
       </Paper>
     </Container>
-  );
+  )
 }

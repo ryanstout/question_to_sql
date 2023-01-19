@@ -1,5 +1,5 @@
-import "@testing-library/jest-dom/extend-expect";
+import "@testing-library/jest-dom/extend-expect"
 
-import { installGlobals } from "@remix-run/node";
+import { installGlobals } from "@remix-run/node"
 
-installGlobals();
+installGlobals()

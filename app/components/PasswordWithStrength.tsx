@@ -1,4 +1,4 @@
-import { IconCheck, IconX } from "@tabler/icons";
+import { IconCheck, IconX } from "@tabler/icons"
 
 import {
   Box,
@@ -9,15 +9,15 @@ import {
   Progress,
   Text,
   createStyles,
-} from "@mantine/core";
-import { useInputState } from "@mantine/hooks";
+} from "@mantine/core"
+import { useInputState } from "@mantine/hooks"
 
 function PasswordRequirement({
   meets,
   label,
 }: {
-  meets: boolean;
-  label: string;
+  meets: boolean
+  label: string
 }) {
   return (
     <Text color={meets ? "teal" : "red"} mt={5} size="sm">
@@ -30,7 +30,7 @@ function PasswordRequirement({
         <Box ml={7}>{label}</Box>
       </Center>
     </Text>
-  );
+  )
 }
 
 const requirements = [
@@ -38,18 +38,18 @@ const requirements = [
   { re: /[a-z]/, label: "Includes lowercase letter" },
   { re: /[A-Z]/, label: "Includes uppercase letter" },
   { re: /[$&+,:;=?@#|'<>.^*()%!-]/, label: "Includes special symbol" },
-];
+]
 
 function getStrength(password: string) {
-  let multiplier = password.length > 5 ? 0 : 1;
+  let multiplier = password.length > 5 ? 0 : 1
 
   requirements.forEach((requirement) => {
     if (!requirement.re.test(password)) {
-      multiplier += 1;
+      multiplier += 1
     }
-  });
+  })
 
-  return Math.max(100 - (100 / (requirements.length + 1)) * multiplier, 0);
+  return Math.max(100 - (100 / (requirements.length + 1)) * multiplier, 0)
 }
 
 const useStyles = createStyles((theme) => ({
@@ -63,19 +63,19 @@ const useStyles = createStyles((theme) => ({
   passwordStrengthShow: {
     maxHeight: "400px",
   },
-}));
+}))
 
 export function PasswordWithStrength(args: PasswordInputProps) {
-  const [value, setValue] = useInputState("");
-  const strength = getStrength(value);
+  const [value, setValue] = useInputState("")
+  const strength = getStrength(value)
   const checks = requirements.map((requirement, index) => (
     <PasswordRequirement
       key={index}
       label={requirement.label}
       meets={requirement.re.test(value)}
     />
-  ));
-  const { classes } = useStyles();
+  ))
+  const { classes } = useStyles()
 
   const bars = Array(4)
     .fill(0)
@@ -93,11 +93,11 @@ export function PasswordWithStrength(args: PasswordInputProps) {
         key={index}
         size={4}
       />
-    ));
+    ))
 
   const pwStrengthClasses = `${classes.passwordStrength} ${
     value !== "" ? classes.passwordStrengthShow : ""
-  }`;
+  }`
 
   return (
     <div>
@@ -115,5 +115,5 @@ export function PasswordWithStrength(args: PasswordInputProps) {
         {checks}
       </div>
     </div>
-  );
+  )
 }

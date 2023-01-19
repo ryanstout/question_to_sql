@@ -1,4 +1,4 @@
-import type { MantineThemeOverride } from "@mantine/core";
+import type { MantineThemeOverride } from "@mantine/core"
 
 export const theme: MantineThemeOverride = {
   colorScheme: "light",
@@ -21,4 +21,4 @@ export const theme: MantineThemeOverride = {
     lg: 18,
     xl: 22,
   },
-};
+}

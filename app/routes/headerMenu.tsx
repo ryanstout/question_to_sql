@@ -6,9 +6,9 @@ import {
   IconCoin,
   IconFingerprint,
   IconNotification,
-} from "@tabler/icons";
+} from "@tabler/icons"
 
-import { Form, Link } from "@remix-run/react";
+import { Form, Link } from "@remix-run/react"
 
 import {
   Anchor,
@@ -29,10 +29,10 @@ import {
   ThemeIcon,
   UnstyledButton,
   createStyles,
-} from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+} from "@mantine/core"
+import { useDisclosure } from "@mantine/hooks"
 
-import type { User } from "~/models/user.server";
+import type { User } from "~/models/user.server"
 
 const useStyles = createStyles((theme) => ({
   link: {
@@ -101,7 +101,7 @@ const useStyles = createStyles((theme) => ({
       display: "none",
     },
   },
-}));
+}))
 
 const mockdata = [
   {
@@ -134,13 +134,13 @@ const mockdata = [
     title: "Notifications",
     description: "Combusken battles with the intensely hot flames it spews",
   },
-];
+]
 
 export function HeaderMenu({ user }: { user: User | undefined }) {
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] =
-    useDisclosure(false);
-  const [linksOpened, { toggle: toggleLinks }] = useDisclosure(false);
-  const { classes, theme } = useStyles();
+    useDisclosure(false)
+  const [linksOpened, { toggle: toggleLinks }] = useDisclosure(false)
+  const { classes, theme } = useStyles()
 
   const links = mockdata.map((item) => (
     <UnstyledButton className={classes.subLink} key={item.title}>
@@ -158,9 +158,9 @@ export function HeaderMenu({ user }: { user: User | undefined }) {
         </div>
       </Group>
     </UnstyledButton>
-  ));
+  ))
 
-  let loginMenu;
+  let loginMenu
   if (user) {
     loginMenu = (
       <Flex>
@@ -169,7 +169,7 @@ export function HeaderMenu({ user }: { user: User | undefined }) {
           <Button type="submit">Log out</Button>
         </Form>
       </Flex>
-    );
+    )
   } else {
     loginMenu = (
       <>
@@ -180,7 +180,7 @@ export function HeaderMenu({ user }: { user: User | undefined }) {
           Sign up
         </Button>
       </>
-    );
+    )
   }
 
   return (
@@ -312,5 +312,5 @@ export function HeaderMenu({ user }: { user: User | undefined }) {
         </ScrollArea>
       </Drawer>
     </Box>
-  );
+  )
 }

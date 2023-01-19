@@ -1,45 +1,45 @@
-import { Client } from "pg";
-import postgres from "postgres";
+import { Client } from "pg"
+import postgres from "postgres"
 
 export async function Query(queryStr: string, args: string[] = []) {
   const client = new Client({
     host: "localhost",
     database: "witharsenal_prod_copy",
-  });
-  await client.connect();
+  })
+  await client.connect()
 
   try {
-    const res = await client.query(queryStr, args);
+    const res = await client.query(queryStr, args)
 
-    return res.rows;
+    return res.rows
   } catch (e) {
-    console.log("QUERY ERROR: ", queryStr, "\n", e);
-    throw e;
+    console.log("QUERY ERROR: ", queryStr, "\n", e)
+    throw e
   } finally {
-    await client.end();
+    await client.end()
   }
 }
 
 function str(s: string) {
-  return JSON.stringify(s);
+  return JSON.stringify(s)
 }
 
 export async function TableNames(): Promise<string[]> {
   const tables = await Query(
     "SELECT table_name FROM information_schema.tables WHERE table_schema='public'"
-  );
+  )
   const tableNames = tables.map((table) => {
-    return table["table_name"] as string;
-  });
-  return tableNames;
+    return table["table_name"] as string
+  })
+  return tableNames
 }
 
 export async function Columns(tableName: string): Promise<Map<string, any>> {
   const columns = await Query(
     "SELECT * FROM information_schema.columns WHERE table_name = $1;",
     [tableName]
-  );
-  return columns;
+  )
+  return columns
 }
 
 export async function ColumnValues(
@@ -52,8 +52,8 @@ export async function ColumnValues(
       tableName
     )} GROUP BY ${str(columnName)} ORDER BY count DESC LIMIT ${limit};`,
     []
-  );
-  return columns;
+  )
+  return columns
 }
 
 export async function Cardinality(
@@ -65,14 +65,14 @@ export async function Cardinality(
       tableName
     )};`,
     []
-  );
-  return columns;
+  )
+  return columns
 }
 
 export async function Count(tableName: string): Promise<Map<string, any>> {
   const columns = await Query(
     `SELECT COUNT(*) as count FROM ${str(tableName)};`,
     []
-  );
-  return columns;
+  )
+  return columns
 }

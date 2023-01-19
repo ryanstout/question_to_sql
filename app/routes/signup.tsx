@@ -1,10 +1,10 @@
-import { ValidatedForm, validationError } from "remix-validated-form";
-import { z } from "zod";
+import { ValidatedForm, validationError } from "remix-validated-form"
+import { z } from "zod"
 
-import { json } from "@remix-run/node";
-import { Link } from "@remix-run/react";
-import { ActionArgs } from "@remix-run/server-runtime";
-import { withZod } from "@remix-validated-form/with-zod";
+import { json } from "@remix-run/node"
+import { Link } from "@remix-run/react"
+import { ActionArgs } from "@remix-run/server-runtime"
+import { withZod } from "@remix-validated-form/with-zod"
 
 import {
   Anchor,
@@ -15,15 +15,15 @@ import {
   Text,
   TextInput,
   Title,
-} from "@mantine/core";
+} from "@mantine/core"
 
-import { PasswordWithStrength } from "~/components/PasswordWithStrength";
-import { Field } from "~/components/field";
-import { createUser, getUserByEmail } from "~/models/user.server";
-import { createUserSession } from "~/session.server";
-import { safeRedirect } from "~/utils";
+import { PasswordWithStrength } from "~/components/PasswordWithStrength"
+import { Field } from "~/components/field"
+import { createUser, getUserByEmail } from "~/models/user.server"
+import { createUserSession } from "~/session.server"
+import { safeRedirect } from "~/utils"
 
-var passwordCheck = /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,250}$/;
+var passwordCheck = /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,250}$/
 
 export const validator = withZod(
   z
@@ -43,17 +43,17 @@ export const validator = withZod(
         "Password be at least 6 characters, include a number, lowercase letter, uppercase letter, and a special character",
       path: ["password"],
     })
-);
+)
 
 export async function action({ request }: ActionArgs) {
-  const data = await validator.validate(await request.formData());
+  const data = await validator.validate(await request.formData())
   if (data.error) {
-    return validationError(data.error);
+    return validationError(data.error)
   }
 
-  const redirectTo = safeRedirect(data.data.redirectTo, "/");
+  const redirectTo = safeRedirect(data.data.redirectTo, "/")
 
-  const existingUser = await getUserByEmail(data.data.email);
+  const existingUser = await getUserByEmail(data.data.email)
   if (existingUser) {
     return json(
       {
@@ -63,21 +63,21 @@ export async function action({ request }: ActionArgs) {
         },
       },
       { status: 400 }
-    );
+    )
   }
 
   const user = await createUser(
     data.data.email,
     data.data.password,
     data.data.name
-  );
+  )
 
   return createUserSession({
     request,
     userId: user.id,
     remember: false,
     redirectTo,
-  });
+  })
 }
 
 export default function Join2() {
@@ -134,5 +134,5 @@ export default function Join2() {
         </ValidatedForm>
       </Paper>
     </Container>
-  );
+  )
 }

@@ -1,43 +1,43 @@
-import { BarDatum, ResponsiveBar } from "@nivo/bar";
-import { ResponsiveLine, Serie } from "@nivo/line";
-import type { Question, User } from "@prisma/client";
+import { BarDatum, ResponsiveBar } from "@nivo/bar"
+import { ResponsiveLine, Serie } from "@nivo/line"
+import type { Question, User } from "@prisma/client"
 import {
   IconChartBar,
   IconChartLine,
   IconGrain,
   IconNotes,
-} from "@tabler/icons";
-import { useNavigate } from "react-router-dom";
-import { zx } from "zodix";
+} from "@tabler/icons"
+import { useNavigate } from "react-router-dom"
+import { zx } from "zodix"
 
-import { useMatches, useParams, useSearchParams } from "@remix-run/react";
-import { LoaderFunction } from "@remix-run/server-runtime";
+import { useMatches, useParams, useSearchParams } from "@remix-run/react"
+import { LoaderFunction } from "@remix-run/server-runtime"
 
-import { Box, Tabs, Title } from "@mantine/core";
-import { Prism } from "@mantine/prism";
+import { Box, Tabs, Title } from "@mantine/core"
+import { Prism } from "@mantine/prism"
 
 type GroupLoaderData = {
-  questions: Question[];
-  questionGroupId: number;
-  latestResult: string;
-};
+  questions: Question[]
+  questionGroupId: number
+  latestResult: string
+}
 
-type LoaderData = null;
+type LoaderData = null
 
 export let loader: LoaderFunction = async ({
   params,
   request,
 }): Promise<LoaderData> => {
-  return null;
-};
+  return null
+}
 
 function LineChart({ type, data }: { type: string; data: Serie[] }) {
   if (!data || !data[0]) {
-    return <div>no data</div>;
+    return <div>no data</div>
   }
   // const keys = Object.keys(data[0])
 
-  return <div>WIP</div>;
+  return <div>WIP</div>
   return (
     <div style={{ height: "500px" }}>
       <Title>Chart</Title>
@@ -47,14 +47,14 @@ function LineChart({ type, data }: { type: string; data: Serie[] }) {
         colors={{ scheme: "nivo" }}
       />
     </div>
-  );
+  )
 }
 
 function BarChart({ type, data }: { type: string; data: BarDatum[] }) {
   if (!data || !data[0]) {
-    return <div>no data</div>;
+    return <div>no data</div>
   }
-  const keys = Object.keys(data[0]);
+  const keys = Object.keys(data[0])
 
   return (
     <div style={{ height: "500px" }}>
@@ -113,23 +113,23 @@ function BarChart({ type, data }: { type: string; data: BarDatum[] }) {
         ]}
       />
     </div>
-  );
+  )
 }
 
 export default function VisualizeMethod() {
-  const params = useParams();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const params = useParams()
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
 
-  let question = searchParams.get("q") || "";
+  let question = searchParams.get("q") || ""
 
   const match = useMatches().find(
     (match) => match.id === "routes/query/$questionGroupId"
-  );
-  const data = match?.data ? (match.data as GroupLoaderData) : null;
+  )
+  const data = match?.data ? (match.data as GroupLoaderData) : null
 
-  const dataObj = data ? JSON.parse(data.latestResult || "{}") : null;
-  const latestResult = data ? data.latestResult : null;
+  const dataObj = data ? JSON.parse(data.latestResult || "{}") : null
+  const latestResult = data ? data.latestResult : null
 
   function changeTab(value: string | null) {
     if (value) {
@@ -137,7 +137,7 @@ export default function VisualizeMethod() {
         `/query/${params.questionGroupId}/chart/${value}?q=` +
           encodeURIComponent(question),
         { preventScrollReset: true }
-      );
+      )
     }
   }
 
@@ -176,7 +176,7 @@ export default function VisualizeMethod() {
         </Tabs.Panel>
       </Tabs>
     </Box>
-  );
+  )
 }
 
 export function ErrorBoundary({ error }) {
@@ -187,5 +187,5 @@ export function ErrorBoundary({ error }) {
       <p>The stack trace is:</p>
       <pre>{error.stack}</pre>
     </div>
-  );
+  )
 }

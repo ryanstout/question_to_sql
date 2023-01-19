@@ -1,4 +1,4 @@
-import { Anchor, Container, Group, createStyles } from "@mantine/core";
+import { Anchor, Container, Group, createStyles } from "@mantine/core"
 
 const useStyles = createStyles((theme) => ({
   footer: {
@@ -25,17 +25,17 @@ const useStyles = createStyles((theme) => ({
       marginTop: theme.spacing.md,
     },
   },
-}));
+}))
 
 export function Footer() {
-  const { classes } = useStyles();
+  const { classes } = useStyles()
 
-  const links = [{ link: "/query_manager/all", label: "All Queries" }];
+  const links = [{ link: "/query_manager/all", label: "All Queries" }]
   const items = links.map((link) => (
     <Anchor<"a"> color="dimmed" key={link.label} href={link.link} size="sm">
       {link.label}
     </Anchor>
-  ));
+  ))
 
   return (
     <div className={classes.footer}>
@@ -43,5 +43,5 @@ export function Footer() {
         <Group className={classes.links}>{items}</Group>
       </Container>
     </div>
-  );
+  )
 }

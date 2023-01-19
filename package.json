@@ -25,6 +25,7 @@
     "ms": "ts-node --require tsconfig-paths/register  --transpileOnly app/models/generate_schema.ts"
   },
   "prettier": {
+    "semi": false,
     "importOrderSeparation": true,
     "importOrderSortSpecifiers": true,
     "importOrderGroupNamespaceSpecifiers": true,

@@ -1,14 +1,14 @@
 // import { Connection } from 'postgresql-client';
-import { sql } from "@codemirror/lang-sql";
-import { EditorView } from "@codemirror/view";
-import type { Question, User } from "@prisma/client";
-import CodeMirror from "@uiw/react-codemirror";
-import beautify from "json-beautify";
-import { useEffect, useState } from "react";
-import { z } from "zod";
-import { zx } from "zodix";
+import { sql } from "@codemirror/lang-sql"
+import { EditorView } from "@codemirror/view"
+import type { Question, User } from "@prisma/client"
+import CodeMirror from "@uiw/react-codemirror"
+import beautify from "json-beautify"
+import { useEffect, useState } from "react"
+import { z } from "zod"
+import { zx } from "zodix"
 
-import { ActionArgs, LoaderFunction, redirect } from "@remix-run/node";
+import { ActionArgs, LoaderFunction, redirect } from "@remix-run/node"
 import {
   Form,
   Outlet,
@@ -18,7 +18,7 @@ import {
   useNavigation,
   useParams,
   useSubmit,
-} from "@remix-run/react";
+} from "@remix-run/react"
 
 import {
   AppShell,
@@ -34,28 +34,28 @@ import {
   Table,
   Text,
   TextInput,
-} from "@mantine/core";
+} from "@mantine/core"
 
-import { prisma } from "~/db.server";
+import { prisma } from "~/db.server"
 import {
   EnhanceSqlQuery,
   GenerateSqlQuery,
-} from "~/models/language_model/query_generator.server";
-import { UserDb } from "~/models/user_db2.server";
-import { Footer } from "~/routes/footer";
-import { requireUserId } from "~/session.server";
-import { toNum } from "~/utils";
+} from "~/models/language_model/query_generator.server"
+import { UserDb } from "~/models/user_db2.server"
+import { Footer } from "~/routes/footer"
+import { requireUserId } from "~/session.server"
+import { toNum } from "~/utils"
 
 type QuestionInBrowser = Pick<
   Question,
   "id" | "question" | "questionGroupId" | "userSql" | "correctState"
->;
+>
 
 type LoaderData = {
-  questions: QuestionInBrowser[];
-  questionGroupId: number;
-  latestResult: string;
-} | null;
+  questions: QuestionInBrowser[]
+  questionGroupId: number
+  latestResult: string
+} | null
 
 export async function findOrCreateQuestionGroup(
   userId: number,
@@ -68,7 +68,7 @@ export async function findOrCreateQuestionGroup(
     ? await prisma.questionGroup.findFirst({
         where: { id: questionGroupId, userId: userId },
       })
-    : null;
+    : null
 
   if (!questionGroup) {
     // create a question group if it doesn't exist
@@ -76,10 +76,10 @@ export async function findOrCreateQuestionGroup(
       data: {
         userId: userId,
       },
-    });
+    })
   }
 
-  return questionGroup;
+  return questionGroup
 }
 
 // Not, questionGroupId should already be vetted
@@ -91,14 +91,14 @@ async function findOrCreateQuestion(
   // check to see if the question already exists
   let question = await prisma.question.findFirst({
     where: { questionGroupId: questionGroupId, question: q, userId: userId },
-  });
+  })
 
   if (!question) {
     // create the question if it doesn't exist
 
     // We need to generate the sql for the query since its new
-    let codexSql = await GenerateSqlQuery(q);
-    codexSql = await EnhanceSqlQuery(codexSql);
+    let codexSql = await GenerateSqlQuery(q)
+    codexSql = await EnhanceSqlQuery(codexSql)
 
     // create the new query
     question = await prisma.question.create({
@@ -109,7 +109,7 @@ async function findOrCreateQuestion(
         userSql: codexSql,
         codexSql: codexSql,
       },
-    });
+    })
   }
 
   // Load all questions and return them
@@ -122,13 +122,13 @@ async function findOrCreateQuestion(
       correctState: true,
     },
     where: { questionGroupId: questionGroupId, userId: userId },
-  });
+  })
 
-  return questions;
+  return questions
 }
 
 export async function action({ request }: ActionArgs) {
-  const userId = await requireUserId(request);
+  const userId = await requireUserId(request)
 
   // create the query, attempt to load the generated sql if it doesn't exist,
   // then redirect to the query page
@@ -137,24 +137,24 @@ export async function action({ request }: ActionArgs) {
     q: z.string().optional(),
     action_name: z.string().optional(),
     questionGroupId: zx.NumAsString,
-  });
+  })
 
-  const q2 = zx.parseQuery(request, { q: z.string().optional() });
+  const q2 = zx.parseQuery(request, { q: z.string().optional() })
   if (q2) {
-    q ||= q2.q;
+    q ||= q2.q
   }
 
   // make sure questionGroup exists
-  let questionGroup = await findOrCreateQuestionGroup(userId, questionGroupId);
+  let questionGroup = await findOrCreateQuestionGroup(userId, questionGroupId)
 
-  let questions: QuestionInBrowser[] | null;
-  let question;
+  let questions: QuestionInBrowser[] | null
+  let question
 
   if (action_name === "update") {
     const { id, userSql } = await zx.parseForm(request, {
       id: zx.NumAsString,
       userSql: z.string(),
-    });
+    })
 
     // TODO: figure out why multiple fields in where clauses on update
     // doesn't work, for now checking the question exists for the user
@@ -165,10 +165,10 @@ export async function action({ request }: ActionArgs) {
         userId: userId,
         questionGroupId: questionGroup.id,
       },
-    });
+    })
 
     if (!question) {
-      throw new Error("Unable to find question to update");
+      throw new Error("Unable to find question to update")
     }
 
     await prisma.question.update({
@@ -178,12 +178,12 @@ export async function action({ request }: ActionArgs) {
       where: {
         id: id,
       },
-    });
+    })
   } else if (
     action_name === "mark_correct" ||
     action_name === "mark_incorrect"
   ) {
-    const { q } = await zx.parseQuery(request, { q: z.string() });
+    const { q } = await zx.parseQuery(request, { q: z.string() })
     const question = await prisma.question.findFirst({
       select: { id: true },
       where: {
@@ -191,34 +191,34 @@ export async function action({ request }: ActionArgs) {
         userId: userId,
         question: q,
       },
-    });
+    })
 
     if (!question) {
-      throw new Error("Unable to find question");
+      throw new Error("Unable to find question")
     }
 
-    const correctValue = action_name === "mark_correct" ? 1 : 0;
+    const correctValue = action_name === "mark_correct" ? 1 : 0
     await prisma.question.update({
       data: { correctState: correctValue },
       where: { id: question.id },
-    });
+    })
   } else {
     // actionName === 'create'
     // If there isn't a question, create one
     if (q) {
-      questions = await findOrCreateQuestion(userId, q, questionGroup.id);
+      questions = await findOrCreateQuestion(userId, q, questionGroup.id)
     } else {
       // Just used to create a new QuestionGroup
-      questions = [] as QuestionInBrowser[];
+      questions = [] as QuestionInBrowser[]
     }
   }
 
   if (q) {
     return redirect(
       `/query/${questionGroup.id}/chart/raw?q=${encodeURIComponent(q || "")}`
-    );
+    )
   } else {
-    return redirect(`/query/${questionGroup.id}/chart/raw`);
+    return redirect(`/query/${questionGroup.id}/chart/raw`)
   }
 }
 
@@ -226,102 +226,97 @@ export let loader: LoaderFunction = async ({
   params,
   request,
 }): Promise<LoaderData> => {
-  const userId = await requireUserId(request);
+  const userId = await requireUserId(request)
 
-  const { q } = zx.parseQuery(request, { q: z.string().optional() });
+  const { q } = zx.parseQuery(request, { q: z.string().optional() })
   const { questionGroupId } = zx.parseParams(params, {
     questionGroupId: zx.NumAsString,
-  });
+  })
 
   // make sure questionGroup exists
-  let questionGroup = await findOrCreateQuestionGroup(userId, questionGroupId);
+  let questionGroup = await findOrCreateQuestionGroup(userId, questionGroupId)
 
-  let questions: QuestionInBrowser[];
-  let question: QuestionInBrowser | null;
+  let questions: QuestionInBrowser[]
+  let question: QuestionInBrowser | null
   if (q) {
     // If there isn't a question, create one
-    questions = await findOrCreateQuestion(userId, q, questionGroup.id);
+    questions = await findOrCreateQuestion(userId, q, questionGroup.id)
 
     // grab the latest question
-    question = questions[questions.length - 1];
+    question = questions[questions.length - 1]
   } else {
-    questions = [] as QuestionInBrowser[];
-    question = null;
+    questions = [] as QuestionInBrowser[]
+    question = null
   }
 
-  let resultJson;
+  let resultJson
 
   if (question) {
     try {
-      const db = new UserDb();
-      await db.connect();
-      const result = await db.query(question.userSql);
-      await db.close();
-      resultJson = beautify(result.results, null!, 2, 100);
+      const db = new UserDb()
+      await db.connect()
+      const result = await db.query(question.userSql)
+      await db.close()
+      resultJson = beautify(result.results, null!, 2, 100)
     } catch (e) {
-      resultJson = beautify(
-        { message: e!.toString(), error: e },
-        null!,
-        2,
-        100
-      );
+      resultJson = beautify({ message: e!.toString(), error: e }, null!, 2, 100)
     }
   } else {
-    resultJson = "";
+    resultJson = ""
   }
 
   return {
     questions,
     questionGroupId: questionGroupId,
     latestResult: resultJson,
-  };
-};
+  }
+}
 
 function QueryHeader({ data }: { data: LoaderData }) {
-  const params = useParams();
+  const params = useParams()
 
-  let location = useLocation();
-  const urlParams = new URLSearchParams(location.search);
-  const q = urlParams.get("q");
+  let location = useLocation()
+  const urlParams = new URLSearchParams(location.search)
+  const q = urlParams.get("q")
 
-  const questionGroupId = params.questionGroupId;
+  const questionGroupId = params.questionGroupId
   if (!questionGroupId) {
-    throw new Error("No question group id was provided");
+    throw new Error("No question group id was provided")
   }
 
-  let currentQuestion: QuestionInBrowser | null;
-  let questions: QuestionInBrowser[];
+  let currentQuestion: QuestionInBrowser | null
+  let questions: QuestionInBrowser[]
   if (data && q) {
-    questions = [...data.questions];
+    questions = [...data.questions]
     if (questions.length === 0) {
-      currentQuestion = null;
+      currentQuestion = null
     } else {
       let currentQuestionIndex = questions.findIndex((question) => {
-        return question.question === q;
-      });
+        return question.question === q
+      })
       if (currentQuestionIndex === -1) {
-        currentQuestionIndex = questions.length - 1;
+        currentQuestionIndex = questions.length - 1
       }
-      currentQuestion = questions.splice(currentQuestionIndex, 1)[0];
+      currentQuestion = questions.splice(currentQuestionIndex, 1)[0]
     }
   } else {
-    questions = [];
-    currentQuestion = null;
+    questions = []
+    currentQuestion = null
   }
 
-  const [question, setQuestion] = useState(currentQuestion?.question || "");
-  const [getQuery, setQuery] = useState(currentQuestion?.userSql || "");
+  const [question, setQuestion] = useState(currentQuestion?.question || "")
+  const [getQuery, setQuery] = useState(currentQuestion?.userSql || "")
 
   useEffect(() => {
     // update the userSql when it updates from the backend
-    const userSql = currentQuestion?.userSql;
+    const userSql = currentQuestion?.userSql
     if (userSql) {
-      setQuery(userSql);
+      setQuery(userSql)
     }
 
-    const loaderQuestion = currentQuestion?.question;
+    const loaderQuestion = currentQuestion?.question
     if (loaderQuestion) {
-      setQuestion(loaderQuestion);
+      setQuestion(loaderQuestion)
     }
   }, [
     currentQuestion,
@@ -329,9 +324,9 @@ function QueryHeader({ data }: { data: LoaderData }) {
     currentQuestion?.question,
     currentQuestion?.userSql,
     data?.questionGroupId,
-  ]);
+  ])
 
-  const submitSqlQuery = useSubmit();
+  const submitSqlQuery = useSubmit()
 
   // called when the user does SHIFT+Enter, updates the sql in the db
   // which will run the new query
@@ -346,23 +341,23 @@ function QueryHeader({ data }: { data: LoaderData }) {
           userSql: getQuery,
         },
         { method: "post" }
-      );
+      )
     }
-  };
+  }
 
-  const navigation = useNavigation();
+  const navigation = useNavigation()
 
-  let previousQuestions;
+  let previousQuestions
   if (questions) {
     previousQuestions = questions.reverse().map((q, i) => {
       return (
         <tr key={q.question}>
           <td key={`td-${q.question}`}>{q.question}</td>
         </tr>
-      );
-    });
+      )
+    })
   } else {
-    previousQuestions = <></>;
+    previousQuestions = <></>
   }
 
   return (
@@ -458,9 +453,9 @@ function QueryHeader({ data }: { data: LoaderData }) {
               onChange={(e) => setQuery(e)}
               onKeyDownCapture={(e) => {
                 if (e.shiftKey && e.key === "Enter") {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  updateSqlQuery();
+                  e.stopPropagation()
+                  e.preventDefault()
+                  updateSqlQuery()
                 }
               }}
             />
@@ -488,7 +483,7 @@ function QueryHeader({ data }: { data: LoaderData }) {
         </Grid>
       </Header>
     </>
-  );
+  )
 }
 
 // export function links() {
@@ -496,8 +491,8 @@ function QueryHeader({ data }: { data: LoaderData }) {
 // }
 
 export default function QuestionGroup() {
-  let data = useLoaderData<LoaderData>();
-  const params = useParams();
+  let data = useLoaderData<LoaderData>()
+  const params = useParams()
 
   return (
     // <Flex direction="column" sx={{ height: '100vh' }}>
@@ -545,10 +540,10 @@ export default function QuestionGroup() {
         <Footer />
       </AppShell>
     </>
-  );
+  )
 }
 
 export function CatchBoundary() {
-  const caught = useCatch();
-  return <h1>Caught error: {caught.statusText}</h1>;
+  const caught = useCatch()
+  return <h1>Caught error: {caught.statusText}</h1>
 }
