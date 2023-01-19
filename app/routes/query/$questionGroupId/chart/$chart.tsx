@@ -1,5 +1,3 @@
-import { BarDatum, ResponsiveBar } from "@nivo/bar"
-import { ResponsiveLine, Serie } from "@nivo/line"
 import type { Question, User } from "@prisma/client"
 import {
   IconChartBar,
@@ -11,10 +9,14 @@ import { useNavigate } from "react-router-dom"
 import { zx } from "zodix"
 
 import { useMatches, useParams, useSearchParams } from "@remix-run/react"
-import { LoaderFunction } from "@remix-run/server-runtime"
+import type { LoaderFunction } from "@remix-run/server-runtime"
 
 import { Box, Tabs, Title } from "@mantine/core"
 import { Prism } from "@mantine/prism"
+import type { BarDatum } from "@nivo/bar"
+import { ResponsiveBar } from "@nivo/bar"
+import type { Serie } from "@nivo/line"
+import { ResponsiveLine } from "@nivo/line"
 
 type GroupLoaderData = {
   questions: Question[]
