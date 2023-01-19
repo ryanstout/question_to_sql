@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.9"
 sqlglot = "^10.4.3"
 snowflake-connector-python = "^2.9.0"
+prisma = "^0.8.0"
 
 
 [build-system]
