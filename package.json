@@ -24,7 +24,16 @@
     "validate": "run-p \"test -- --run\" lint typecheck test:e2e:run",
     "ms": "ts-node --require tsconfig-paths/register  --transpileOnly app/models/generate_schema.ts"
   },
-  "prettier": {},
+  "prettier": {
+    "importOrderSeparation": true,
+    "importOrderSortSpecifiers": true,
+    "importOrderGroupNamespaceSpecifiers": true,
+    "importOrder": [
+      "^@remix(.*)$",
+      "^(@mantine|@emotion)(.*)$",
+      "^~/"
+    ]
+  },
   "eslintIgnore": [
     "/node_modules",
     "/build",
@@ -92,6 +101,7 @@
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",
+    "@trivago/prettier-plugin-sort-imports": "^4.0.0",
     "@types/bcryptjs": "^2.4.2",
     "@types/compression": "^1.7.2",
     "@types/eslint": "^8.4.10",
