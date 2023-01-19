@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Description: install a node package and pull TS definitions if needed
 
-npm i $0 --save
+npm i $@ --save
 npx typesync
 npm i

@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-npx ts-node $@
+npx ts-node --transpileOnly $@
