@@ -271,50 +271,54 @@ export interface TableDescription {
   is_external: string
 }
 
-Array.prototype.last = function () {
-  return this[this.length - 1]
-}
-
 async function shouldIncludeTable(
   database: Snowflake,
   fullyQualifiedTableName: string
 ): Promise<boolean> {
-  const tableName = fullyQualifiedTableName.split(".").last()
-  if (tableName.startsWith("_AIRBYTE")) {
+  const SKIP_PREFIXES = [
+    "_AIRBYTE",
+    "DRAFT_ORDERS",
+    "ABANDONED_CHECKOUTS",
+    "FULFILLMENTS",
+  ]
+  const SKIP_SUFFIXES = ["_SCD"]
+
+  const tableName = fullyQualifiedTableName.split(".").at(-1)
+  invariant(tableName !== undefined)
+
+  if (SKIP_PREFIXES.some((prefix) => tableName.startsWith(prefix))) {
     log.debug("excluding table", { table: fullyQualifiedTableName })
     return false
   }
 
-  if (tableName.endsWith("_SCD")) {
+  if (SKIP_SUFFIXES.some((suffix) => tableName.endsWith(suffix))) {
     log.debug("excluding table", { table: fullyQualifiedTableName })
     return false
   }
 
-  const countResult = await executeSQL<{ ["COUNT"]: number }>(
-    database,
-    `SELECT COUNT(*) as count FROM ${fullyQualifiedTableName}`
-  )
+  // const countResult = await executeSQL<{ ["COUNT"]: number }>(
+  //   database,
+  //   `SELECT COUNT(*) as count FROM ${fullyQualifiedTableName}`
+  // )
 
-  if (countResult[0].COUNT === 0) {
-    log.debug("excluding empty table", {
-      table: fullyQualifiedTableName,
-    })
-    return false
-  }
+  // if (countResult[0].COUNT === 0) {
+  //   log.debug("excluding empty table", {
+  //     table: fullyQualifiedTableName,
+  //   })
+  //   return false
+  // }
 
   return true
 }
 
 async function describeTables(snowflake: Snowflake, database: string) {
-  debugger
   const showTablesSql = "SHOW TABLES IN DATABASE " + database
   const snowflakeTableList = await executeSQL<TableDescription>(
     snowflake,
     showTablesSql
   )
-  debugger
 
-  log.debug("got all tables", { count: snowflakeTableList.length })
+  log.debug("all tables", { count: snowflakeTableList.length })
 
   let tableDescribeMap: { [key: string]: string } = {}
 
@@ -357,19 +361,42 @@ function cleanSnowflakeSQLDescribe(sqlDescribe: string) {
       .replace(/\t\_airbyte\_.*/g, "")
       // remove duplicate lines
       .replace(/\n{2,}/gm, "\n")
+      // remove all tabs
+      .replace(/\t/g, "")
+      // remove trailing semicolon
+      .replace(/;$/gm, "")
   )
 }
 
-async function main(databaseName: string) {
+async function init() {
+  process.chdir(__dirname + "/..")
+  await loadEnv("")
+  configureLogging()
+}
+
+async function main({
+  databaseName,
+  outputFile,
+}: {
+  databaseName: string
+  outputFile: string
+}) {
   await init()
 
   log.info("collecting all tables for SQL dump")
   const connection = await snowflakeConnection()
-  const tableMap = await describeTables(connection, "DAYSPRINGPENS")
+  const tableMap = await describeTables(connection, databaseName)
 
   const jsonMap = JSON.stringify(tableMap, undefined, 2)
-  log.info("writing table map to snowflake.json")
-  require("fs").writeFileSync("./snowflake_filtered.json", jsonMap)
+
+  log.info(`writing table map to ${outputFile}.json`)
+  Object.values(jsonMap).join("\n")
+
+  require("fs").writeFileSync(`${outputFile}.json`, jsonMap)
+  require("fs").writeFileSync(
+    `${outputFile}.sql`,
+    Object.values(tableMap).join("\n")
+  )
 
   // TODO dump into DB tables
 
@@ -386,22 +413,19 @@ async function snowflakeRepl() {
   })
 }
 
-async function init() {
-  process.chdir(__dirname + "/..")
-  await loadEnv("")
-  configureLogging()
-}
-
 const program = new Command()
 program.option("--cli", "open up a snowflake repl", false)
+program.option(
+  "--database <database>",
+  "snowflake database to dump",
+  "DAYSPRINGPENS"
+)
+program.option("--output <output>", "output file prefix", "snowflake")
 program.parse(process.argv)
 const options = program.opts()
 
 if (options.cli) {
   snowflakeRepl()
 } else {
-  main("")
+  main({ databaseName: options.database, outputFile: options.output })
 }
-
-// var snowflakeTableJSON = require('fs').readFileSync('./snowflake.json')
-// repl({ snowflakeTableJSON})
