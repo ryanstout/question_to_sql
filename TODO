@@ -1,8 +1,17 @@
-# What do we need to run a query?
+# What do we need to run a query on the shopify?
 
-- Test schema
-  - Filter airbyte stuff using hacky script
-- Snowflake connection connected to user
+- [x] Test schema
+      [x] Filter airbyte stuff using hacky script
+- [ ] Python Indexing Script
+  - [ ] [mbianco] Snowflake connection
+  - [ ] [mbianco] Finalize prisma models
+  - [ ] [mbianco] Prisma models in python
+  - [ ] [mbianco] Snowflake > prisma model dump
+  - [ ] ML stuff
+- [ ] Python Query
+  - [ ] Endpoint for accepting natural language query
+  - [ ] Doing face search / table filtering
+- [ ] [mbianco] Snowflake connection connected to user
 - Maybe SQL transforms from OpenAI? We'll need to derisk this
 
 # What do we need so daniel can run a query?
@@ -10,7 +19,15 @@
 - Deploy
 - User login tied to data source
 
-# What do we need for better queries
+# What do we need so daniel & JP can run a query?
+
+# What do we need to improve the query creator?
 
 - Dynamic test schema generation with column hints
-- Maybe vector search for column names
+- Training data for fine tuning & one-shot learning
+- Maybe vector search for column names?
+
+# What do we need to improve the query run experience?
+
+- Feedback pipeline, force people to choose
+- Sharable URLs
