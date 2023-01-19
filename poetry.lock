@@ -570,6 +570,18 @@ docs = ["sphinx (!=5.2.0,!=5.2.0.post0)", "sphinx-rtd-theme"]
 test = ["flaky", "pretend", "pytest (>=3.0.1)"]
 
 [[package]]
+name = "python-decouple"
+version = "3.7"
+description = "Strict separation of settings from code."
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "python-decouple-3.7.tar.gz", hash = "sha256:e88a8d6bdf3b07d471a854099e455e20a6fa7a4d6ecf8631b250e3db654336e6"},
+    {file = "python_decouple-3.7-py3-none-any.whl", hash = "sha256:1596dad2670cca5b1f87d087d9adb6a1958c590df346b85d4b19a9d6f0d52cef"},
+]
+
+[[package]]
 name = "python-dotenv"
 version = "0.21.0"
 description = "Read key-value pairs from a .env file and set them as environment variables"
@@ -777,4 +789,4 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "3a2ea484e1fddf32fee4f94c4377038b03c9a55f8271badb9efa4f90cf43c1e9"
+content-hash = "b9565f4776da30dea49fe364b4a507b4aa5d836dbc569ef8a9b7a8d21bdc2a23"
