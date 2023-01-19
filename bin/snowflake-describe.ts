@@ -3,8 +3,8 @@
 import { Command } from "commander"
 import type { LogLevelNames } from "loglevel"
 import log from "loglevel"
-import loglevelPrefix from "loglevel-plugin-prefix"
-import { Snowflake, loadFiles } from "snowflake-multisql"
+import logLevelPrefix from "loglevel-plugin-prefix"
+import { Snowflake } from "snowflake-multisql"
 import invariant from "tiny-invariant"
 
 import { loadEnv } from "@remix-run/dev/dist/env"
@@ -12,9 +12,9 @@ import { loadEnv } from "@remix-run/dev/dist/env"
 function configureLogging() {
   // TODO extract out to separate logging config
   // add expected log level prefixes
-  loglevelPrefix.reg(log)
+  logLevelPrefix.reg(log)
   log.enableAll()
-  loglevelPrefix.apply(log)
+  logLevelPrefix.apply(log)
 
   if (process.env.LOG_LEVEL) {
     const logLevelFromEnv = process.env.LOG_LEVEL.toLowerCase() as LogLevelNames
@@ -158,15 +158,6 @@ async function listSchemas(snowflake: Snowflake) {
   console.dir(schemaInAccount[0].data)
 
   repl({ snowflake })
-}
-
-// should be IExecuteAllResult
-function extractSingleRowResult(result: any) {
-  if (result.length > 1) {
-    throw new Error("Expected only one row")
-  }
-
-  return result[0]
 }
 
 export async function executeSQL<T>(snowflake: Snowflake, sql: string) {
