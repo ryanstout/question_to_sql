@@ -8,7 +8,8 @@ import { useEffect, useState } from "react"
 import { z } from "zod"
 import { zx } from "zodix"
 
-import { ActionArgs, LoaderFunction, redirect } from "@remix-run/node"
+import type { ActionArgs, LoaderFunction } from "@remix-run/node"
+import { redirect } from "@remix-run/node"
 import {
   Form,
   Outlet,
@@ -36,11 +37,11 @@ import {
 } from "@mantine/core"
 
 import { prisma } from "~/db.server"
+import queryRunner from "~/lib/query-runner"
 import {
   EnhanceSqlQuery,
   GenerateSqlQuery,
 } from "~/models/language_model/query_generator.server"
-import { UserDb } from "~/models/user_db2.server"
 import { Footer } from "~/routes/footer"
 import { requireUserId } from "~/session.server"
 
@@ -251,12 +252,24 @@ export let loader: LoaderFunction = async ({
 
   if (question) {
     try {
-      const db = new UserDb()
-      await db.connect()
-      const result = await db.query(question.userSql)
-      await db.close()
-      resultJson = beautify(result.results, null!, 2, 100)
+      const result = await queryRunner.runQuery(
+        {
+          // TODO this is a total hack for not having a proper user
+          type: "snowflake",
+          credentials: {
+            account: process.env.SNOWFLAKE_ACCOUNT,
+            username: process.env.SNOWFLAKE_USERNAME,
+            password: process.env.SNOWFLAKE_PASSWORD,
+            database: process.env.SNOWFLAKE_DATABASE,
+            schema: process.env.SNOWFLAKE_SCHEMA,
+            warehouse: process.env.SNOWFLAKE_WAREHOUSE,
+          },
+        },
+        question.userSql
+      )
+      resultJson = beautify(result, null!, 2, 100)
     } catch (e) {
+      console.error(e)
       resultJson = beautify({ message: e!.toString(), error: e }, null!, 2, 100)
     }
   } else {
@@ -516,11 +529,11 @@ export default function QuestionGroup() {
     <>
       <AppShell
         padding="md"
-        navbar={
-          <Navbar width={{ base: 300 }} height="100%" p="xs">
-            <h2>Side</h2>
-          </Navbar>
-        }
+        // navbar={
+        //   <Navbar width={{ base: 300 }} height="100%" p="xs">
+        //     <h2>Side</h2>
+        //   </Navbar>
+        // }
         header={<QueryHeader data={data} />}
         styles={(theme) => ({
           main: {
