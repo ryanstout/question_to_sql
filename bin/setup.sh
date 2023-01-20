@@ -19,3 +19,9 @@ npm run setup
 npm run build
 
 echo "`npm run dev` to start the server"
+
+# for better asdf compatibility
+poetry config virtualenvs.prefer-active-python true
+
+# helpful packages for ipython
+pip install ipython ipdb pdbr ipython-autoimport rich docrepr colorama
