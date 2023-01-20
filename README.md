@@ -11,6 +11,15 @@ bin/setup.sh
 npm run dev
 ```
 
+# Prisma
+
+Generate the python and ts schemas with:
+`prisma generate --schema prisma/schema.prisma`
+
+# Import DataSource
+
+python python/import.py {user_id}
+
 # Schemas [WIP]
 
 Place your test database in a local postgres (currenthly hardcoded to db name of witharsenal_prod_copy)
