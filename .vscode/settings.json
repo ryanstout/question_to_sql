@@ -18,5 +18,8 @@
   ],
   // https://github.com/streetsidesoftware/vscode-spell-checker/issues/225
   "cSpell.ignoreRegExpList": ["/from\\s+(['\"]).*\\1/"],
-  "cSpell.words": ["AIRBYTE"]
+  "cSpell.words": ["AIRBYTE"],
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.python"
+  }
 }

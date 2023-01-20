@@ -11,6 +11,8 @@ sqlglot = "^10.4.3"
 snowflake-connector-python = "^2.9.0"
 prisma = "^0.8.0"
 python-decouple = "^3.7"
+openai = {extras = ["embeddings"], version = "^0.26.1"}
+python-dotenv = "^0.21.0"
 
 
 [build-system]

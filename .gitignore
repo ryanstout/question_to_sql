@@ -12,3 +12,4 @@ node_modules
 
 snowflake.sql
 snowflake.json
+/lib/__pycache__
