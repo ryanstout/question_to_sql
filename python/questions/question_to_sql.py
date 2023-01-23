@@ -1,5 +1,5 @@
 from schema.schema_builder import SchemaBuilder
-from utils.connections import Connections
+from python.utils.connections import Connections
 
 
 class QuestionToSql:

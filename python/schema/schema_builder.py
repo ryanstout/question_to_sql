@@ -3,7 +3,7 @@
 
 from prisma.models import User, DataSource, Business, DataSourceTableDescription, DataSourceTableColumn
 
-from schema.full_schema import FullSchema
+from python.schema.full_schema import FullSchema
 
 
 class SchemaBuilder:

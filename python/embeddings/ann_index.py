@@ -1,9 +1,9 @@
 import os
-from embeddings.embedding import Embedding
 from typing import Union
 import numpy as np
 
-from embeddings.ann_faiss import AnnFaiss
+from python.embeddings.embedding import Embedding
+from python.embeddings.ann_faiss import AnnFaiss
 
 
 class AnnIndex:

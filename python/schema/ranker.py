@@ -2,15 +2,16 @@
 # the schema builder:
 #
 # {
-#     'tableName1': {
-#         'columnName1': ['valueHint1', 'valueHint2'],
-#         'columnName2': [],
-#         'columnName2': ['valueHint1', 'valueHint2', 'valueHint3'],
+#     'tableId1': {
+#         'columnId1': ['valueHint1', 'valueHint2'],
+#         'columnId2': [],
+#         'columnId3': ['valueHint1', 'valueHint2', 'valueHint3'],
 #     },
-#     'tableName2': {
+#     'tableId2': {
 #         # ...
 #     },
 #     # ...
 # }
 
 class Ranker:
+    def __init__(self, db):

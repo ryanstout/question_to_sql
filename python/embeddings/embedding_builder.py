@@ -4,9 +4,9 @@ import re
 from prisma.models import User, DataSource, Business, DataSourceTableDescription, DataSourceTableColumn
 import collections
 import math
-from utils.entropy import token_entropy
 
-from embeddings.ann_index import AnnIndex
+from python.utils.entropy import token_entropy
+from python.embeddings.ann_index import AnnIndex
 
 # How long of a value do we create an embedding for?
 MAX_VALUE_LENGTH = 600

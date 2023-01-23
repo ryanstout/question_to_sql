@@ -18,7 +18,7 @@ Generate the python and ts schemas with:
 
 # Import DataSource
 
-python python/import.py {user_id}
+python -m python.import {user_id}
 
 # Schemas [WIP]
 
