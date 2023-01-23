@@ -25,16 +25,21 @@ npm run build
 echo "`npm run dev` to start the server"
 
 # for better asdf compatibility
-poetry config virtualenvs.prefer-activepython true
+# config writes to: ~/Library/Preferences/pypoetry/config.toml
+poetry config virtualenvs.prefer-active-python true
 poetry install
 
 # helpful packages for ipython
 pip install ipython ipdb pdbr ipython-autoimport rich docrepr colorama
 
 # you need python installed properly to generate the prisma bindings
-prisma generate --schema prisma/schema.prisma
-
 # for now, we are nuking the entire DB, will need to change this in the future
-psql --command="DROP DATABASE nlpquery" && \
+psql --command="DROP DATABASE nlpquery"; \
+    # remove all of the existing migrations
     rm -rf prisma/migrations && \
-    prisma migrate dev
+    # make sure the prisma versions are correct! `prisma-client-py --version`
+    npx prisma migrate dev
+
+# the prisma bindings are generated when you run `migrate dev`. Should look like:
+#   ✔ Generated Prisma Client Python (v0.8.0) to ./../../.asdf/installs/python/3.9.9/lib/python3.9/site-packages/prisma in 132ms
+# make sure the install path is the same as your virtualenv!
