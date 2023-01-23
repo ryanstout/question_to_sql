@@ -1764,6 +1764,30 @@ all = ["nodejs-bin"]
 node = ["nodejs-bin"]
 
 [[package]]
+name = "prisma-client"
+version = "0.2.1"
+description = "Prisma Client Python is an auto-generated and fully type-safe database client"
+category = "main"
+optional = false
+python-versions = ">=3"
+files = [
+    {file = "prisma-client-0.2.1.tar.gz", hash = "sha256:bee18aa7bb97b892e734cbcaf3e770d79c735b8fda3285ef7772d2b2a305ffb7"},
+    {file = "prisma_client-0.2.1-py3-none-any.whl", hash = "sha256:71a24ae148f083f7946f0b9daec9aa426b1d06dfdb80261b8567865d015a9b8e"},
+]
+
+[package.dependencies]
+click = ">=7.1.2"
+httpx = ">=0.19.0"
+jinja2 = ">=2.11.2"
+pydantic = ">=1.8.0"
+python-dotenv = ">=0.12.0"
+
+[package.extras]
+all = ["mkdocs (==1.2.3)", "mkdocs-material (==7.3.0)", "pre-commit (==2.8.2)", "tox (==3.24.0)", "wheel (==0.37.0)"]
+dev = ["pre-commit (==2.8.2)", "tox (==3.24.0)", "wheel (==0.37.0)"]
+docs = ["mkdocs (==1.2.3)", "mkdocs-material (==7.3.0)"]
+
+[[package]]
 name = "prompt-toolkit"
 version = "3.0.36"
 description = "Library for building powerful interactive command lines in Python"
@@ -3099,4 +3123,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "630e26dedeb9d7a28da81997d05f454ee2378e6c8b011dc421cbfc7c70ea75b2"
+content-hash = "790e9cbee6342c3f102d59c8ae127f45c4d330318a792c9628611ec3020662b1"

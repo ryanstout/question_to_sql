@@ -18,6 +18,7 @@ faiss-cpu = "^1.7.3"
 xxhash = "^3.2.0"
 tiktoken = "^0.1.2"
 sentence-transformers = "^2.2.2"
+prisma-client = "^0.2.1"
 
 
 [tool.poetry.group.dev.dependencies]
