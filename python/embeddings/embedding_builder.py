@@ -67,7 +67,8 @@ class EmbeddingBuilder:
             where={'tableId': table.id})
 
         # Table name
-        self.idx_table_names.add(name, table.id, None, None)
+        self.idx_table_names.add(
+            self.datasource.id, name, table.id, None, None)
 
         # Column Names
         columns = self.db.datasourcetablecolumn.find_many(where={
@@ -82,7 +83,8 @@ class EmbeddingBuilder:
 
             column_names.append(column.name)
             # Add individual column names
-            self.idx_column_names.add(column.name, table.id, column.id, None)
+            self.idx_column_names.add(
+                self.datasource.id, column.name, table.id, column.id, None)
 
             # Add cell values (requires a full scan of each table)
             if column.distinctRows < 1000:
@@ -90,14 +92,14 @@ class EmbeddingBuilder:
 
         # Add table and column names as a single string (for table lookup)
         self.idx_table_and_column_names.add(
-            name + ' ' + ' '.join(column_names), table.id, None, None)
+            self.datasource.id, name + ' ' + ' '.join(column_names), table.id, None, None)
 
         # Add for table + column names + all values
         for table_value_group in in_groups_of("\n".join(self.table_values), MAX_EMBEDDING_TOKENS):
             full_table_str = name + "\n" + \
                 "\n".join(column_names) + "\n" + table_value_group
             self.idx_column_name_and_all_column_values.add(
-                full_table_str, table.id, None, None)
+                self.datasource.id, full_table_str, table.id, None, None)
 
     def add_table_column_values(self, table: DataSourceTableDescription, column: DataSourceTableColumn):
         if re.search("^(VARCHAR)", column.type):
@@ -121,14 +123,14 @@ class EmbeddingBuilder:
                         if len(value_str) < MAX_FOR_SMALL_VALUE:
                             self.table_values.append(value_str)
                             column_values.append(value_str)
-                        self.idx_values.add(value_str, table.id,
+                        self.idx_values.add(self.datasource.id, value_str, table.id,
                                             column.id, value_str)
 
             # Add for column name + all column values (keeping below max embedding)
             for col_value_group in in_groups_of("\n".join(column_values), MAX_EMBEDDING_TOKENS):
                 full_column_str = column.name + "\n" + col_value_group
                 self.idx_column_name_and_all_column_values.add(
-                    full_column_str, table.id, column.id, None)
+                    self.datasource.id, full_column_str, table.id, column.id, None)
 
     def save(self):
         # Write out the indexes

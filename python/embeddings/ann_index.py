@@ -14,16 +14,17 @@ class AnnIndex:
         self.index_offset = 0
         self.embeddings = []
 
-    def add(self, content: str, tableId: Union[int, None], columnId: Union[int, None], value: Union[str, None]):
+    def add(self, datasource_id: int, content: str, table_id: Union[int, None], column_id: Union[int, None], value: Union[str, None]):
         embedding = Embedding(self.db, content)
 
         # Create a EmbeddingLink
         embedding_link = self.db.embeddinglink.create(data={
+            'dataSourceId': datasource_id,
             'indexNumber': self.index_number,
             'indexOffset': self.index_offset,
             'contentHash': embedding.content_hash,
-            'tableId': tableId,
-            'columnId': columnId,
+            'tableId': table_id,
+            'columnId': column_id,
             'value': value
         })
 
