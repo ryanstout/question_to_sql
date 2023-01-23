@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.9"
 sqlglot = "^10.4.3"
 snowflake-connector-python = "^2.9.0"
+prisma-client = "^0.2.1"
 prisma = "^0.8.0"
 python-decouple = "^3.7"
 openai = {extras = ["embeddings"], version = "^0.26.1"}
@@ -18,7 +19,6 @@ faiss-cpu = "^1.7.3"
 xxhash = "^3.2.0"
 tiktoken = "^0.1.2"
 sentence-transformers = "^2.2.2"
-prisma-client = "^0.2.1"
 
 
 [tool.poetry.group.dev.dependencies]
