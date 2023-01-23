@@ -20,19 +20,21 @@ import numpy as np
 
 
 class Ranker:
-    def __init__(self, db):
+    def __init__(self, db, datasource_id: int):
         self.db = db
 
         # Load the faiss indexes
-        self.idx_table_names = AnnSearch(0, 'python/indexes/table_names')
-        self.idx_column_names = AnnSearch(1, 'python/indexes/column_names')
-        # self.idx_table_and_column_names = AnnSearch(
+        self.idx_table_names = AnnSearch(
+            db, datasource_id, 0, 'python/indexes/table_names')
+        self.idx_column_names = AnnSearch(
+            db, datasource_id, 1, 'python/indexes/column_names')
+        # self.idx_table_and_column_names = AnnSearch(db,
         #     3, 'python/indexes/table_and_column_names')
 
         # # Table and Columns indexes
-        # self.idx_table_and_column_names_and_values = AnnSearch(
+        # self.idx_table_and_column_names_and_values = AnnSearch(db,
         #     4, 'python/indexes/table_and_column_names_and_values')
-        # self.idx_column_name_and_all_column_values = AnnSearch(
+        # self.idx_column_name_and_all_column_values = AnnSearch(db,
         #     5, 'python/indexes/column_name_and_all_column_values')
 
     def rank(self, query: str, embedder=OpenAIEmbeddings, cache_results=True):
@@ -51,4 +53,6 @@ if __name__ == '__main__':
     connections = Connections()
     connections.open()
 
-    Ranker(connections.db).rank("how many orders from Montana?")
+    datasource = connections.db.datasource.find_first()
+
+    Ranker(connections.db, datasource.id).rank("how many orders from Montana?")

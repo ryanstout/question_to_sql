@@ -46,7 +46,7 @@ class Import():
 
             # from IPython import embed; embed()
 
-            for table in tableList:
+            for table in list(tableList)[:5]:
                 name = table['name']
 
                 # Filter out airbyte tables

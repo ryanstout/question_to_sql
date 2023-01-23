@@ -39,7 +39,7 @@ class AnnIndex:
             data = np.stack(self.embeddings, axis=0)
 
             # Make output folder if it doesn't exist
-            os.mkdirs(os.dirname(self.path), exist_ok=True)
+            os.makedirs(os.dirname(self.path), exist_ok=True)
 
             print(data.dtype, data.shape)
             AnnFaiss().build_and_save(data, self.path)

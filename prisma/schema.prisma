@@ -105,6 +105,7 @@ model DataSource {
   businessId Int?
 
   dataSourceTableDescriptions DataSourceTableDescription[]
+  EmbeddingLink               EmbeddingLink[]
 }
 
 model DataSourceTableDescription {
@@ -175,6 +176,9 @@ model DataSourceTableColumn {
 model EmbeddingLink {
   id Int @id @default(autoincrement())
 
+  DataSource   DataSource? @relation(fields: [dataSourceId], references: [id])
+  dataSourceId Int?
+
   // Which index is this (see docs/prompt_embeddings.md)
   indexNumber Int
 
@@ -193,10 +197,10 @@ model EmbeddingLink {
   // Store a copy (for now) of the cell value so we can construct the Value Hints
   value String?
 
+  // The main way we do lookups (from faiss index)
+  @@index([dataSourceId, indexNumber, indexOffset], name: "faissIndex")
   // When rebuilding, we'll want to look up
   @@index([contentHash, tableId, columnId])
-  // The main way we do lookups (from faiss index)
-  @@index([indexNumber, indexOffset])
 }
 
 // Simple cache for contentHash -> embedding so we don't have to rehit the openai api

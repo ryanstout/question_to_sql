@@ -100,10 +100,10 @@ class EmbeddingBuilder:
                 full_table_str, table.id, None, None)
 
     def add_table_column_values(self, table: DataSourceTableDescription, column: DataSourceTableColumn):
-        if re.search("^(VARCHAR|VARIANT)", column.type):
+        if re.search("^(VARCHAR)", column.type):
             # Get all the values for this column
             values = self.snowflake_cursor.execute(
-                f"select DISTINCT({column.name}) as value from {table.fullyQualifiedName} LIMIT 50;")
+                f"select DISTINCT({column.name}) as value from {table.fullyQualifiedName} LIMIT 5;")
 
             column_values = []
 
