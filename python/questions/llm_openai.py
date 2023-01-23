@@ -10,7 +10,7 @@ from decouple import config
 openai.api_key = config('OPENAI_API_KEY')
 
 
-class NlpQuestionToSql:
+class LLMOpenai:
     def __init__(self, question: str):
 
         nlp_question = sys.stdin.read()
@@ -33,6 +33,3 @@ class NlpQuestionToSql:
             stream=False,
             stop=[";", "\n\n"],
         )
-
-
-# NlpQuestionToSql()

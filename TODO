@@ -54,3 +54,9 @@ Goal: EOD Tuesday
 
 - Feedback pipeline, force people to choose
 - Sharable URLs
+
+# Assorted Todos/Improvements
+
+- [ ] Columns with the name "DEFAULT" or "VALUES" (and maybe other sql keywords don't seem to work with snowflake)
+- [ ] Test adding column name in front of value for more context in embedding
+      `1

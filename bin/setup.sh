@@ -12,6 +12,10 @@ asdf install
 poetry install
 npm install
 
+echo "Install libomp openblas for Mac for Faiss kNN library"
+brew install libomp openblas
+
+
 cp .env.example .env
 echo "Update .env with fresh secrets"
 

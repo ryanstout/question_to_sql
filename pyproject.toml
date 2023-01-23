@@ -14,6 +14,10 @@ python-decouple = "^3.7"
 openai = {extras = ["embeddings"], version = "^0.26.1"}
 python-dotenv = "^0.21.0"
 ipython = "^8.8.0"
+faiss-cpu = "^1.7.3"
+xxhash = "^3.2.0"
+tiktoken = "^0.1.2"
+sentence-transformers = "^2.2.2"
 
 
 [tool.poetry.group.dev.dependencies]

@@ -12,4 +12,7 @@ node_modules
 
 snowflake.sql
 snowflake.json
-/lib/__pycache__
+__pycache__
+python/indexes
+
+.DS_Store
