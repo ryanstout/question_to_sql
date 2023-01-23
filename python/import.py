@@ -11,8 +11,8 @@ from prisma.models import User, DataSource, Business, DataSourceTableDescription
 from prisma.enums import DataSourceType
 import json
 
-from embeddings.embedding_builder import EmbeddingBuilder
-from utils.connections import Connections
+from python.embeddings.embedding_builder import EmbeddingBuilder
+from python.utils.connections import Connections
 
 
 class Import():

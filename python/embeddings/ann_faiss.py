@@ -63,8 +63,10 @@ class AnnFaiss():
 
     def query(self, query, number_of_matches):
         t1 = time.time()
+        print("Q: ", query.shape)
         query = np.expand_dims(query, axis=0)
-        faiss.normalize_L2(query)
+        if (query.shape[0] > 1):
+            faiss.normalize_L2(query)
         scores, indexes = self.index.search(query, number_of_matches)
         t2 = time.time()
         print("Query NN in: ", indexes.shape, ' in ',

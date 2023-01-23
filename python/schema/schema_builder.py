@@ -23,7 +23,7 @@ class SchemaBuilder:
 
 
 if __name__ == "__main__":
-    from utils.connections import Connections
+    from python.utils.connections import Connections
 
     connections = Connections()
     connections.open()

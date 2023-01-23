@@ -7,14 +7,19 @@ class MSMarcoEmbeddings:
     def __init__(self):
         device = 'cpu'
         # device = 'mps'  # Move to M1 Mac GPU
+
         self.model = SentenceTransformer(
             # 'msmarco-distilbert-base-v4',
             # 'all-MiniLM-L6-v2',
             'all-mpnet-base-v2',  # dot-score, Large model, good for semantic search
+            # 'msmarco-distilbert-base-tas-b', # dot product
             device=device
         )  # use cosine
-        # model = SentenceTransformer('msmarco-distilbert-base-tas-b') # use dot product
 
+    def encode(self, content: str):
+        return self.model.encode(content)
+
+    def test(self):
         # t1 = time.time()
         # for i in range(100):
         #     a1 = self.model.encode([
@@ -41,4 +46,4 @@ class MSMarcoEmbeddings:
 
 
 if __name__ == "__main__":
-    MSMarcoEmbeddings()
+    MSMarcoEmbeddings().test()
