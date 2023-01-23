@@ -1,28 +1,51 @@
 # What do we need to run a query on the shopify?
 
+Goal: EOD Monday
+
 - [x] Test schema
       [x] Filter airbyte stuff using hacky script
-- [ ] Python Indexing Script
-  - [ ] [mbianco] Snowflake connection
-  - [ ] [mbianco] Finalize prisma models
-  - [ ] [mbianco] Prisma models in python
-  - [ ] [mbianco] Snowflake > prisma model dump
-  - [ ] ML stuff
+- [ ] Real shopify data
+  - [ ] Pull from fivetran
+- [x] Python Indexing Script
+  - [x] [mbianco] Snowflake connection
+  - [x] [mbianco] Finalize prisma models
+  - [x] [ryan] Table indexing
 - [ ] Python Query
   - [ ] Endpoint for accepting natural language query
-  - [ ] Doing face search / table filtering
-- [ ] [mbianco] Snowflake connection connected to user
-- Maybe SQL transforms from OpenAI? We'll need to derisk this
+  - [ ] Manually whitelist order tables
+  - [ ] Integration with TS side
+
+# What do we need to iterate on the ranking?
+
+Goal: EOD Tuesday
+
+- [ ] [mbianco] Live Integration Tests
+  - [ ] Manually run script
+  - [ ] Agnostic to result data
+- [ ] [ryan] Python Indexing Script
+  - [ ] Question > Ranking data structure
+- [ ] [mbianco] Python Query Improvements
+  - [ ] Input ranked dict, iteratively compute the output schema
+  - [ ] Maybe SQL transforms from OpenAI
 
 # What do we need so daniel can run a query?
 
-- Deploy
-- User login tied to data source
+- [ ] [kai] User login tied to data source
+- [ ] [kai] MVP UI
+- [ ] [mbianco] Deploy
+  - [ ] Docker Build
+  - [ ] File system access
+  - [ ] Postgres
+  - [ ] TBD embedding, if openai embeddings aren't good enough
 
-# What do we need so daniel & JP can run a query?
+# What do we need so daniel & spectora can run a query?
+
+- [ ] Snowflake connection for Spectora
+  - [ ] Run import script and fix new bugs
 
 # What do we need to improve the query creator?
 
+- [ ] Logging
 - Dynamic test schema generation with column hints
 - Training data for fine tuning & one-shot learning
 - Maybe vector search for column names?
