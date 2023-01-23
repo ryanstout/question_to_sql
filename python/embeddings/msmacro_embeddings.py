@@ -5,75 +5,39 @@ import torch
 
 class MSMarcoEmbeddings:
     def __init__(self):
+        device = 'cpu'
+        # device = 'mps'  # Move to M1 Mac GPU
         self.model = SentenceTransformer(
-            'msmarco-distilbert-base-v4')  # use cosine
+            # 'msmarco-distilbert-base-v4',
+            # 'all-MiniLM-L6-v2',
+            'all-mpnet-base-v2',  # dot-score, Large model, good for semantic search
+            device=device
+        )  # use cosine
         # model = SentenceTransformer('msmarco-distilbert-base-tas-b') # use dot product
 
-        # Move to M1 Mac GPU
-        # self.model.to(torch.device('mps'))
-        # query_embedding = model.encode(
-        #     'How many orders are there from Montana')
-        t1 = time.time()
-        for i in range(100):
-            a1 = self.model.encode([
-                'Alabama',
-                'Alaska',
-                'Arizona',
-                'Arkansas',
-                'California',
-                'Colorado',
-                'Connecticut',
-                'Delaware',
-                'Florida',
-                'Georgia',
-                'Hawaii',
-                'Idaho',
-                'IllinoisIndiana',
-                'Iowa',
-                'Kansas',
-                'Kentucky',
-                'Louisiana',
-                'Maine',
-                'Maryland',
-                'Massachusetts',
-                'Michigan',
-                'Minnesota',
-                'Mississippi',
-                'Missouri',
-                'MontanaNebraska',
-                'Nevada',
-                'New Hampshire',
-                'New Jersey',
-                'New Mexico',
-                'New York',
-                'North Carolina',
-                'North Dakota',
-                'Ohio',
-                'Oklahoma',
-                'Oregon',
-                'PennsylvaniaRhode Island',
-                'South Carolina',
-                'South Dakota',
-                'Tennessee',
-                'Texas',
-                'Utah',
-                'Vermont',
-                'Virginia',
-                'Washington',
-                'West Virginia',
-                'Wisconsin',
-                'Wyoming'
-            ])
-        t2 = time.time()
-        print(a1.shape, t2-t1)
-        # a2 = model.encode('STATE Nevada')
-        # a3 = model.encode('A blog title')
-        # a4 = model.encode('create table Order')
+        # t1 = time.time()
+        # for i in range(100):
+        #     a1 = self.model.encode([
+        #         'How many orders are there from Montana?',
+        #         'When was the first order placed?',
+        #     ], device=device, batch_size=50)
+        # t2 = time.time()
+        # print(a1.shape, t2-t1)
+        a2 = self.model.encode('Nevada, Illinois, California, Texas, Florida')
+        a3 = self.model.encode(
+            'Milk, Yogurt, Eggs, Cheese, Ham, More, Things, To, Fill, Up, List')
+        a4 = self.model.encode('STATE: Montana')
+
+        e1 = self.model.encode('How many orders are there from Montana?')
+
+        print("Similarity:", util.dot_score(e1, a2))
+        print("Similarity:", util.dot_score(e1, a3))
+        print("Similarity:", util.dot_score(e1, a4))
 
         # print("Similarity:", util.cos_sim(query_embedding, a1))
-        # print("Similarity:", util.cos_sim(query_embedding, a2))
-        # print("Similarity:", util.cos_sim(query_embedding, a3))
-        # print("Similarity:", util.cos_sim(query_embedding, a4))
+        # print("Similarity:", util.cos_sim(e1, a2))
+        # print("Similarity:", util.cos_sim(e1, a3))
+        # print("Similarity:", util.cos_sim(e1, a4))
 
 
 if __name__ == "__main__":
