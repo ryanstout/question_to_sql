@@ -9,4 +9,6 @@ class AnnSearch:
 
     def search(self, embedding, number_of_matches):
         result = self.index.query(embedding, number_of_matches)
+
+        result = [i for i in result if i != -1]
         print(result)
