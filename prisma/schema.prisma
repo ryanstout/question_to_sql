@@ -47,14 +47,23 @@ model QuestionGroup {
   Question Question[]
 }
 
+enum FeedbackState {
+  UNKNOWN
+  CORRECT
+  INCORRECT
+}
+
 // TODO should have openai state, since it can fail on that end
 model Question {
   id       Int    @id @default(autoincrement())
   question String
 
-  userSql      String // the query, starts with the codex model output, then can be updated by the user
-  codexSql     String // the original query generated from openai
-  correctState Int? // null, not set, 0 = incorrect, 1 = correct
+  userSql  String // the query, starts with the codex model output, then can be updated by the user
+  codexSql String // the original query generated from openai
+
+  // should be unset initially, and result is only stored if the
+  feedbackState FeedbackState
+  resultData    Json?
 
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId Int
@@ -160,7 +169,7 @@ model DataSourceTableColumn {
   embeddingLinks EmbeddingLink[]
 }
 
-// When we query the embeddings stored in a Faiss index, the result is a list 
+// When we query the embeddings stored in a Faiss index, the result is a list
 // of indexes into this table. This table points to the table and/or column.
 // NULL's are used if it only points to one or the other.
 model EmbeddingLink {
@@ -184,7 +193,7 @@ model EmbeddingLink {
   // Store a copy (for now) of the cell value so we can construct the Value Hints
   value String?
 
-  // When rebuilding, we'll want to look up 
+  // When rebuilding, we'll want to look up
   @@index([contentHash, tableId, columnId])
   // The main way we do lookups (from faiss index)
   @@index([indexNumber, indexOffset])
