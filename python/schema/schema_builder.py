@@ -14,9 +14,11 @@ class SchemaBuilder:
         self.output = []
 
         # Loop through each table in the datasource
-        tables = self.db.datasourcetabledescription.find_many({
-            'dataSourceId': datasource.id,
-        })
+        tables = self.db.datasourcetabledescription.find_many(
+            {
+                "dataSourceId": datasource.id,
+            }
+        )
 
         for table in tables:
             pass

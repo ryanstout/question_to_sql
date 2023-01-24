@@ -20,15 +20,17 @@ class AnnIndex:
         embedding = Embedding(self.db, content)
 
         # Create a EmbeddingLink
-        embedding_link = self.db.embeddinglink.create(data={
-            'dataSourceId': datasource_id,
-            'indexNumber': self.index_number,
-            'indexOffset': self.index_offset,
-            'contentHash': embedding.content_hash,
-            'tableId': table_id,
-            'columnId': column_id,
-            'value': value
-        })
+        embedding_link = self.db.embeddinglink.create(
+            data={
+                "dataSourceId": datasource_id,
+                "indexNumber": self.index_number,
+                "indexOffset": self.index_offset,
+                "contentHash": embedding.content_hash,
+                "tableId": table_id,
+                "columnId": column_id,
+                "value": value,
+            }
+        )
 
         self.embeddings.append(embedding.embedding_numpy)
 

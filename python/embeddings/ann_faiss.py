@@ -4,7 +4,7 @@ import time
 import faiss
 
 
-class AnnFaiss():
+class AnnFaiss:
     def build_and_save(self, data, output_path, dimensions=1536):
         t1 = time.time()
 
@@ -29,8 +29,7 @@ class AnnFaiss():
             self.index = faiss.IndexFlatIP(dimensions)
         else:
             quantizer = faiss.IndexFlatL2(dimensions)
-            self.index = faiss.IndexIVFFlat(
-                quantizer, dimensions, min(1000, rows), faiss.METRIC_INNER_PRODUCT)
+            self.index = faiss.IndexIVFFlat(quantizer, dimensions, min(1000, rows), faiss.METRIC_INNER_PRODUCT)
             self.index.nprobe = 10
 
         # nlist = 20
@@ -45,13 +44,13 @@ class AnnFaiss():
         print("Building index...")
         self.index.add(data)
 
-        faiss.write_index(self.index, output_path + '.faiss')
+        faiss.write_index(self.index, output_path + ".faiss")
 
         t2 = time.time()
         print("Built Faiss in ", t2 - t1, " secs")
 
     def load(self, faiss_path, nprobe=15):
-        self.index = faiss.read_index(faiss_path + '.faiss')
+        self.index = faiss.read_index(faiss_path + ".faiss")
 
         # Set how many lists to look for NN in
         self.index.nprobe = nprobe
@@ -65,11 +64,10 @@ class AnnFaiss():
         t1 = time.time()
         print("Q: ", query.shape)
         query = np.expand_dims(query, axis=0)
-        if (query.shape[0] > 1):
+        if query.shape[0] > 1:
             faiss.normalize_L2(query)
         scores, indexes = self.index.search(query, number_of_matches)
         t2 = time.time()
-        print("Query NN in: ", indexes.shape, ' in ',
-              t2 - t1, ' (nprobe ', self.nprobe, ')')
+        print("Query NN in: ", indexes.shape, " in ", t2 - t1, " (nprobe ", self.nprobe, ")")
 
         return scores, indexes[0]

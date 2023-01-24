@@ -14,18 +14,20 @@ class AnnSearch:
         self.datasource_id = datasource_id
 
     def lookup_link(self, link_id: int):
-        link = self.db.embeddinglink.find_first(where={
-            'dataSourceId': int(self.datasource_id),
-            'indexNumber': self.index_number,
-            'indexOffset': int(link_id),
-        })
+        link = self.db.embeddinglink.find_first(
+            where={
+                "dataSourceId": int(self.datasource_id),
+                "indexNumber": self.index_number,
+                "indexOffset": int(link_id),
+            }
+        )
 
         return [link.tableId, link.columnId, link.value]
 
     def search(self, embedding, number_of_matches):
         scores, results = self.index.query(embedding, number_of_matches)
 
-        reject_idxs = (results == -1)
+        reject_idxs = results == -1
         scores = np.delete(scores, reject_idxs, axis=1)
         results = np.delete(results, reject_idxs)
 

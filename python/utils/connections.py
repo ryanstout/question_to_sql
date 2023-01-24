@@ -12,9 +12,9 @@ class Connections:
         # TODO this will need to be pulled from the datasource
         self.snowflake_connection = snowflake.connector.connect(
             # pull these from the environment
-            user=config('SNOWFLAKE_USERNAME'),
-            password=config('SNOWFLAKE_PASSWORD'),
-            account=config('SNOWFLAKE_ACCOUNT'),
+            user=config("SNOWFLAKE_USERNAME"),
+            password=config("SNOWFLAKE_PASSWORD"),
+            account=config("SNOWFLAKE_ACCOUNT"),
         )
 
     def snowflake_cursor(self):

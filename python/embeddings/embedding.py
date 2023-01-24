@@ -11,6 +11,7 @@ from prisma import Base64
 from python.embeddings.openai_embeddings import OpenAIEmbeddings
 
 
+# create embeddings vector via openai from a string
 class Embedding:
     def __init__(self, db, content, embedder=OpenAIEmbeddings, cache_results=True):
         self.embedder = embedder
@@ -21,16 +22,14 @@ class Embedding:
 
         if cache_results:
             # Check if the embedding is already in the embedding cache
-            embedding = db.embeddingcache.find_first(
-                where={'contentHash': hash})
+            embedding = db.embeddingcache.find_first(where={"contentHash": hash})
 
             if embedding:
                 # Prisma requires things go through base64 to a Bytes (Blob) field. Because reasons?
                 emb_load = io.BytesIO(Base64.decode(embedding.embedding))
                 emb_load.seek(0)
 
-                self.embedding_numpy = np.load(
-                    emb_load, allow_pickle=True)['x']
+                self.embedding_numpy = np.load(emb_load, allow_pickle=True)["x"]
                 self.content_hash = embedding.contentHash
                 return None
 
@@ -43,11 +42,13 @@ class Embedding:
         emb_bytes = emb_str.getvalue()
 
         # Cache the embedding
-        db.embeddingcache.create(data={
-            'contentHash': hash,
-            # why prisma won't let me pass in bytes is beyond me
-            'embedding': Base64.encode(emb_bytes)
-        })
+        db.embeddingcache.create(
+            data={
+                "contentHash": hash,
+                # why prisma won't let me pass in bytes is beyond me
+                "embedding": Base64.encode(emb_bytes),
+            }
+        )
 
         self.embedding_numpy = embedding
         self.content_hash = hash
@@ -60,6 +61,7 @@ class Embedding:
 
 if __name__ == "__main__":
     from prisma import Prisma
+
     db = Prisma()
     db.connect()
     e = Embedding(db, "hello world")
