@@ -20,6 +20,13 @@ Generate the python and ts schemas with:
 
 python -m python.import {user_id}
 
+```shell
+poetry run python python/import.py \
+  --user-id=1 \
+  --database-name=FIVETRAN_DATABASE \
+  --table-limit=1 --column-limit=1 --column-value-limit=1
+```
+
 # Schemas [WIP]
 
 Place your test database in a local postgres (currenthly hardcoded to db name of witharsenal_prod_copy)
