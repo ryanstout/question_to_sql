@@ -1,4 +1,12 @@
-import { HeaderMenu } from "./headerMenu"
+
+import {
+  AppShell
+} 
+from "@mantine/core"
+
+import { HeaderMenu } from "../components/dashboard/headerMenu"
+import Search from "../components/dashboard/search"
+import AppFooter  from "../components/dashboard/footer"
 import { useState } from "react"
 
 import { Link } from "@remix-run/react"
@@ -9,13 +17,16 @@ export default function Index() {
   const user = useOptionalUser()
   const [question, setQuestion] = useState("")
 
-  console.log("user: ", user)
+  
   return (
-    <>
+    <AppShell
+      footer={
+        <AppFooter/>
+      }
+    >
       <HeaderMenu user={user} />
-      <main>
-        <Link to="/query">Get Started</Link>
-      </main>
-    </>
+      <Search/>
+        
+    </AppShell>
   )
 }
