@@ -43,7 +43,7 @@ import {
   EnhanceSqlQuery,
   GenerateSqlQuery,
 } from "~/models/language_model/query_generator.server"
-import { Footer } from "~/routes/footer"
+import { Footer } from "~/components/admin/footer"
 import { requireUserId } from "~/session.server"
 
 type QuestionInBrowser = Pick<

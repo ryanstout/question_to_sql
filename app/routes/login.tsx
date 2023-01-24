@@ -9,9 +9,12 @@ import { withZod } from "@remix-validated-form/with-zod"
 import {
   Anchor,
   Button,
+  Center,
   Checkbox,
   Container,
+  Grid,
   Group,
+  Image,
   Paper,
   PasswordInput,
   Text,
@@ -23,6 +26,8 @@ import { Field } from "~/components/field"
 import { prisma } from "~/db.server"
 import { verifyLogin } from "~/models/user.server"
 import { createUserSession, getUserId } from "~/session.server"
+
+import Logo from "../assets/images/LogoVertical.svg"
 
 export async function loader({ request }: LoaderArgs) {
   const userId = await getUserId(request)
@@ -101,30 +106,24 @@ export default function LoginPage() {
           fontWeight: 900,
         })}
       >
-        Welcome back!
+        
       </Title>
-      <Text color="dimmed" size="sm" align="center" mt={5}>
-        Do not have an account yet?{" "}
-        <Text component={Link} to="/signup" size="sm">
-          Create account
-        </Text>
-      </Text>
+
 
       <Paper withBorder shadow="md" p={30} mt={30} radius="md">
+        <Image width="70%" style={{marginLeft: "25%"}} px={1} py={1} src={Logo} />
         <ValidatedForm validator={validator} method="post" action="/login">
           <input type="hidden" name="redirectTo" value={redirectTo} />
           <Field
             component={TextInput}
             name="email"
             label="Email"
-            placeholder="you@mantine.dev"
             required
           />
           <Field
             component={PasswordInput}
             name="password"
             label="Password"
-            placeholder="Your password"
             required
             mt="md"
           />
@@ -134,15 +133,8 @@ export default function LoginPage() {
               label="Remember me"
               sx={{ lineHeight: 1 }}
             />
-            <Anchor<"a">
-              onClick={(event) => event.preventDefault()}
-              href="#"
-              size="sm"
-            >
-              Forgot password?
-            </Anchor>
           </Group>
-          <Button type="submit" fullWidth mt="xl">
+          <Button type="submit" fullWidth mt="xl" color="violet.7">
             Sign in
           </Button>
         </ValidatedForm>
