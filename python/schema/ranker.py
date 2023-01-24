@@ -25,26 +25,26 @@ class Ranker:
 
         # Load the faiss indexes
         self.idx_table_names = AnnSearch(
-            db, datasource_id, 0, 'python/indexes/table_names')
+            db, datasource_id, 0, f"python/indexes/{datasource.id}/table_names")
         self.idx_column_names = AnnSearch(
-            db, datasource_id, 1, 'python/indexes/column_names')
-        # self.idx_table_and_column_names = AnnSearch(db,
-        #     3, 'python/indexes/table_and_column_names')
+            db, datasource_id, 1, f"python/indexes/{datasource.id}/column_names")
+        self.idx_table_and_column_names = AnnSearch(
+            db, datasource_id, 3, f"python/indexes/{datasource.id}/table_and_column_names")
 
-        # # Table and Columns indexes
-        # self.idx_table_and_column_names_and_values = AnnSearch(db,
-        #     4, 'python/indexes/table_and_column_names_and_values')
-        # self.idx_column_name_and_all_column_values = AnnSearch(db,
-        #     5, 'python/indexes/column_name_and_all_column_values')
+        # Table and Columns indexes
+        # self.idx_table_and_column_names_and_values = AnnSearch(
+        #     db, datasource_id, 4, f"python/indexes/{datasource.id}/table_and_column_names_and_values")
+        self.idx_column_name_and_all_column_values = AnnSearch(
+            db, datasource_id, 5, f"python/indexes/{datasource.id}/column_name_and_all_column_values")
 
     def rank(self, query: str, embedder=OpenAIEmbeddings, cache_results=True):
         query_embedding = Embedding(
             self.db, query, embedder=embedder, cache_results=cache_results).embedding_numpy
 
         # Fetch ranked table id
-        results = self.idx_table_names.search(query_embedding, 1000)
-
-        print(results)
+        scores_and_tables = self.idx_table_names.search(query_embedding, 1000)
+        scores_and_tables_with_columns = self.idx_column_names.search(
+            query_embedding, 1000)
 
 
 if __name__ == '__main__':

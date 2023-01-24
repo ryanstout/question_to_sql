@@ -33,20 +33,21 @@ class EmbeddingBuilder:
 
         # Table indexes
         self.idx_table_names = AnnIndex(
-            self.db, 0, 'python/indexes/table_names')
+            self.db, 0, f"python/indexes/{datasource.id}/table_names")
         self.idx_column_names = AnnIndex(
-            self.db, 1, 'python/indexes/column_names')
+            self.db, 1, f"python/indexes/{datasource.id}/column_names")
         self.idx_table_and_column_names = AnnIndex(
-            self.db, 3, 'python/indexes/table_and_column_names')
+            self.db, 3, f"python/indexes/{datasource.id}/table_and_column_names")
 
         # Table and Columns indexes
         self.idx_table_and_column_names_and_values = AnnIndex(
-            self.db, 4, 'python/indexes/table_and_column_names_and_values')
+            self.db, 4, f"python/indexes/{datasource.id}/table_and_column_names_and_values")
         self.idx_column_name_and_all_column_values = AnnIndex(
-            self.db, 5, 'python/indexes/column_name_and_all_column_values')
+            self.db, 5, f"python/indexes/{datasource.id}/column_name_and_all_column_values")
 
         # Cell Values
-        self.idx_values = AnnIndex(self.db, 2, 'python/indexes/values')
+        self.idx_values = AnnIndex(
+            self.db, 2, f"python/indexes/{datasource.id}/values")
 
         # Temp store for all short string values in a table
         # TODO: this will blow up on huge tables

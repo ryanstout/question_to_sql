@@ -72,4 +72,4 @@ class AnnFaiss():
         print("Query NN in: ", indexes.shape, ' in ',
               t2 - t1, ' (nprobe ', self.nprobe, ')')
 
-        return indexes[0]
+        return scores, indexes[0]

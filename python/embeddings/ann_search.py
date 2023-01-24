@@ -1,5 +1,6 @@
 from python.embeddings.ann_faiss import AnnFaiss
 from python.embeddings.embedding import Embedding
+import numpy as np
 
 
 class AnnSearch:
@@ -19,14 +20,18 @@ class AnnSearch:
             'indexOffset': int(link_id),
         })
 
-        print("LINK: ", link)
         return [link.tableId, link.columnId, link.value]
 
     def search(self, embedding, number_of_matches):
-        results = self.index.query(embedding, number_of_matches)
+        scores, results = self.index.query(embedding, number_of_matches)
 
-        results = [i for i in results if i != -1]
+        reject_idxs = (results == -1)
+        scores = np.delete(scores, reject_idxs, axis=1)
+        results = np.delete(results, reject_idxs)
 
-        # map in tables, coulmns, values
-        results = map(self.lookup_link, results)
-        print(list(results))
+        scores_results = []
+        for (score, idx) in zip(scores.tolist()[0], results.tolist()):
+            if idx != -1:
+                scores_results.append((score, self.lookup_link(idx)))
+
+        return scores_results
