@@ -14,6 +14,7 @@ class ElementRank(t.TypedDict):
     table_id: int
     column_id: t.Union[int, None]
     value_hint: t.Union[str, None]
+    score: float
 
 
 # note that in a ranking type list, you could have multiple ranking types with the same
@@ -40,9 +41,9 @@ class Ranker:
         # Cell values
         self.idx_values = AnnSearch(self.db, datasource_id, 2, f"python/indexes/{datasource.id}/values")
 
-    def rank(self, query: str, embedder=OpenAIEmbeddings, cache_results=True, weights=[1.0, 1.0, 1.0, 1.0, 1.0]) -> SCHEMA_RANKING_TYPE:
-
-        rankings = {}
+    def rank(
+        self, query: str, embedder=OpenAIEmbeddings, cache_results=True, table_weights=[1.0, 1.0, 1.0], column_weights=[1.0, 1.0, 1.0]
+    ) -> SCHEMA_RANKING_TYPE:
 
         query_embedding = Embedding(self.db, query, embedder=embedder, cache_results=cache_results).embedding_numpy
 
@@ -50,43 +51,22 @@ class Ranker:
         table_matches = self.idx_table_names.search(query_embedding, 1000)
         tables_with_columns_matches = self.idx_column_names.search(query_embedding, 1000)
 
-        tables = self.merge_ranks([table_matches, tables_with_columns_matches], weights[:2], 0)
-
-        for table_id in self.pull_assoc(tables, 0):
-            rankings[table_id] = {}
-
         columns_matches = self.idx_column_names.search(query_embedding, 100000)
         column_name_and_all_column_values_matches = self.idx_column_name_and_all_column_values.search(query_embedding, 100000)
 
-        columns = self.merge_ranks([columns_matches, column_name_and_all_column_values_matches], weights[2:4], 1)
-
-        # Assign the column ids
-        for column in columns:
-            column_table_id = column[1][0]
-            if column_table_id in rankings:
-                # Because of limits, we need to make sure the table is there
-                if column_table_id not in rankings:
-                    rankings[column_table_id] = {}
-
-                column_id = column[1][1]
-                rankings[column_table_id][column_id] = []
-
-        # Get values from indexes
         value_matches = self.idx_values.search(query_embedding, 10000)
 
-        # Assign the value matches for each associated column
-        for value_match in value_matches:
-            table_id, column_id, value = value_match[1]
+        tables = self.merge_ranks([table_matches, tables_with_columns_matches, value_matches], table_weights, 0)
+        columns = self.merge_ranks([columns_matches, column_name_and_all_column_values_matches, value_matches], column_weights, 1)
 
-            # Because of rankings, the first time we see the table or column
-            # might be in the value search
-            if table_id not in rankings:
-                rankings[table_id] = {}
-            if column_id not in rankings[table_id]:
-                rankings[table_id][column_id] = []
-            rankings[table_id][column_id].append(value)
+        rankings = list(
+            map(lambda x: ElementRank(table_id=x[1][0], column_id=x[1][1], value_hint=x[1][2], score=x[0]), tables + columns + value_matches)
+        )
 
-        print("tables: ", rankings)
+        # Sort rankings by score
+        rankings.sort(key=lambda x: x["score"], reverse=True)
+
+        return rankings
 
     def merge_ranks(self, scores_and_associations, weights, remove_dups_idx=None):
         # Merge the output of multiple AnnSearch#search's via the passed in
