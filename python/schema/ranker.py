@@ -13,10 +13,15 @@
 #     # ...
 # }
 
-from python.embeddings.ann_search import AnnSearch
-from python.embeddings.openai_embeddings import OpenAIEmbeddings
-from python.embeddings.embedding import Embedding
+import typing as t
+
 import numpy as np
+
+from python.embeddings.ann_search import AnnSearch
+from python.embeddings.embedding import Embedding
+from python.embeddings.openai_embeddings import OpenAIEmbeddings
+
+SCHEMA_RANKING_TYPE = t.Dict[int, t.Dict[int, t.List[str]]]
 
 
 class Ranker:
