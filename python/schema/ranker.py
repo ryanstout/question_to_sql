@@ -22,7 +22,14 @@ from python.embeddings.ann_search import AnnSearch
 from python.embeddings.embedding import Embedding
 from python.embeddings.openai_embeddings import OpenAIEmbeddings
 
-SCHEMA_RANKING_TYPE = t.Dict[int, t.Dict[int, t.List[str]]]
+
+class ElementRank(t.TypedDict):
+    table_id: int
+    column_id: t.Union[int, None]
+    value_hint: t.Union[str, None]
+
+
+SCHEMA_RANKING_TYPE = t.List[ElementRank]
 
 
 class Ranker:
