@@ -40,7 +40,7 @@ class Ranker:
         # Cell values
         self.idx_values = AnnSearch(self.db, datasource_id, 2, f"python/indexes/{datasource.id}/values")
 
-    def rank(self, query: str, embedder=OpenAIEmbeddings, cache_results=True, weights=[1.0, 1.0, 1.0, 1.0, 1.0]):
+    def rank(self, query: str, embedder=OpenAIEmbeddings, cache_results=True, weights=[1.0, 1.0, 1.0, 1.0, 1.0]) -> SCHEMA_RANKING_TYPE:
 
         rankings = {}
 
