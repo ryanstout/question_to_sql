@@ -48,6 +48,7 @@ model QuestionGroup {
 }
 
 enum FeedbackState {
+  UNANSWERED
   UNKNOWN
   CORRECT
   INCORRECT
