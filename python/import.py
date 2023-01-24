@@ -1,27 +1,35 @@
 # make pythonpath the upper directory relative to the location of this file
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Imports the schema and metadata from the snowflake database to the
 # local database.
 
-from multiprocessing.pool import ThreadPool
+import json
 import re
-from snowflake.connector.cursor import DictCursor
+import sys
+from multiprocessing.pool import ThreadPool
+
+import click
 import snowflake.connector
 from decouple import config
-import sys
-from prisma import Prisma
-from prisma.models import User, DataSource, Business, DataSourceTableDescription, DataSourceTableColumn
 from prisma.enums import DataSourceType
-import json
+from prisma.models import (
+    Business,
+    DataSource,
+    DataSourceTableColumn,
+    DataSourceTableDescription,
+    User,
+)
+from snowflake.connector.cursor import DictCursor
 
+import python.utils.sql as sql
+from prisma import Prisma
 from python.embeddings.embedding_builder import EmbeddingBuilder
 from python.utils.connections import Connections
 from python.utils.logging import log
-import python.utils.sql as sql
 
 SKIP_COLUMNS = [
     # fivetran columns
@@ -234,9 +242,6 @@ class Import:
                 "type": DataSourceType.SNOWFLAKE,
             }
         )
-
-
-import click
 
 
 @click.command()
