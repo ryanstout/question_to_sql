@@ -13,7 +13,11 @@
 #     # ...
 # }
 
+<<<<<<< HEAD
 import typing as t
+=======
+import sys
+>>>>>>> c236dbe (Move test question to argv for ranker)
 
 import numpy as np
 
@@ -129,4 +133,6 @@ if __name__ == "__main__":
 
     datasource = connections.db.datasource.find_first()
 
-    Ranker(connections.db, datasource.id).rank("how many orders from Montana?")
+    question = sys.argv[1]
+
+    Ranker(connections.db, datasource.id).rank(question)
