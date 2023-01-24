@@ -1,5 +1,6 @@
 # Called from import.py, builds and updates the embedding indexes
 
+from multiprocessing.pool import ThreadPool
 import re
 from prisma.models import User, DataSource, Business, DataSourceTableDescription, DataSourceTableColumn
 import collections
@@ -86,7 +87,14 @@ class EmbeddingBuilder:
 
         columns = all_columns[0:column_limit]
 
+        column_add_pool = ThreadPool(processes=20)
+
+        # not all column names will be included in the index, depending on the token size
         column_names = []
+
+        # run all of the embedding results async and wait for them all to complete
+        column_add_results = []
+
         for column in columns:
             # TODO we should be doing upsert instead
             self.db.embeddinglink.delete_many(
@@ -102,9 +110,20 @@ class EmbeddingBuilder:
             #      but long term, we'd want a more complex heuristic
             # Add cell values (requires a full scan of each table)
             if column.distinctRows < column_value_limit:
-                self.add_table_column_values(table, column, column_value_limit=column_value_limit)
+                column_add_results.append(
+                    column_add_pool.apply_async(self.add_table_column_values, (table, column, column_value_limit))
+                )
+                # self.add_table_column_values(table, column, column_value_limit=column_value_limit)
             else:
                 log.debug("not indexing column, too many values", column_name=column.name, distinct_rows=column.distinctRows)
+
+        log.debug("waiting for async results")
+
+        # wait sync for all AsyncResults to complete
+        for result in column_add_results:
+            result.wait(60)
+
+        log.debug("async results complete", total=len(column_add_results), successful=len([r for r in column_add_results if r.successful()]))
 
         # Add table and column names as a single string (for table lookup)
         self.idx_table_and_column_names.add(
