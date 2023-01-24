@@ -67,7 +67,11 @@ class Ranker:
         for column in columns:
             column_table_id = column[1][0]
             if column_table_id in rankings:
-                rankings[column_table_id][column[1][1]] = []
+                # Because of limits, we need to make sure the table is there
+                if column_table_id not in rankings: rankings[column_table_id] = {}
+
+                column_id = column[1][1]
+                rankings[column_table_id][column_id] = []
 
         # Get values from indexes
         value_matches = self.idx_values.search(query_embedding, 10000)
@@ -75,6 +79,11 @@ class Ranker:
         # Assign the value matches for each associated column
         for value_match in value_matches:
             table_id, column_id, value = value_match[1]
+
+            # Because of rankings, the first time we see the table or column
+            # might be in the value search
+            if table_id not in rankings: rankings[table_id] = {}
+            if column_id not in rankings[table_id]: rankings[table_id][column_id] = []
             rankings[table_id][column_id].append(value)
 
         print("tables: ", rankings)
