@@ -26,6 +26,5 @@
     }
   },
   "python.linting.lintOnSave": true,
-  "python.sortImports.args": ["--settings-path", "${workspaceFolder}"],
   "python.formatting.provider": "black"
 }
