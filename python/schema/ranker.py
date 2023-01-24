@@ -108,4 +108,5 @@ if __name__ == "__main__":
 
     question = sys.argv[1]
 
-    Ranker(connections.db, datasource.id).rank(question)
+    ranks = Ranker(connections.db, datasource.id).rank(question)
+    print(ranks)
