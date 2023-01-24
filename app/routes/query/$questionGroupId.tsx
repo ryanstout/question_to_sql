@@ -2,6 +2,7 @@
 import { sql } from "@codemirror/lang-sql"
 import { EditorView } from "@codemirror/view"
 import type { Question } from "@prisma/client"
+import { FeedbackState } from "@prisma/client"
 import CodeMirror from "@uiw/react-codemirror"
 import beautify from "json-beautify"
 import { useEffect, useState } from "react"
@@ -47,7 +48,7 @@ import { requireUserId } from "~/session.server"
 
 type QuestionInBrowser = Pick<
   Question,
-  "id" | "question" | "questionGroupId" | "userSql" | "correctState"
+  "id" | "question" | "questionGroupId" | "userSql" | "feedbackState"
 >
 
 type LoaderData = {
@@ -107,6 +108,7 @@ async function findOrCreateQuestion(
         userId: userId,
         userSql: codexSql,
         codexSql: codexSql,
+        feedbackState: FeedbackState.UNANSWERED,
       },
     })
   }
@@ -118,7 +120,7 @@ async function findOrCreateQuestion(
       question: true,
       questionGroupId: true,
       userSql: true,
-      correctState: true,
+      feedbackState: true,
     },
     where: { questionGroupId: questionGroupId, userId: userId },
   })
@@ -196,9 +198,14 @@ export async function action({ request }: ActionArgs) {
       throw new Error("Unable to find question")
     }
 
-    const correctValue = action_name === "mark_correct" ? 1 : 0
+    const correctValue =
+      action_name === "mark_correct"
+        ? FeedbackState.CORRECT
+        : FeedbackState.INCORRECT
     await prisma.question.update({
-      data: { correctState: correctValue },
+      data: {
+        feedbackState: correctValue,
+      },
       where: { id: question.id },
     })
   } else {
@@ -426,7 +433,9 @@ function QueryHeader({ data }: { data: LoaderData }) {
                       value={questionGroupId}
                     />
                     <Button w="100%" type="submit" color="green">
-                      {currentQuestion?.correctState === 1 ? "✓" : ""}
+                      {currentQuestion?.feedbackState === FeedbackState.CORRECT
+                        ? "✓"
+                        : ""}
                       Mark Correct
                     </Button>
                   </Form>
@@ -444,7 +453,10 @@ function QueryHeader({ data }: { data: LoaderData }) {
                       value={questionGroupId}
                     />
                     <Button w="100%" type="submit" color="red">
-                      {currentQuestion?.correctState === 0 ? "✓" : ""}
+                      {currentQuestion?.feedbackState ===
+                      FeedbackState.INCORRECT
+                        ? "✓"
+                        : ""}
                       Mark Incorrect
                     </Button>
                   </Form>

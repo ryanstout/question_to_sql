@@ -32,6 +32,10 @@ export async function EnhanceSqlQuery(query: string): Promise<string> {
   })
 }
 
+async function sleep(duration: number) {
+  await new Promise((r) => setTimeout(r, duration))
+}
+
 export async function GenerateSqlQuery(query: string): Promise<string> {
   // return Promise.resolve("SELECT COUNT(*)\nFROM orders\nWHERE created_at >= '2019-12-01'\nAND created_at < '2020-01-01'\nAND pledge_level = 'Arsenal 2 Standard'")
 
@@ -46,9 +50,12 @@ export async function GenerateSqlQuery(query: string): Promise<string> {
   const t1 = new Date().getTime()
   let response
 
+  return "SELECT * FROM orders;"
+
   // TODO: exponential backoff
   for (let i = 0; i < 10; i++) {
     try {
+      console.log(prompt)
       response = await openai().createCompletion({
         model: "code-davinci-002",
         prompt: prompt,
@@ -70,6 +77,8 @@ export async function GenerateSqlQuery(query: string): Promise<string> {
           response.status,
           " trying again..."
         )
+
+        sleep(1000)
       } else {
         // Successful request, return
         console.log("SELECT " + response.data.choices[0].text + ";")
