@@ -1,3 +1,8 @@
+# make pythonpath the upper directory relative to the location of this file
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 # Imports the schema and metadata from the snowflake database to the
 # local database.
 
