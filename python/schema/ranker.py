@@ -13,11 +13,8 @@
 #     # ...
 # }
 
-<<<<<<< HEAD
-import typing as t
-=======
 import sys
->>>>>>> c236dbe (Move test question to argv for ranker)
+import typing as t
 
 import numpy as np
 
