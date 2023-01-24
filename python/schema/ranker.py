@@ -68,7 +68,8 @@ class Ranker:
             column_table_id = column[1][0]
             if column_table_id in rankings:
                 # Because of limits, we need to make sure the table is there
-                if column_table_id not in rankings: rankings[column_table_id] = {}
+                if column_table_id not in rankings:
+                    rankings[column_table_id] = {}
 
                 column_id = column[1][1]
                 rankings[column_table_id][column_id] = []
@@ -82,8 +83,10 @@ class Ranker:
 
             # Because of rankings, the first time we see the table or column
             # might be in the value search
-            if table_id not in rankings: rankings[table_id] = {}
-            if column_id not in rankings[table_id]: rankings[table_id][column_id] = []
+            if table_id not in rankings:
+                rankings[table_id] = {}
+            if column_id not in rankings[table_id]:
+                rankings[table_id][column_id] = []
             rankings[table_id][column_id].append(value)
 
         print("tables: ", rankings)
@@ -91,8 +94,6 @@ class Ranker:
     def merge_ranks(self, scores_and_associations, weights, remove_dups_idx=None):
         # Merge the output of multiple AnnSearch#search's via the passed in
         # weights
-        print(remove_dups_idx)
-
         merged = []
         for idx, scores_and_assocs in enumerate(scores_and_associations):
             for score_and_assoc in scores_and_assocs:
