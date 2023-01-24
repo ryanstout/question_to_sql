@@ -66,8 +66,6 @@ def question_with_schema_to_sql(schema: str, question: str) -> str:
         stop=[";", "\n\n"],
     )
 
-    breakpoint()
-
     result = t.cast(OpenAIResponse, result)
 
     if len(result.choices) > 1:
