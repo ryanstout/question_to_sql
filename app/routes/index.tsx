@@ -1,32 +1,37 @@
-
-import {
-  AppShell
-} 
-from "@mantine/core"
-
+import AppFooter from "../components/dashboard/footer"
 import { HeaderMenu } from "../components/dashboard/headerMenu"
-import Search from "~/routes/query/index"
-import AppFooter  from "../components/dashboard/footer"
 import { useState } from "react"
+import { z } from "zod"
+import { zx } from "zodix"
 
-import { Link } from "@remix-run/react"
+import { json } from "@remix-run/node"
+import type { ActionArgs } from "@remix-run/node"
+import { Link, Outlet, useActionData, useLocation } from "@remix-run/react"
 
+import { AppShell } from "@mantine/core"
+
+import Search from "~/components/dashboard/search"
+import { questionToSql } from "~/lib/question.server"
 import { useOptionalUser } from "~/utils"
+
+export const action = async ({ request }: ActionArgs) => {
+  const { q } = await zx.parseForm(request, {
+    q: z.string().optional(),
+  })
+
+  const sql = await questionToSql(q)
+
+  return json({ q, sql })
+}
 
 export default function Index() {
   const user = useOptionalUser()
-  const [question, setQuestion] = useState("")
+  const loader = useActionData()
 
-  
   return (
-    <AppShell
-      footer={
-        <AppFooter/>
-      }
-    >
+    <AppShell footer={<AppFooter />}>
       <HeaderMenu user={user} />
-      <Search/>
-        
+      <Search question={loader ? loader.q : ""} />
     </AppShell>
   )
 }
