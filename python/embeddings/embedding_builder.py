@@ -44,6 +44,8 @@ class EmbeddingBuilder:
 
         self.datasource = datasource
 
+        self.db.embeddinglink.delete_many(where={"dataSourceId": datasource.id})
+
         # See docs/prompt_embeddings.md for info on index types
 
         # Table indexes
@@ -69,7 +71,6 @@ class EmbeddingBuilder:
             raise Exception(f"Table {name} not found")
 
         # TODO we should be doing upsert instead
-        self.db.embeddinglink.delete_many(where={"tableId": table.id})
 
         self.idx_table_names.add(self.datasource.id, name, table.id, None, None)
 
@@ -89,7 +90,6 @@ class EmbeddingBuilder:
 
         for column in columns:
             # TODO we should be doing upsert instead
-            self.db.embeddinglink.delete_many(where={"columnId": column.id})
 
             column_names.append(column.name)
             # Add individual column names

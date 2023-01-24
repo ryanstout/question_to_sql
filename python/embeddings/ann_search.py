@@ -1,10 +1,12 @@
+import numpy as np
+
+from prisma import Prisma
 from python.embeddings.ann_faiss import AnnFaiss
 from python.embeddings.embedding import Embedding
-import numpy as np
 
 
 class AnnSearch:
-    def __init__(self, db, datasource_id: int, index_number: int, path: str):
+    def __init__(self, db: Prisma, datasource_id: int, index_number: int, path: str):
         self.index = AnnFaiss()
         self.index.load(path)
 
