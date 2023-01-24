@@ -1,60 +1,78 @@
-import { useState } from "react"
 import { z } from "zod"
 import { zx } from "zodix"
-
-import { ActionArgs, LoaderFunction, redirect } from "@remix-run/node"
-import { Form } from "@remix-run/react"
-
-import { Center, TextInput, Title } from "@mantine/core"
-
 import { prisma } from "~/db.server"
-import { HeaderMenu } from "~/routes/headerMenu"
-import { Hero } from "~/routes/hero"
-import { findOrCreateQuestionGroup } from "~/routes/query/$questionGroupId"
-import { requireUserId } from "~/session.server"
-import { useOptionalUser } from "~/utils"
+import { redirect, json } from "@remix-run/node"
+import { Form, useLoaderData, useLocation, useSearchParams } from "@remix-run/react"
 
-export async function action({ request }: ActionArgs) {
-  const userId = await requireUserId(request)
+import Search from "~/components/dashboard/search"
 
-  // TODO in what case would input query be optional?
-  const { q } = await zx.parseForm(request, {
-    q: z.string().optional(),
-  })
+import {
+  EnhanceSqlQuery,
+  GenerateSqlQuery
+} from "~/models/language_model/query_generator.server"
 
-  const questionGroup = await findOrCreateQuestionGroup(userId, null)
 
-  if (q) {
-    return redirect(
-      `/query/${questionGroup.id}/chart/raw?q=${encodeURIComponent(
-        q as string
-      )}`
-    )
-  } else {
-    return redirect(`/query/${questionGroup.id}/chart/raw`)
+export const loader = async () => {
+    console.log("HERE");
+    const location = useLocation()
+    let params = new URLSearchParams(location.search);
+    console.log("location", location);
+    console.log("PARAMS", params.getAll("id"));
+    return json({ ok: true });
+  };
+
+// export async function action({ request }: ActionArgs) {
+    
+//     const { questionText } = await zx.parseForm(request, {
+//         questionText: z.string().optional(),
+//     });
+
+//     let codexSql = await generateQuestionSQL(questionText || "");
+//     let question = await createQuestion(questionText || "", 1, codexSql, 1);
+
+//     if(question){
+//         return redirect(`/?id=${question.id}`)
+//     }
+//     else{
+//         return redirect('/')
+//     }
+//   }
+  
+  
+//   async function generateQuestionSQL(questionText: string){
+//     console.log(questionText);
+//     let codexSql = await GenerateSqlQuery(questionText)
+//     codexSql = await EnhanceSqlQuery(codexSql)
+//     return codexSql;
+//   }
+  
+//   async function createQuestion(
+//     questionText: string,
+//     questionGroupId: number,
+//     codexSql: string,
+//     userId?: number
+//   ) {
+  
+//     let question = await prisma.question.create({
+//       data: {
+//         question: questionText,
+//         userId: userId,
+//         questionGroupId: questionGroupId,
+//         userSql: codexSql,
+//         codexSql: codexSql,
+//         feedbackState: 'UNKNOWN'
+//       },
+//     })
+  
+//     return question
+//   }
+
+  export default function QuerySearch() {
+
+    const ok = useLoaderData();
+    console.log("LOGGING IN COMPONENT", ok);
+
+      return (
+        <Search/>
+      )
   }
-}
-
-export default function Index() {
-  // TODO we need to require user login at this stage
-  const user = useOptionalUser()
-  const [question, setQuestion] = useState("")
-
-  return (
-    <>
-      <main>
-        <Center sx={{ height: "100vh" }}>
-          {/* TODO I don't think we need an explicit action here? */}
-          <Form action="/query" method="post">
-            <Title>What would you like to know?</Title>
-            <TextInput
-              name="q"
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-            />
-          </Form>
-        </Center>
-      </main>
-    </>
-  )
-}

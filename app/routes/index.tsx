@@ -5,7 +5,7 @@ import {
 from "@mantine/core"
 
 import { HeaderMenu } from "../components/dashboard/headerMenu"
-import Search from "../components/dashboard/search"
+import Search from "~/routes/query/index"
 import AppFooter  from "../components/dashboard/footer"
 import { useState } from "react"
 
