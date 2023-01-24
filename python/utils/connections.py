@@ -1,7 +1,8 @@
-from prisma import Prisma
-from snowflake.connector.cursor import DictCursor
 import snowflake.connector
 from decouple import config
+from snowflake.connector.cursor import DictCursor
+
+from prisma import Prisma
 
 
 class Connections:
@@ -16,6 +17,8 @@ class Connections:
             password=config("SNOWFLAKE_PASSWORD"),
             account=config("SNOWFLAKE_ACCOUNT"),
         )
+
+        return self.db
 
     def snowflake_cursor(self):
         return self.snowflake_connection.cursor(cursor_class=DictCursor)
