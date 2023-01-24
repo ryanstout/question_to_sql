@@ -167,7 +167,8 @@ class EmbeddingBuilder:
                 log.debug("skipping embedding, not enough entropy", entropy=entropy)
                 continue
 
-            log.debug("adding embedding", column_name=column.name, entropy=entropy)
+            log.debug("adding embedding", table_name=table.fullyQualifiedName.split(".")[-1],
+                      column_name=column.name, entropy=entropy)
 
             # We have 5 different indexes we are building (tables, columns, column values, etc)
             # For larger indexes, we track shorter column values. Check out `docs/prompt_embeddings.md` for more
