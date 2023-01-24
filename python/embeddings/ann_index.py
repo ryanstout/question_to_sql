@@ -6,6 +6,7 @@ from python.embeddings.embedding import Embedding
 from python.embeddings.ann_faiss import AnnFaiss
 
 
+# ann = approximate nearest neighbor
 class AnnIndex:
     def __init__(self, db, index_number: int, path: str):
         self.path = path
@@ -15,6 +16,7 @@ class AnnIndex:
         self.embeddings = []
 
     def add(self, datasource_id: int, content: str, table_id: Union[int, None], column_id: Union[int, None], value: Union[str, None]):
+
         embedding = Embedding(self.db, content)
 
         # Create a EmbeddingLink

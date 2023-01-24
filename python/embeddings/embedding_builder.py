@@ -117,7 +117,7 @@ class EmbeddingBuilder:
 
     def add_table_column_values(self, table: DataSourceTableDescription, column: DataSourceTableColumn, column_value_limit: int):
         # only index string columns
-        if re.search("^VARCHAR", column.type):
+        if not re.search("^VARCHAR", column.type):
             log.debug("skipping embeddings for column, not varchar", column_name=column.name)
             return
 
@@ -137,7 +137,6 @@ class EmbeddingBuilder:
             value_str = value['VALUE']
 
             # TODO we could break the input into chunks and generate embedding for each chunk
-
             if not value_str or len(value_str) >= MAX_VALUE_LENGTH:
                 log.debug("skipping embedding, too long")
                 continue
