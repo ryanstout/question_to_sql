@@ -37,6 +37,10 @@ class Ranker:
         self.idx_column_name_and_all_column_values = AnnSearch(
             db, datasource_id, 5, f"python/indexes/{datasource.id}/column_name_and_all_column_values")
 
+        # Cell values
+        self.idx_values = AnnSearch(
+            self.db, datasource_id, 2, f"python/indexes/{datasource.id}/values")
+
     def rank(self, query: str, embedder=OpenAIEmbeddings, cache_results=True, weights=[1.0, 1.0, 1.0, 1.0, 1.0]):
 
         rankings = {}
@@ -72,6 +76,12 @@ class Ranker:
                 rankings[column_table_id][column[1][1]] = []
 
         # Get values from indexes
+        value_matches = self.idx_values.search(query_embedding, 10000)
+
+        # Assign the value matches for each associated column
+        for value_match in value_matches:
+            table_id, column_id, value = value_match[1]
+            rankings[table_id][column_id].append(value)
 
         print('tables: ', rankings)
 
