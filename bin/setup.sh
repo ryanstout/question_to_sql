@@ -34,7 +34,8 @@ pip install ipython ipdb pdbr ipython-autoimport rich docrepr colorama
 
 # you need python installed properly to generate the prisma bindings
 # for now, we are nuking the entire DB, will need to change this in the future
-psql --command="DROP DATABASE nlpquery"; \
+# TODO add IF TABLE EXISTS so it doesn't error out
+psql --command="DROP DATABASE nlpquery" && \
     # remove all of the existing migrations
     rm -rf prisma/migrations && \
     # make sure the prisma versions are correct! `prisma-client-py --version`
