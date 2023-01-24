@@ -1,16 +1,8 @@
-# make pythonpath the upper directory relative to the location of this file
-import os
-import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-# Imports the schema and metadata from the snowflake database to the
-# local database.
+from python.setup import log
 
 import faulthandler
 import json
 import re
-import sys
 from multiprocessing.pool import ThreadPool
 
 import click
@@ -32,9 +24,16 @@ from python.embeddings.embedding_builder import EmbeddingBuilder
 from python.utils.connections import Connections
 from python.utils.logging import log
 
+# Imports the schema and metadata from the snowflake database to the
+# local database.
+
+
 # Setup the fault handler so we can send SIGABRT and get a stack trace
 faulthandler.enable()
 
+
+# Imports the schema and metadata from the snowflake database to the
+# local database.
 
 SKIP_COLUMNS = [
     # fivetran columns

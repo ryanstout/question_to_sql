@@ -1,8 +1,6 @@
 import click
 
 from python.questions import question_with_data_source_to_sql
-from python.schema.ranker import Ranker
-from python.schema.schema_builder import SchemaBuilder
 
 # from python.setup import log
 

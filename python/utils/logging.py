@@ -10,6 +10,7 @@ install(show_locals=True)
 
 def setLevel(level):
     level = getattr(logging, level.upper())
+    # TODO add thread logging and customized format
     structlog.configure(
         # context_class enables thread-local logging to avoid passing a log instance around
         # https://www.structlog.org/en/21.1.0/thread-local.html
