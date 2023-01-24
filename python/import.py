@@ -214,7 +214,11 @@ class Import():
     def get_cardinality(self, table_description, cursor, name):
         # Gets the distinct rows for the column and the total rows
         counts = cursor.execute(
-            f"SELECT COUNT(DISTINCT({table_description.fullyQualifiedName}.{name})) as count FROM {table_description.fullyQualifiedName};")
+            f"""
+            SELECT COUNT(DISTINCT("{table_description.fullyQualifiedName}.{name}")) as count
+            FROM "{table_description.fullyQualifiedName}"
+            """
+        )
 
         # TODO we should assert against there being a single return value here
         for count in counts:
@@ -225,7 +229,11 @@ class Import():
 
     def get_total_rows(self, table_description, cursor):
         counts = cursor.execute(
-            f"SELECT COUNT(*) as count FROM {table_description.fullyQualifiedName}")
+            f"""
+            SELECT COUNT(*) as count
+            FROM "{table_description.fullyQualifiedName}"
+            """
+        )
 
         for count in counts:
             row_count = count['COUNT']

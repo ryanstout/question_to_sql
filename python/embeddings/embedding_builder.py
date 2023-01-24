@@ -125,7 +125,7 @@ class EmbeddingBuilder:
         values = self.snowflake_cursor.execute(
             f"""
             SELECT DISTINCT({column.name})
-            AS VALUE FROM {table.fullyQualifiedName}
+            AS VALUE FROM "{table.fullyQualifiedName}"
             LIMIT {column_value_limit}
             """
         )
