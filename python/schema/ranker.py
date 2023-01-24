@@ -29,6 +29,8 @@ class ElementRank(t.TypedDict):
     value_hint: t.Union[str, None]
 
 
+# note that in a ranking type list, you could have multiple ranking types with the same
+# column_id and value_hints
 SCHEMA_RANKING_TYPE = t.List[ElementRank]
 
 
