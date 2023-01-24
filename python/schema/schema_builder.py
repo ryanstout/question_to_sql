@@ -24,7 +24,7 @@ class SchemaBuilder:
     def __init__(self, db: Prisma):
         self.db: Prisma = db
 
-    def build(self, ranked_schema: SCHEMA_RANKING_TYPE):
+    def build(self, ranked_schema: SCHEMA_RANKING_TYPE) -> str:
         return self.generate_sql(ranked_schema)
 
     def estimate_token_count(self, text: str) -> int:
@@ -73,6 +73,8 @@ class SchemaBuilder:
                 return sql
             else:
                 sql += new_table_sql
+
+        return sql
 
 
 if __name__ == "__main__":

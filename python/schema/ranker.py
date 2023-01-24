@@ -27,19 +27,19 @@ class Ranker:
         self.db = db
 
         # Load the faiss indexes
-        self.idx_table_names = AnnSearch(db, datasource_id, 0, f"python/indexes/{datasource.id}/table_names")
-        self.idx_column_names = AnnSearch(db, datasource_id, 1, f"python/indexes/{datasource.id}/column_names")
-        self.idx_table_and_column_names = AnnSearch(db, datasource_id, 3, f"python/indexes/{datasource.id}/table_and_column_names")
+        self.idx_table_names = AnnSearch(db, datasource_id, 0, f"python/indexes/{datasource_id}/table_names")
+        self.idx_column_names = AnnSearch(db, datasource_id, 1, f"python/indexes/{datasource_id}/column_names")
+        self.idx_table_and_column_names = AnnSearch(db, datasource_id, 3, f"python/indexes/{datasource_id}/table_and_column_names")
 
         # Table and Columns indexes
         # self.idx_table_and_column_names_and_values = AnnSearch(
-        #     db, datasource_id, 4, f"python/indexes/{datasource.id}/table_and_column_names_and_values")
+        #     db, datasource_id, 4, f"python/indexes/{datasource_id}/table_and_column_names_and_values")
         self.idx_column_name_and_all_column_values = AnnSearch(
-            db, datasource_id, 5, f"python/indexes/{datasource.id}/column_name_and_all_column_values"
+            db, datasource_id, 5, f"python/indexes/{datasource_id}/column_name_and_all_column_values"
         )
 
         # Cell values
-        self.idx_values = AnnSearch(self.db, datasource_id, 2, f"python/indexes/{datasource.id}/values")
+        self.idx_values = AnnSearch(self.db, datasource_id, 2, f"python/indexes/{datasource_id}/values")
 
     def rank(
         self, query: str, embedder=OpenAIEmbeddings, cache_results=True, table_weights=[1.0, 1.0, 1.0], column_weights=[1.0, 1.0, 1.0]
@@ -104,9 +104,9 @@ if __name__ == "__main__":
     connections = Connections()
     connections.open()
 
-    datasource = connections.db.datasource.find_first()
+    datasource_id = connections.db.datasource.find_first().id
 
     question = sys.argv[1]
 
-    ranks = Ranker(connections.db, datasource.id).rank(question)
+    ranks = Ranker(connections.db, datasource_id).rank(question)
     print(ranks)
