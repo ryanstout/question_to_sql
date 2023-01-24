@@ -1,18 +1,3 @@
-# Taking in the question, generate the following data structure to pass to
-# the schema builder:
-#
-# {
-#     'tableId1': {
-#         'columnId1': ['valueHint1', 'valueHint2'],
-#         'columnId2': [],
-#         'columnId3': ['valueHint1', 'valueHint2', 'valueHint3'],
-#     },
-#     'tableId2': {
-#         # ...
-#     },
-#     # ...
-# }
-
 import sys
 import typing as t
 
@@ -23,6 +8,8 @@ from python.embeddings.embedding import Embedding
 from python.embeddings.openai_embeddings import OpenAIEmbeddings
 
 
+# Taking in the question, generate the following data structure to pass to
+# the schema builder:
 class ElementRank(t.TypedDict):
     table_id: int
     column_id: t.Union[int, None]
