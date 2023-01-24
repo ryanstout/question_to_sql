@@ -20,6 +20,12 @@
   "cSpell.ignoreRegExpList": ["/from\\s+(['\"]).*\\1/"],
   "cSpell.words": ["AIRBYTE"],
   "[python]": {
-    "editor.defaultFormatter": "ms-python.python"
-  }
+    "editor.defaultFormatter": "ms-python.python",
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": true
+    }
+  },
+  "python.linting.lintOnSave": true,
+  "python.sortImports.args": ["--settings-path", "${workspaceFolder}"],
+  "python.formatting.provider": "black"
 }
