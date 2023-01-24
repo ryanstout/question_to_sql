@@ -37,14 +37,75 @@ class Ranker:
         self.idx_column_name_and_all_column_values = AnnSearch(
             db, datasource_id, 5, f"python/indexes/{datasource.id}/column_name_and_all_column_values")
 
-    def rank(self, query: str, embedder=OpenAIEmbeddings, cache_results=True):
+    def rank(self, query: str, embedder=OpenAIEmbeddings, cache_results=True, weights=[1.0, 1.0, 1.0, 1.0, 1.0]):
+
+        rankings = {}
+
         query_embedding = Embedding(
             self.db, query, embedder=embedder, cache_results=cache_results).embedding_numpy
 
         # Fetch ranked table id
-        scores_and_tables = self.idx_table_names.search(query_embedding, 1000)
-        scores_and_tables_with_columns = self.idx_column_names.search(
+        table_matches = self.idx_table_names.search(query_embedding, 1000)
+        tables_with_columns_matches = self.idx_column_names.search(
             query_embedding, 1000)
+
+        tables = self.merge_ranks(
+            [table_matches, tables_with_columns_matches], weights[:2], 0
+        )
+
+        for table_id in self.pull_assoc(tables, 0):
+            rankings[table_id] = {}
+
+        columns_matches = self.idx_column_names.search(
+            query_embedding, 100000)
+        column_name_and_all_column_values_matches = self.idx_column_name_and_all_column_values.search(
+            query_embedding, 100000)
+
+        columns = self.merge_ranks(
+            [columns_matches, column_name_and_all_column_values_matches], weights[2:4], 1
+        )
+
+        # Assign the column ids
+        for column in columns:
+            column_table_id = column[1][0]
+            if column_table_id in rankings:
+                rankings[column_table_id][column[1][1]] = []
+
+        # Get values from indexes
+
+        print('tables: ', rankings)
+
+    def merge_ranks(self, scores_and_associations, weights, remove_dups_idx=None):
+        # Merge the output of multiple AnnSearch#search's via the passed in
+        # weights
+        print(remove_dups_idx)
+
+        merged = []
+        for idx, scores_and_assocs in enumerate(scores_and_associations):
+            for score_and_assoc in scores_and_assocs:
+                # Multiply the scores by the the associated weight
+                merged.append((score_and_assoc[0] *
+                              weights[idx], score_and_assoc[1]))
+
+        # Sort
+        merged.sort(key=lambda x: x[0], reverse=True)
+
+        if remove_dups_idx is not None:
+            # Remove duplicates for the target table, column, or value
+            final = []
+            seen = set()
+            for score_and_assoc in merged:
+                if score_and_assoc[1][remove_dups_idx] not in seen:
+                    final.append(score_and_assoc)
+                    seen.add(score_and_assoc[1][remove_dups_idx])
+        else:
+            final = merged
+
+        return final
+
+    def pull_assoc(self, scores_and_assocs, assoc_idx):
+        # Grabs the table, column, or value from the association tuple
+        return [score_and_assoc[1][assoc_idx] for score_and_assoc in scores_and_assocs]
 
 
 if __name__ == '__main__':
