@@ -1,6 +1,7 @@
 # Imports the schema and metadata from the snowflake database to the
 # local database.
 
+from multiprocessing.pool import ThreadPool
 import re
 from snowflake.connector.cursor import DictCursor
 import snowflake.connector
@@ -39,6 +40,8 @@ SKIP_TABLES = [
 
 class Import():
     def __init__(self, user_id, database):
+        self.column_pool = ThreadPool(processes=10)
+
         self.connections = Connections()
         self.connections.open()
 
@@ -68,8 +71,6 @@ class Import():
             tableList = self.snowflake_cursor.execute(
                 "SHOW TABLES IN DATABASE " + database)
 
-            # from IPython import embed; embed()
-
             for table in list(tableList)[:5]:
                 name = table['name']
 
@@ -96,33 +97,21 @@ class Import():
                 'fullyQualifiedName': fqn
             })
 
-        # description_payload: DataSourceTableDescription = DataSourceTableDescription(
-        #     'dataSourceId': datasource.id,
-        #     'skip': False,
-        #     'fullyQualifiedName': fqn,
-        #     'generatedSQLCache': '',
-        #     'embeddingsCache': '{}',
-        # )
+        description_payload = {
+            'dataSourceId': datasource.id,
+            'skip': False,
+            'fullyQualifiedName': fqn,
+            'generatedSQLCache': '',
+            'embeddingsCache': '{}',
+        }
 
         if table_description:
             table_description = self.db.datasourcetabledescription.update(
-                data={
-                    'dataSourceId': datasource.id,
-                    'skip': False,
-                    'fullyQualifiedName': fqn,
-                    'generatedSQLCache': '',
-                    'embeddingsCache': '{}',
-                }, where={
+                data=description_payload, where={
                 'id': table_description.id
             })
         else:
-            table_description = self.db.datasourcetabledescription.create(data={
-                'dataSourceId': datasource.id,
-                'skip': False,
-                'fullyQualifiedName': fqn,
-                'generatedSQLCache': '',
-                'embeddingsCache': '{}',
-            })
+            table_description = self.db.datasourcetabledescription.create(data=description_payload)
 
         self.create_column_records(table_description)
         self.embedding_builder.add_table(fqn)
@@ -136,68 +125,85 @@ class Import():
         assert(columnInfo != None)
 
         for column in columnInfo:
-            name = column['name']
+            self.column_pool.apply_async(self.create_column_record, args=(
+                table_description, column, row_count))
+            # result is not important, otherwise we would `async_task.get()`
 
-            if any(re.search(regex, name) for regex in SKIP_COLUMNS):
-                log.debug("skipping column", column=column)
-                continue
+    def create_column_record(self, table_description: DataSourceTableDescription, column, row_count: int) -> None:
+        name = column['name']
+        type = column['type']
 
-            kind = column['kind']
-            type = column['type']
+        if any(re.search(regex, name) for regex in SKIP_COLUMNS):
+            log.debug("skipping column", column=name)
+            return
 
-            log.info("inspecting column", name=name, type=type)
+        log.info("inspecting column", name=name, type=type)
 
-            # Get the cardinality of the column
-            distinct_row_count = self.get_cardinality(
-                table_description, cursor, name)
+        # since we are in a thread pool, we want to use a unique cursor to avoid any state issues
+        cursor = self.connections.snowflake_cursor()
 
-            table_column = self.db.datasourcetablecolumn.find_first(
-                where={
-                    'dataSourceTableDescriptionId': table_description.id,
-                    'name': name
-                })
+        # Get the cardinality of the column
+        distinct_row_count = self.get_cardinality(
+            table_description,
+            cursor,
+            name
+        )
 
-            data = {
-                'dataSourceTableDescriptionId': table_description.id,
-                'name': column['name'],
-                'type': column['type'],
-                'kind': column['kind'],
-                'skip': False,
-                'inspectionMetadata': '{}',
-                'isNull': column['null?'] == 'Y',
-                'default': column['default'] or '',
-                'distinctRows': distinct_row_count,
-                'rows': row_count,
+        column_external_id_locator = {
+            'dataSourceTableDescriptionId': table_description.id,
+            'name': name
+        }
 
-                'extendedProperties': json.dumps({
-                    'comment': column['comment'],
-                }),
-                'embeddingsCache': '{}',
-            }
+        column_description_payload = column_external_id_locator | {
+            'type': column['type'],
+            'kind': column['kind'],
+            'skip': False,
+            'inspectionMetadata': '{}',
+            'isNull': column['null?'] == 'Y',
+            'default': column['default'] or '',
+            'distinctRows': distinct_row_count,
 
-            if table_column:
-                self.db.datasourcetablecolumn.update(data=data, where={
-                    'id': table_column.id
-                })
-            else:
-                table_column = self.db.datasourcetablecolumn.create(
-                    data=data)
+            # TODO ideally, this should not be passed here and already added upstream
+            'rows': row_count,
+
+            'extendedProperties': json.dumps({
+                'comment': column['comment'],
+            }),
+            'embeddingsCache': '{}',
+        }
+
+        # TODO I hope we can use upsert here instead...
+        table_column = self.db.datasourcetablecolumn.find_first(where=column_external_id_locator)
+
+        if table_column:
+            self.db.datasourcetablecolumn.update(data=column_description_payload, where={
+                'id': table_column.id
+            })
+        else:
+            self.db.datasourcetablecolumn.create(
+                data=column_description_payload)
+
 
     def get_cardinality(self, table_description, cursor, name):
         # Gets the distinct rows for the column and the total rows
         counts = cursor.execute(
             f"SELECT COUNT(DISTINCT({table_description.fullyQualifiedName}.{name})) as count FROM {table_description.fullyQualifiedName};")
+
+        # TODO we should assert against there being a single return value here
         for count in counts:
             distinct_row_count = count['COUNT']
             break
+
         return distinct_row_count
 
     def get_total_rows(self, table_description, cursor):
         counts = cursor.execute(
             f"SELECT COUNT(*) as count FROM {table_description.fullyQualifiedName}")
+
         for count in counts:
             row_count = count['COUNT']
             break
+
         return row_count
 
     def find_or_create_business(self, user):
@@ -231,4 +237,5 @@ class Import():
 
 
 if __name__ == "__main__":
+    # user id is the first argument
     Import(sys.argv[1], config("SNOWFLAKE_DATABASE"))

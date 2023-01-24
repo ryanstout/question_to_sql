@@ -9,6 +9,7 @@ class Connections:
         self.db = Prisma()
         self.db.connect()
 
+        # TODO this will need to be pulled from the datasource
         self.snowflake_connection = snowflake.connector.connect(
             # pull these from the environment
             user=config('SNOWFLAKE_USERNAME'),
