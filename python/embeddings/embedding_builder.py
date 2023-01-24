@@ -9,6 +9,8 @@ from python.utils.logging import log
 from python.utils.entropy import token_entropy
 from python.embeddings.ann_index import AnnIndex
 
+import python.utils.sql as sql
+
 # How long of a value do we create an embedding for?
 # embeddings have a window, so we truncate the values to fit into the window
 # TODO where are these limits documented in openai?
@@ -125,7 +127,7 @@ class EmbeddingBuilder:
         values = self.snowflake_cursor.execute(
             f"""
             SELECT DISTINCT({column.name})
-            AS VALUE FROM "{table.fullyQualifiedName}"
+            AS VALUE FROM {sql.normalize_fqn_quoting(table.fullyQualifiedName)}
             LIMIT {column_value_limit}
             """
         )

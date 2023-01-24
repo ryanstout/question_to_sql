@@ -20,6 +20,7 @@ import json
 from python.embeddings.embedding_builder import EmbeddingBuilder
 from python.utils.connections import Connections
 from python.utils.logging import log
+import python.utils.sql as sql
 
 SKIP_COLUMNS = [
 # fivetran columns
@@ -144,7 +145,9 @@ class Import():
         row_count = self.get_total_rows(table_description, cursor)
 
         raw_column_list = cursor.execute(
-            f"DESCRIBE TABLE {table_description.fullyQualifiedName}"
+            f"""
+            DESCRIBE TABLE {sql.normalize_fqn_quoting(table_description.fullyQualifiedName)}
+            """
         ).fetchall()
 
         log.debug("inspecting columns", full_count=len(raw_column_list), limit=limit)
@@ -215,8 +218,8 @@ class Import():
         # Gets the distinct rows for the column and the total rows
         counts = cursor.execute(
             f"""
-            SELECT COUNT(DISTINCT("{table_description.fullyQualifiedName}.{name}")) as count
-            FROM "{table_description.fullyQualifiedName}"
+            SELECT COUNT(DISTINCT({table_description.fullyQualifiedName}.{sql.normalize_fqn_quoting(name)}")) as count
+            FROM {sql.normalize_fqn_quoting(table_description.fullyQualifiedName)}
             """
         )
 
@@ -228,12 +231,12 @@ class Import():
         return distinct_row_count
 
     def get_total_rows(self, table_description, cursor):
-        counts = cursor.execute(
-            f"""
+        raw_sql =             f"""
             SELECT COUNT(*) as count
-            FROM "{table_description.fullyQualifiedName}"
+            FROM {sql.normalize_fqn_quoting(table_description.fullyQualifiedName)}
             """
-        )
+
+        counts = cursor.execute(raw_sql)
 
         for count in counts:
             row_count = count['COUNT']
