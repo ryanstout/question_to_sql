@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+/Users/mike/Library/Caches/pypoetry/virtualenvs/nlpquery-bkN6bad3-py3.9/bin/python "$@"

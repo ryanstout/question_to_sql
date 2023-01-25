@@ -1,13 +1,15 @@
 import type { Question } from "@prisma/client"
+import path from "path"
 import { PythonShell } from "python-shell"
 
 import { prisma } from "~/db.server"
+import { log } from "~/lib/logging.server"
 import { runQuery } from "~/lib/query-runner"
 
 interface QuestionResult {
   question: Question
   status: "success" | "error"
-  data: any[]
+  data?: any[]
 }
 
 function fakeDataSource() {
@@ -30,7 +32,7 @@ export async function processQuestion(
   userId: number,
   dataSourceId: number,
   question: string
-): QuestionResult {
+): Promise<QuestionResult> {
   const dataSource = fakeDataSource()
   const sql = await questionToSql(dataSourceId, question)
   // TODO handle invalid query error
@@ -53,24 +55,45 @@ export async function processQuestion(
   }
 }
 
+function rootDirectory() {
+  return path.resolve(__dirname + "/../..")
+}
+
+function pythonCommand() {
+  return path.resolve(__dirname + "/../../bin/python-wrapper")
+}
+
+function escapeShell(cmd) {
+  return '"' + cmd.replace(/(["'$`\\])/g, "\\$1") + '"'
+}
+
 export async function questionToSql(
   dataSourceId: number,
   naturalQuestion: string
 ) {
   return new Promise((resolve, reject) => {
+    const pythonPath = pythonCommand()
+    log.debug("sending question to python", { path: pythonPath })
+
     PythonShell.run(
       "python/answer.py",
       {
-        pythonPath:
-          "/Users/mike/Library/Caches/pypoetry/virtualenvs/nlpquery-bkN6bad3-py3.9/bin/python",
+        pythonPath: pythonPath,
         mode: "text",
-        args: ["--data-source-id", dataSourceId, "--question", naturalQuestion],
+        cwd: rootDirectory(),
+        args: [
+          "--data-source-id",
+          dataSourceId.toString(),
+          "--question",
+          escapeShell(naturalQuestion),
+        ],
       },
       (err, results) => {
         if (err) {
+          log.error("error running python", { results })
           reject(err)
         } else {
-          resolve(results)
+          resolve(results!.join(""))
         }
       }
     )
