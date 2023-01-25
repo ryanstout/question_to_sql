@@ -39,26 +39,31 @@ class TableRank(t.TypedDict):
 TABLE_SCHEMA = t.List[TableRank]
 
 
+# TODO move to a generic utils
+def estimate_token_count(text: str) -> int:
+    enc = tiktoken.get_encoding("gpt2")
+    token_count = len(enc.encode(text))
+    return token_count
+
+
 class SchemaBuilder:
     TOKEN_COUNT_LIMIT = 7_000 - 1_024
 
     def __init__(self, db: Prisma):
         self.db: Prisma = db
+        self.cached_columns = {}
 
     def build(self, ranked_schema: SCHEMA_RANKING_TYPE) -> str:
         return self.generate_sql_from_element_rank(ranked_schema)
 
-    def estimate_token_count(self, text: str) -> int:
-        t1 = time.time()
-        enc = tiktoken.get_encoding("gpt2")
-        token_count = len(enc.encode(text))
-        t2 = time.time()
-        log.debug("tokenize: ", tokenize_time=(t2 - t1))
-        return token_count
-
     def generate_column_describe(self, column_id: int, hints: t.List[str]) -> str:
         # TODO should we filter by kind?
-        column = self.db.datasourcetablecolumn.find_first(where={"id": column_id})
+        column = self.cached_columns[column_id]
+
+        # not caching the columns was creating a massive slowdown in schema generation
+        if not column:
+            self.cached_columns[column_id] = self.db.datasourcetablecolumn.find_first(where={"id": column_id})
+
         if column is None:
             raise Exception(f"column not found {column_id}")
 
@@ -104,12 +109,9 @@ class SchemaBuilder:
 
         for element_rank in ranked_schema:
             # first, let's check to see if the new schema is above the token limit
-            t1 = time.time()
             new_table_sql = self.generate_sql_describe(table_ranks)
-            t2 = time.time()
-            log.debug("generate time: ", time=(t2 - t1))
 
-            token_count = self.estimate_token_count(new_table_sql)
+            token_count = estimate_token_count(new_table_sql)
             if token_count > self.TOKEN_COUNT_LIMIT:
                 log.debug("schema token count", token_count=token_count)
                 return sql
