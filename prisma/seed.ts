@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client"
+import { DataSourceType, PrismaClient } from "@prisma/client"
 import bcrypt from "bcryptjs"
 
 const prisma = new PrismaClient()
@@ -22,6 +22,27 @@ async function seed() {
         create: {
           hash: hashedPassword,
         },
+      },
+    },
+  })
+
+  const business = await prisma.business.create({
+    data: { name: "Great Business" },
+  })
+
+  // create a data source for hacking
+  const dataSource = await prisma.dataSource.create({
+    data: {
+      name: "Personal Snowflake",
+      businessId: business.id,
+      type: DataSourceType.SNOWFLAKE,
+      credentials: {
+        account: process.env.SNOWFLAKE_ACCOUNT,
+        username: process.env.SNOWFLAKE_USERNAME,
+        password: process.env.SNOWFLAKE_PASSWORD,
+        database: process.env.SNOWFLAKE_DATABASE,
+        schema: process.env.SNOWFLAKE_SCHEMA,
+        warehouse: process.env.SNOWFLAKE_WAREHOUSE,
       },
     },
   })
