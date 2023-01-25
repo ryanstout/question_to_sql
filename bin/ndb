@@ -4,4 +4,5 @@
 node inspect \
   --debug-port=0 \
   -r ts-node/register/transpile-only \
+  -r tsconfig-paths/register \
   $@

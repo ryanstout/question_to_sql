@@ -1,2 +1,4 @@
 #!/usr/bin/env bash
-npx ts-node --transpileOnly $@
+node -r ts-node/register/transpile-only \
+     -r tsconfig-paths/register \
+     $@
