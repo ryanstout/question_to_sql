@@ -507,7 +507,6 @@ function QueryHeader({ data }: { data: LoaderData }) {
 export default function QuestionGroup() {
   let data = useLoaderData<LoaderData>()
   const params = useParams()
-  return <></>
 
   return (
     <>

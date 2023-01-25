@@ -6,32 +6,6 @@ import { format } from "sql-formatter"
 
 import { promptForQuestion } from "~/models/language_model/prompt.server"
 
-export async function EnhanceSqlQuery(query: string): Promise<string> {
-  // return query
-  return new Promise((resolve, reject) => {
-    // const { stdout, stderr } = await exec("python lib/sql_enhance.py")
-    let shell = new PythonShell("lib/sql_enhance.py", { mode: "text" })
-    let output = [] as string[]
-    shell.on("message", (message) => {
-      console.log("message", message)
-      output.push(message)
-    })
-    shell.send(query)
-    shell.end(function (err, code, signal) {
-      // if (err) throw err;
-      if (err) {
-        reject(err)
-      }
-
-      let result = output.join("\n")
-
-      result = format(result, { language: "postgresql" })
-
-      resolve(result)
-    })
-  })
-}
-
 async function sleep(duration: number) {
   await new Promise((r) => setTimeout(r, duration))
 }

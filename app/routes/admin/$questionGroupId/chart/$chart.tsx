@@ -119,7 +119,6 @@ function BarChart({ type, data }: { type: string; data: BarDatum[] }) {
 }
 
 export default function VisualizeMethod() {
-  return <></>
   const params = useParams()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
