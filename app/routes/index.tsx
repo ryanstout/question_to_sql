@@ -1,21 +1,17 @@
-import AppFooter from "../components/dashboard/footer"
-import { HeaderMenu } from "../components/dashboard/headerMenu"
-import { useState } from "react"
+import { AppShell } from "@mantine/core"
+import type { ActionArgs } from "@remix-run/node"
+import { json } from "@remix-run/node"
+import { useActionData } from "@remix-run/react"
 import { z } from "zod"
 import { zx } from "zodix"
-
-import { json } from "@remix-run/node"
-import type { ActionArgs } from "@remix-run/node"
-import { Link, Outlet, useActionData, useLocation } from "@remix-run/react"
-
-import { AppShell } from "@mantine/core"
-
-import QueryFeedback from "~/components/dashboard/queryFeedback"
-import Search from "~/components/dashboard/search"
-import { questionToSql } from "~/lib/question.server"
+import AppFooter from "~/components/dashboard/footer"
+import HeaderMenu from "~/components/dashboard/headerMenu"
+import LandingSearch from "~/components/dashboard/landingSearch"
 import { processQuestion } from "~/lib/question.server"
 import { requireUserId } from "~/session.server"
-import { useOptionalUser } from "~/utils"
+
+
+
 
 // this is executed on the server side
 export const action = async ({ request }: ActionArgs) => {
@@ -30,15 +26,18 @@ export const action = async ({ request }: ActionArgs) => {
   return json({ q, sql })
 }
 
+export const loader: LoaderFunction = async ({ request }) => {
+  const userId = await requireUserId(request)
+  return userId;
+}
+
 export default function Index() {
-  const user = useOptionalUser()
   const loader = useActionData()
 
   return (
     <AppShell footer={<AppFooter />}>
-      <HeaderMenu user={user} />
-      <Search question={loader ? loader.q : ""} />
-      <QueryFeedback feedback={loader ? loader : {}} />
+      <HeaderMenu />
+      <LandingSearch question={loader ? loader.q : ""} />
     </AppShell>
   )
 }

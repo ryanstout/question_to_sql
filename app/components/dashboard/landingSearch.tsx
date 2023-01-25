@@ -1,13 +1,13 @@
-import { IconSearch } from "@tabler/icons"
+import { Grid, Loader, TextInput } from "@mantine/core"
 import {
   Form
 } from "@remix-run/react"
+import { IconSearch } from "@tabler/icons"
+import { useState } from "react"
 
-import {useState} from "react"
 
-import { Center, Grid, Loader, TextInput, Title } from "@mantine/core"
 
-export default function Search({ question }: { question: string }) {
+export default function LandingSearch({ question }: { question: string }) {
   
   const [isLoading, setIsLoading] = useState(false)  
   const [userQuery, setUserQuery] = useState("");
@@ -35,7 +35,7 @@ export default function Search({ question }: { question: string }) {
         <Grid>
           <Grid.Col span={4} offset={4}>
             <Form 
-              action="?index" 
+              action="/admin?index" 
               method="post"
               onSubmit={(e) => {handleSubmit()}}
             >

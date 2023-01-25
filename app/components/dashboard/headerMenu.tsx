@@ -1,22 +1,15 @@
 import {
-  IconLogout,
-} from "@tabler/icons"
-
-import { Form, Link } from "@remix-run/react"
-
-import {
   Box,
-  Button,
-  Grid,
+  Button, createStyles, Grid,
   Header,
-  Image,
-  createStyles,
+  Image
 } from "@mantine/core"
-import { useDisclosure } from "@mantine/hooks"
-
-import type { User } from "~/models/user.server"
-import Logo from "../../assets/images/LogoHorizontal.svg"
-
+import { Form } from "@remix-run/react"
+import {
+  IconLogout
+} from "@tabler/icons"
+import Logo from "~/assets/images/LogoHorizontal.svg"
+import { useOptionalUser } from "~/utils"
 
 const useStyles = createStyles((theme) => ({
   link: {
@@ -46,7 +39,9 @@ const useStyles = createStyles((theme) => ({
   }
 }))
 
-export function HeaderMenu({ user }: { user: User | undefined }) {
+export default function HeaderMenu() {
+
+  const user = useOptionalUser();
 
   let loginMenu
   if (user) {
@@ -63,10 +58,10 @@ export function HeaderMenu({ user }: { user: User | undefined }) {
   }
 
   return (
-    <Box pb={120}>
+    <Box pb={70}>
       <Header height={80} px="md">
         <Grid>
-        <Image height={70} width={180} mt={11} src={Logo} />
+        <a href="/"><Image height={70} width={180} mt={11} src={Logo} /></a>
         <Grid.Col span={1} offset={9}>
         {loginMenu}
         </Grid.Col>

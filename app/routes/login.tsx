@@ -1,32 +1,25 @@
-import Logo from "../assets/images/LogoVertical.svg"
-import { ValidatedForm, validationError } from "remix-validated-form"
-import { z } from "zod"
-
-import type { ActionArgs, LoaderArgs, MetaFunction } from "@remix-run/node"
-import { json, redirect } from "@remix-run/node"
-import { Link, useSearchParams } from "@remix-run/react"
-import { withZod } from "@remix-validated-form/with-zod"
-
 import {
-  Anchor,
-  Button,
-  Center,
-  Checkbox,
-  Container,
-  Grid,
-  Group,
+  Button, Checkbox,
+  Container, Group,
   Image,
   Paper,
-  PasswordInput,
-  Text,
-  TextInput,
-  Title,
+  PasswordInput, TextInput,
+  Title
 } from "@mantine/core"
-
+import type { ActionArgs, LoaderArgs, MetaFunction } from "@remix-run/node"
+import { json, redirect } from "@remix-run/node"
+import { useSearchParams } from "@remix-run/react"
+import { withZod } from "@remix-validated-form/with-zod"
+import { ValidatedForm, validationError } from "remix-validated-form"
+import { z } from "zod"
 import { Field } from "~/components/field"
 import { prisma } from "~/db.server"
 import { verifyLogin } from "~/models/user.server"
 import { createUserSession, getUserId } from "~/session.server"
+import Logo from "../assets/images/LogoVertical.svg"
+
+
+
 
 export async function loader({ request }: LoaderArgs) {
   const userId = await getUserId(request)
@@ -109,7 +102,7 @@ export default function LoginPage() {
       <Paper withBorder shadow="md" p={30} mt={30} radius="md">
         <Image
           width="70%"
-          // style={{ marginLeft: "25%" }}
+          style={{ marginLeft: "25%" }}
           px={1}
           py={1}
           src={Logo}

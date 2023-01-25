@@ -1,4 +1,4 @@
-import { Anchor, Container, Group, createStyles } from "@mantine/core"
+import { Anchor, Container, createStyles, Group } from "@mantine/core"
 
 const useStyles = createStyles((theme) => ({
   footer: {

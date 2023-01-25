@@ -1,22 +1,19 @@
-import type { Question, User } from "@prisma/client"
-import {
-  IconChartBar,
-  IconChartLine,
-  IconGrain,
-  IconNotes,
-} from "@tabler/icons"
-import { useNavigate } from "react-router-dom"
-import { zx } from "zodix"
-
-import { useMatches, useParams, useSearchParams } from "@remix-run/react"
-import type { LoaderFunction } from "@remix-run/server-runtime"
-
 import { Box, Tabs, Title } from "@mantine/core"
 import { Prism } from "@mantine/prism"
 import type { BarDatum } from "@nivo/bar"
 import { ResponsiveBar } from "@nivo/bar"
 import type { Serie } from "@nivo/line"
 import { ResponsiveLine } from "@nivo/line"
+import type { Question } from "@prisma/client"
+import { useMatches, useParams, useSearchParams } from "@remix-run/react"
+import type { LoaderFunction } from "@remix-run/server-runtime"
+import {
+  IconChartBar, IconGrain,
+  IconNotes
+} from "@tabler/icons"
+import { useNavigate } from "react-router-dom"
+
+
 
 type GroupLoaderData = {
   questions: Question[]
@@ -59,7 +56,7 @@ function BarChart({ type, data }: { type: string; data: BarDatum[] }) {
   const keys = Object.keys(data[0])
 
   return (
-    <div style={{ height: "500px" }}>
+    <div style={{ height: "500px"}}>
       <Title>Chart</Title>
       <ResponsiveBar
         data={data}
@@ -68,14 +65,13 @@ function BarChart({ type, data }: { type: string; data: BarDatum[] }) {
         enableGridX={false}
         enableLabel={false}
         padding={0.2}
-        margin={{ top: 50, right: 130, bottom: 50, left: 80 }}
+        margin={{ top: 50, right: 130, bottom: 150, left: 80 }}
         axisTop={null}
         axisRight={null}
         axisBottom={{
           tickSize: 5,
           tickPadding: 5,
           tickRotation: 70,
-          legend: "country",
           legendPosition: "middle",
           legendOffset: 32,
         }}
@@ -152,9 +148,9 @@ export default function VisualizeMethod() {
           <Tabs.Tab value="bar" icon={<IconChartBar size={14} />}>
             Bar
           </Tabs.Tab>
-          <Tabs.Tab value="line" icon={<IconChartLine size={14} />}>
+          {/* <Tabs.Tab value="line" icon={<IconChartLine size={14} />}>
             Line
-          </Tabs.Tab>
+          </Tabs.Tab> */}
           <Tabs.Tab value="scatter" icon={<IconGrain size={14} />}>
             Scatter
           </Tabs.Tab>

@@ -1,19 +1,16 @@
-import { useState } from "react"
-import { z } from "zod"
-import { zx } from "zodix"
-
+import { Center, TextInput, Title } from "@mantine/core"
 import type { ActionArgs } from "@remix-run/node"
 import { LoaderFunction, redirect } from "@remix-run/node"
 import { Form } from "@remix-run/react"
-
-import { Center, TextInput, Title } from "@mantine/core"
-
-import { HeaderMenu } from "~/components/dashboard/headerMenu"
-import { prisma } from "~/db.server"
+import { useState } from "react"
+import { z } from "zod"
+import { zx } from "zodix"
 import { findOrCreateQuestionGroup } from "~/routes/admin/$questionGroupId"
-import { Hero } from "~/routes/hero"
 import { requireUserId } from "~/session.server"
 import { useOptionalUser } from "~/utils"
+
+
+
 
 export async function action({ request }: ActionArgs) {
   const userId = await requireUserId(request)
@@ -34,6 +31,10 @@ export async function action({ request }: ActionArgs) {
   } else {
     return redirect(`/admin/${questionGroup.id}/chart/raw`)
   }
+}
+
+export const loader: LoaderFunction = async ({ request }) => {
+  await requireUserId(request)
 }
 
 export default function Index() {

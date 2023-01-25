@@ -1,13 +1,13 @@
 import { sql } from "@codemirror/lang-sql"
 import { EditorView } from "@codemirror/view"
+import {
+  AppShell,
+  Box,
+  Button, Divider, Flex,
+  Grid, Stack, Text
+} from "@mantine/core"
 import type { Question } from "@prisma/client"
 import { FeedbackState } from "@prisma/client"
-import CodeMirror from "@uiw/react-codemirror"
-import beautify from "json-beautify"
-import { useEffect, useState } from "react"
-import { z } from "zod"
-import { zx } from "zodix"
-
 import type { ActionArgs, LoaderFunction } from "@remix-run/node"
 import { redirect } from "@remix-run/node"
 import {
@@ -18,24 +18,16 @@ import {
   useNavigation,
   useParams,
   useSearchParams,
-  useSubmit,
+  useSubmit
 } from "@remix-run/react"
-
-import {
-  AppShell,
-  Box,
-  Button,
-  Flex,
-  Grid,
-  Header,
-  Loader,
-  Stack,
-  Table,
-  Text,
-  TextInput,
-} from "@mantine/core"
-
-import { Footer } from "~/components/admin/footer"
+import CodeMirror from "@uiw/react-codemirror"
+import beautify from "json-beautify"
+import { useEffect, useState } from "react"
+import { z } from "zod"
+import { zx } from "zodix"
+import ConsoleSearch from "~/components/dashboard/consoleSearch"
+import AppFooter from "~/components/dashboard/footer"
+import HeaderMenu from "~/components/dashboard/headerMenu"
 import { prisma } from "~/db.server"
 import { log } from "~/lib/logging.server"
 import { runQuery } from "~/lib/query-runner"
@@ -137,6 +129,8 @@ export async function action({ request }: ActionArgs) {
     action_name: z.string().optional(),
     questionGroupId: zx.NumAsString,
   })
+
+  console.log("HERE", q);
 
   const q2 = zx.parseQuery(request, { q: z.string().optional() })
   if (q2) {
@@ -288,6 +282,8 @@ export let loader: LoaderFunction = async ({
 }
 
 function QueryHeader({ data }: { data: LoaderData }) {
+  
+
   const params = useParams()
 
   const [searchParams] = useSearchParams()
@@ -360,6 +356,7 @@ function QueryHeader({ data }: { data: LoaderData }) {
   const navigation = useNavigation()
 
   let previousQuestions
+
   if (questions) {
     previousQuestions = questions.reverse().map((q, i) => {
       return (
@@ -374,41 +371,15 @@ function QueryHeader({ data }: { data: LoaderData }) {
 
   return (
     <>
-      <Header height={250} p="0" m="0">
-        <Grid sx={{ height: "100%" }} p="0" m="0">
+        <Grid p="0" m="0">
           <Grid.Col span={5} p="lg">
             <Stack justify="space-between" sx={{ height: "100%" }}>
-              <Box>
-                <Form method="post">
-                  <Flex>
-                    <input
-                      type="hidden"
-                      name="questionGroupId"
-                      value={questionGroupId}
-                    />
-                    <TextInput
-                      size="lg"
-                      w="100%"
-                      name="q"
-                      value={question}
-                      onChange={(e) => setQuestion(e.target.value)}
-                    />
-                    <Button size="lg" type="submit">
-                      &gt;
-                    </Button>
-                    {navigation.state === "submitting" && (
-                      <Loader size="xl" variant="bars" p="10px" />
-                    )}
-                  </Flex>
-                </Form>
-
-                <Box sx={{ height: "90px", overflowY: "auto" }}>
-                  <Table p="sm">
-                    <tbody>{previousQuestions}</tbody>
-                  </Table>
-                </Box>
-              </Box>
-
+            <ConsoleSearch currentQuestionState={{
+              question: currentQuestion?.question, 
+              questionGroupId: questionGroupId,
+              navigationState: navigation.state,
+              previousQuestions: previousQuestions
+            }} />
               <Flex>
                 <Box w="100%">
                   <Form method="post" action="/admin">
@@ -493,13 +464,12 @@ function QueryHeader({ data }: { data: LoaderData }) {
                     backgroundColor: "rgba(128,128,128,0.1)",
                   }}
                 >
-                  Press Shift+Enter to executre an updated query
+                  Press Shift+Enter to execute an updated query
                 </span>
               </Text>
             </Box>
           </Grid.Col>
         </Grid>
-      </Header>
     </>
   )
 }
@@ -507,12 +477,17 @@ function QueryHeader({ data }: { data: LoaderData }) {
 export default function QuestionGroup() {
   let data = useLoaderData<LoaderData>()
   const params = useParams()
+  
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
 
   return (
     <>
       <AppShell
         padding="md"
-        header={<QueryHeader data={data} />}
+        // header={}
+        footer={<AppFooter />}
         styles={(theme) => ({
           main: {
             backgroundColor:
@@ -522,8 +497,10 @@ export default function QuestionGroup() {
           },
         })}
       >
+        <HeaderMenu/>
+        <QueryHeader data={data} />
+        <Divider my="sm" variant="dotted" />
         <Outlet />
-        <Footer />
       </AppShell>
     </>
   )
