@@ -60,8 +60,8 @@ model Question {
   id       Int    @id @default(autoincrement())
   question String
 
-  userSql  String // the query, starts with the codex model output, then can be updated by the user
-  codexSql String // the original query generated from openai
+  userSql  String? // the query, starts with the codex model output, then can be updated by the user
+  codexSql String? // the original query generated from openai
 
   // should be unset initially, and result is only stored if the
   feedbackState FeedbackState @default(UNANSWERED)
