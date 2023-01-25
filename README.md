@@ -16,15 +16,32 @@ npm run dev
 Generate the python and ts schemas with:
 `prisma generate --schema prisma/schema.prisma`
 
-# Import DataSource
+# Frontend
 
-python -m python.import {user_id}
+- All route logic is very thin
+- All `~/components` should not use "top-level state"
+- All `action` and `loader` exports should be thin and pass to a `~/lib/*.server` file (this is the "frontend of the backend")
+- `action` and `loader` exports should do all input validation and state retrieval before passing to the `*.server` functions
+
+# CLI Tools
+
+First, we need to import the table data:
 
 ```shell
 poetry run python python/import.py \
   --user-id=1 \
   --database-name=FIVETRAN_DATABASE \
-  --table-limit=1 --column-limit=1 --column-value-limit=1
+  --table-limit=100 \
+  --column-limit=100 \
+  --column-value-limit=100
+```
+
+Once everything is imported, we can ask questions:
+
+```shell
+poetry run python python/answer.py \
+  --data-source-id 1 \
+  --question "What are the top orders of all time?"
 ```
 
 # Schemas [WIP]

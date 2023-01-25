@@ -10,36 +10,54 @@ Goal: EOD Monday
   - [x] [mbianco] Snowflake connection
   - [x] [mbianco] Finalize prisma models
   - [x] [ryan] Table indexing
-- [ ] [mbianco] Python Query
-  - [ ] Endpoint for accepting natural language query
-  - [ ] Integration with TS side
+- [x] [mbianco] Python Query
+  - [x] Endpoint for accepting natural language query
+  - [x] Integration with TS side
 
 # What do we need to iterate on the ranking?
 
 Goal: EOD Tuesday
 
-- [ ] [mbianco] Live Integration Tests
+- [ ] [ryan] Live Integration Tests
   - [ ] Manually run script
   - [ ] Agnostic to result data
 - [x] [ryan] Python Indexing Script
-  - [-] Question > Ranking data structure
-- [ ] [mbianco] Python Query Improvements
+  - [x] Question > Ranking data structure
+- [x] [mbianco] Python Query Improvements
   - [x] Input ranked dict, iteratively compute the output schema
-  - [ ] Maybe SQL transforms from OpenAI
+  - [x] Maybe SQL transforms from OpenAI
 
 # What do we need so daniel can run a query?
 
+What questions are we trying to answer?
+
+1. Is the user able to answer questions?
+2. Is the ML model failing?
+3. Look & feel
+
+- [ ] UI integration
+  - [ ] Question record creation
 - [ ] [kai] User login tied to data source
 - [ ] [kai] MVP UI
-  - [ ] First page is login
-  - [ ] Search, must answer feedback state
-  - [ ] Look at history
-  - [ ] URL: .com/USER/12345-mike-wants-money
+  - [ ] Login page [mbianco]
+  - [ ] Search box [mbianco]
+  - [ ] Forced feedback state (complete/incomplete) [mbianco]
+  - [ ] Read-only SQL editor [mbianco]
+  - [ ] Basic JSON result [mbianco]
 - [ ] [mbianco] Deploy
   - [ ] Docker Build
   - [ ] File system access
   - [ ] Postgres
   - [ ] TBD embedding, if openai embeddings aren't good enough
+
+# How to train the system?
+
+- [ ] UI improvements
+  - [ ] R+W SQL Editor [ryan]
+  - [ ] Visualize answers
+  - [ ] Look at history
+  - [ ] Fancy URL structure .com/USER/12345-mike-wants-money
+  - [ ] Group question
 
 # What do we need so daniel & spectora can run a query?
 
