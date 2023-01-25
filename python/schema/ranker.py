@@ -59,9 +59,11 @@ class Ranker:
         # Fetch ranked table id
         table_matches = self.idx_table_names.search(query_embedding, 1000)
         tables_with_columns_matches = self.idx_column_names.search(query_embedding, 1000)
+        log.debug("Table matches", matches=table_matches)
 
         columns_matches = self.idx_column_names.search(query_embedding, 10000)
         column_name_and_all_column_values_matches = self.idx_column_name_and_all_column_values.search(query_embedding, 1000)
+        log.debug("Column matches", matches=columns_matches)
 
         value_matches = self.idx_values.search(query_embedding, 1000)
 
@@ -71,7 +73,8 @@ class Ranker:
 
         log.debug("End faiss lookups")
 
-        rankings = list(map(lambda x: ElementRank(table_id=x[1][0], column_id=x[1][1], value_hint=x[1][2], score=x[0]), tables + columns + values))
+        # rankings = list(map(lambda x: ElementRank(table_id=x[1][0], column_id=x[1][1], value_hint=x[1][2], score=x[0]), tables + columns + values))
+        rankings = list(map(lambda x: ElementRank(table_id=x[1][0], column_id=x[1][1], value_hint=x[1][2], score=x[0]), tables + columns))
 
         # Sort rankings by score
         rankings.sort(key=lambda x: x["score"], reverse=True)
@@ -85,6 +88,7 @@ class Ranker:
         for idx, scores_and_assocs in enumerate(scores_and_associations):
             for score_and_assoc in scores_and_assocs:
                 # Multiply the scores by the the associated weight
+                log.debug("rank: ", score=score_and_assoc[0], weight=weights[idx], assoc=score_and_assoc[1])
                 merged.append((score_and_assoc[0] * weights[idx], score_and_assoc[1]))
 
         # Sort

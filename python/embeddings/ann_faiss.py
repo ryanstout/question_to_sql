@@ -28,7 +28,9 @@ class AnnFaiss:
         #     dimensions, "IVF10,PQ16x8", faiss.METRIC_INNER_PRODUCT)
 
         rows = data.shape[0]
-        if dimensions < 1000:
+        if dimensions < 10000:
+            # self.index = faiss.index_factory(min(1000, rows), "HNSW", faiss.METRIC_INNER_PRODUCT)
+            # self.index = faiss.IndexHNSWFlat(dimensions, faiss.METRIC_INNER_PRODUCT)
             self.index = faiss.IndexFlatIP(dimensions)
         else:
             quantizer = faiss.IndexFlatL2(dimensions)
