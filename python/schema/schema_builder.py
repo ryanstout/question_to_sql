@@ -13,10 +13,10 @@ from prisma.models import (
     User,
 )
 
+import python.utils as utils
 from prisma import Prisma
 from python.schema.full_schema import FullSchema
 from python.schema.ranker import SCHEMA_RANKING_TYPE, ElementRank
-import python.utils as utils
 
 # TODO looks like we cannot set default values on typeddict: https://github.com/python/mypy/issues/6131
 
@@ -65,7 +65,7 @@ class SchemaBuilder:
         rendered_choices = ""
 
         # remove Nones, empty string, duplicates, and whitespace string from hints
-        filtered_hints = set(['"hint"' for hint in hints if hint and hint.strip()])
+        filtered_hints = set([hint.lower() for hint in hints if hint and hint.strip()])
 
         if filtered_hints:
             raw_choice_list = repr(filtered_hints)
