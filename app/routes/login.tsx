@@ -1,3 +1,4 @@
+import Logo from "../assets/images/LogoVertical.svg"
 import { ValidatedForm, validationError } from "remix-validated-form"
 import { z } from "zod"
 
@@ -26,8 +27,6 @@ import { Field } from "~/components/field"
 import { prisma } from "~/db.server"
 import { verifyLogin } from "~/models/user.server"
 import { createUserSession, getUserId } from "~/session.server"
-
-import Logo from "../assets/images/LogoVertical.svg"
 
 export async function loader({ request }: LoaderArgs) {
   const userId = await getUserId(request)
@@ -105,21 +104,19 @@ export default function LoginPage() {
           fontFamily: `Greycliff CF, ${theme.fontFamily}`,
           fontWeight: 900,
         })}
-      >
-        
-      </Title>
-
+      ></Title>
 
       <Paper withBorder shadow="md" p={30} mt={30} radius="md">
-        <Image width="70%" style={{marginLeft: "25%"}} px={1} py={1} src={Logo} />
+        <Image
+          width="70%"
+          // style={{ marginLeft: "25%" }}
+          px={1}
+          py={1}
+          src={Logo}
+        />
         <ValidatedForm validator={validator} method="post" action="/login">
           <input type="hidden" name="redirectTo" value={redirectTo} />
-          <Field
-            component={TextInput}
-            name="email"
-            label="Email"
-            required
-          />
+          <Field component={TextInput} name="email" label="Email" required />
           <Field
             component={PasswordInput}
             name="password"

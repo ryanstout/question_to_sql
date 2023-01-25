@@ -1,9 +1,8 @@
-import { Question } from "@prisma/client"
-import { useState } from "react"
+import type { Question } from "@prisma/client"
 import { z } from "zod"
 import { zx } from "zodix"
 
-import type { ActionArgs, LoaderArgs, MetaFunction } from "@remix-run/node"
+import type { ActionArgs } from "@remix-run/node"
 import {
   Form,
   Link,
@@ -11,25 +10,15 @@ import {
   useNavigate,
   useParams,
 } from "@remix-run/react"
-import { LoaderFunction, redirect } from "@remix-run/server-runtime"
+import type { LoaderFunction } from "@remix-run/server-runtime"
+// TODO: pagination logic should be abstracted
+import { redirect } from "@remix-run/server-runtime"
 
-import {
-  Button,
-  Center,
-  Container,
-  Pagination,
-  Table,
-  TextInput,
-  Title,
-} from "@mantine/core"
-import { Prism } from "@mantine/prism"
+import { Button, Container, Pagination, Table } from "@mantine/core"
 
 import { prisma } from "~/db.server"
-import { train } from "~/models/language_model/trainer.server"
 import { requireUserId } from "~/session.server"
 import { toNum } from "~/utils"
-
-// TODO: pagination logic should be abstracted
 
 type LoaderData = {
   result: Pick<Question, "id" | "question" | "questionGroupId">[]

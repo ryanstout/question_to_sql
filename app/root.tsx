@@ -10,7 +10,6 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-  useCatch,
 } from "@remix-run/react"
 
 import { MantineProvider, createEmotionCache } from "@mantine/core"
