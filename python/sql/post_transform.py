@@ -56,7 +56,6 @@ class PostTransform:
     def add_fully_qualified_name(self, node):
         if isinstance(node, exp.Table):
             # Find the matching table in the db
-            print("Node Name: ", node.name)
             db_table = self.db.datasourcetabledescription.find_first(
                 where={"dataSourceId": self.datasource_id, "fullyQualifiedName": {"endsWith": f".{node.name.upper()}"}}
             )
