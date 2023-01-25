@@ -9,7 +9,7 @@ openai.api_key = config("OPENAI_KEY")
 
 
 class OpenAIEmbeddings:
-    @apply_backoff(max_tries=5, max_delay=30)
+    @apply_backoff(max_tries=5)
     def encode(content: str):
         result = openai.Embedding.create(model="text-embedding-ada-002", input=content)
 

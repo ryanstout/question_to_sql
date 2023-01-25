@@ -1,4 +1,5 @@
 import openai
+from backoff_utils import apply_backoff
 from decouple import config
 
 from python.schema.ranker import Ranker
@@ -51,6 +52,7 @@ class OpenAIResponse(t.TypedDict):
     usage: Usage
 
 
+@apply_backoff(max_tries=5)
 def question_with_schema_to_sql(schema: str, question: str) -> str:
     prompt = f"{schema}\n\n-- {question}\nSELECT "
 
