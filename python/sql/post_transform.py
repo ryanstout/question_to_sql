@@ -17,6 +17,7 @@ from sqlglot import diff, exp, parse_one
 from sqlglot.optimizer import optimize
 
 from python.utils.connections import Connections
+from python.utils.logging import log
 
 
 class PostTransform:
@@ -59,6 +60,10 @@ class PostTransform:
             db_table = self.db.datasourcetabledescription.find_first(
                 where={"dataSourceId": self.datasource_id, "fullyQualifiedName": {"endsWith": f".{node.name.upper()}"}}
             )
+
+            if not db_table:
+                log.error("Could not find table in db", table_name=node.name)
+                return node
 
             name_parts = db_table.fullyQualifiedName.split(".")
             wrapped = list(map(lambda x: f'"{x}"', name_parts))
