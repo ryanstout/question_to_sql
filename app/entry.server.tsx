@@ -5,6 +5,9 @@ import { RemixServer } from "@remix-run/react"
 
 import { createStylesServer, injectStyles } from "@mantine/remix"
 
+// import in order to configure the global logger
+import logger from "~/lib/logging.server"
+
 const server = createStylesServer()
 
 export default function handleRequest(
