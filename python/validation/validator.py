@@ -34,9 +34,10 @@ class Validator:
             old_sql = question.codexSql
 
             old_results = run_query(snowflake_cursor, old_sql)
-            print(old_results)
+            print("Results: ", old_results)
 
             new_sql = questions.question_with_data_source_to_sql(data_source_id, question.question)
+            print(new_sql)
             # new_results = snowflake_cursor.execute(new_sql)
 
     def check_match(self, old_results, new_results):

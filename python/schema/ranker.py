@@ -46,7 +46,7 @@ class Ranker:
         query: str,
         embedder=OpenAIEmbeddings,
         cache_results=True,
-        table_weights=[1.0, 1.0, 1.0],
+        table_weights=[10.0, 10.0, 1.0],
         column_weights=[1.0, 1.0, 1.0],
         value_weights=[1.0],
     ) -> SCHEMA_RANKING_TYPE:
