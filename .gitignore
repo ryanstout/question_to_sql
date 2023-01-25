@@ -12,6 +12,7 @@ node_modules
 
 snowflake.sql
 snowflake.json
+python.log
 __pycache__
 python/indexes
 

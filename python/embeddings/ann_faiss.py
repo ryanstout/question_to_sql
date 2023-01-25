@@ -49,7 +49,7 @@ class AnnFaiss:
         faiss.write_index(self.index, output_path + ".faiss")
 
         t2 = time.time()
-        log.debug("Built Faiss in ", t2 - t1, " secs")
+        log.debug("Built Faiss", sec=(t2 - t1))
 
     def load(self, faiss_path, nprobe=15):
         self.index = faiss.read_index(faiss_path + ".faiss")
