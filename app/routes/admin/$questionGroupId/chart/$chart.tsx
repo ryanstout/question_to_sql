@@ -119,12 +119,14 @@ function BarChart({ type, data }: { type: string; data: BarDatum[] }) {
 }
 
 export default function VisualizeMethod() {
+  return <></>
   const params = useParams()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
   let question = searchParams.get("q") || ""
 
+  // pull loader data from another route
   const match = useMatches().find(
     (match) => match.id === "routes/admin/$questionGroupId"
   )
@@ -132,6 +134,7 @@ export default function VisualizeMethod() {
 
   const dataObj = data ? JSON.parse(data.latestResult || "{}") : null
   const latestResult = data ? data.latestResult : null
+  console.log(`result ${latestResult}}`)
 
   function changeTab(value: string | null) {
     if (value) {

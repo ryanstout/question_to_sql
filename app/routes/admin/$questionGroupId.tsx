@@ -1,4 +1,3 @@
-// import { Connection } from 'postgresql-client';
 import { sql } from "@codemirror/lang-sql"
 import { EditorView } from "@codemirror/view"
 import type { Question } from "@prisma/client"
@@ -30,7 +29,6 @@ import {
   Grid,
   Header,
   Loader,
-  Navbar,
   Stack,
   Table,
   Text,
@@ -39,11 +37,9 @@ import {
 
 import { Footer } from "~/components/admin/footer"
 import { prisma } from "~/db.server"
-import queryRunner from "~/lib/query-runner"
-import {
-  EnhanceSqlQuery,
-  GenerateSqlQuery,
-} from "~/models/language_model/query_generator.server"
+import { log } from "~/lib/logging.server"
+import { runQuery } from "~/lib/query-runner"
+import { fakeDataSource, questionToSql } from "~/lib/question.server"
 import { requireUserId } from "~/session.server"
 
 type QuestionInBrowser = Pick<
@@ -94,11 +90,13 @@ async function findOrCreateQuestion(
   })
 
   if (!question) {
+    // TODO route to new generator
     // create the question if it doesn't exist
 
+    const dataSource = fakeDataSource()
+
     // We need to generate the sql for the query since its new
-    let codexSql = await GenerateSqlQuery(q)
-    codexSql = await EnhanceSqlQuery(codexSql)
+    const codexSql = await questionToSql(dataSource.id, q)
 
     // create the new query
     question = await prisma.question.create({
@@ -151,6 +149,7 @@ export async function action({ request }: ActionArgs) {
   let questions: QuestionInBrowser[] | null
   let question
 
+  // updating the usersql, not the original question
   if (action_name === "update") {
     const { id, userSql } = await zx.parseForm(request, {
       id: zx.NumAsString,
@@ -220,6 +219,7 @@ export async function action({ request }: ActionArgs) {
   }
 
   if (q) {
+    // TODO questionID
     return redirect(
       `/admin/${questionGroup.id}/chart/raw?q=${encodeURIComponent(q || "")}`
     )
@@ -234,7 +234,10 @@ export let loader: LoaderFunction = async ({
 }): Promise<LoaderData> => {
   const userId = await requireUserId(request)
 
+  // extract natural language query from query params
   const { q } = zx.parseQuery(request, { q: z.string().optional() })
+
+  // extract group from path params
   const { questionGroupId } = zx.parseParams(params, {
     questionGroupId: zx.NumAsString,
   })
@@ -258,23 +261,17 @@ export let loader: LoaderFunction = async ({
   let resultJson
 
   if (question) {
+    const dataSourceId = 1
+    const dataSource = fakeDataSource()
+
     try {
-      const result = await queryRunner.runQuery(
-        {
-          // TODO this is a total hack for not having a proper user
-          type: "snowflake",
-          credentials: {
-            account: process.env.SNOWFLAKE_ACCOUNT,
-            username: process.env.SNOWFLAKE_USERNAME,
-            password: process.env.SNOWFLAKE_PASSWORD,
-            database: process.env.SNOWFLAKE_DATABASE,
-            schema: process.env.SNOWFLAKE_SCHEMA,
-            warehouse: process.env.SNOWFLAKE_WAREHOUSE,
-          },
-        },
-        question.userSql
-      )
-      resultJson = beautify(result, null!, 2, 100)
+      const sql = await questionToSql(dataSource.id, question)
+      log.debug("sql from python", { sql })
+
+      const results = await runQuery(dataSource, sql)
+
+      // prettify the resulting JSON
+      resultJson = beautify(results, null!, 2, 100)
     } catch (e) {
       console.error(e)
       resultJson = beautify({ message: e!.toString(), error: e }, null!, 2, 100)
@@ -472,6 +469,7 @@ function QueryHeader({ data }: { data: LoaderData }) {
               extensions={[sql({}), EditorView.lineWrapping]}
               onChange={(e) => setQuery(e)}
               onKeyDownCapture={(e) => {
+                // shift+enter to edit the query
                 if (e.shiftKey && e.key === "Enter") {
                   e.stopPropagation()
                   e.preventDefault()
@@ -506,46 +504,15 @@ function QueryHeader({ data }: { data: LoaderData }) {
   )
 }
 
-// export function links() {
-//     return [{ rel: "stylesheet", href: styles }];
-// }
-
 export default function QuestionGroup() {
   let data = useLoaderData<LoaderData>()
   const params = useParams()
+  return <></>
 
   return (
-    // <Flex direction="column" sx={{ height: '100vh' }}>
-    //     <QueryHeader q={q} query={query} />
-    //     <Box sx={{ overflowY: 'scroll' }}>
-    //         <Grid>
-    //             <Grid.Col span={2}>
-    //                 <Box>
-    //                     <Navbar width={{ base: 300 }} height="100%" p="xs">
-    //                         <h2>Side navbar</h2>
-    //                     </Navbar>
-
-    //                 </Box>
-    //             </Grid.Col>
-    //             <Grid.Col span={10}>
-    //                 <Box>
-    //                     <Outlet />
-    //                     <Footer />
-    //                 </Box>
-    //             </Grid.Col>
-    //         </Grid>
-
-    //     </Box>
-    // </Flex>
-
     <>
       <AppShell
         padding="md"
-        // navbar={
-        //   <Navbar width={{ base: 300 }} height="100%" p="xs">
-        //     <h2>Side</h2>
-        //   </Navbar>
-        // }
         header={<QueryHeader data={data} />}
         styles={(theme) => ({
           main: {

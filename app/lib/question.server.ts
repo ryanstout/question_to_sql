@@ -14,7 +14,7 @@ interface QuestionResult {
   data?: any[]
 }
 
-function fakeDataSource() {
+export function fakeDataSource() {
   return {
     // TODO this is a total hack for not having a proper user
     type: "snowflake",
@@ -37,22 +37,23 @@ export async function processQuestion(
 ): Promise<QuestionResult> {
   const dataSource = fakeDataSource()
 
-  // TODO handle invalid query error
-  const sql = await questionToSql(dataSourceId, question)
-  log.debug("sql from python", { sql })
-
-  const data = await runQuery(dataSource, sql)
-  log.debug("got data from snowflake")
-
   const questionRecord = await prisma.question.create({
     data: {
       userId: userId,
       dataSourceId: dataSourceId,
 
       question: question,
-      codexSql: sql,
     },
   })
+
+  // codexSql: sql,
+
+  // TODO handle invalid query error
+  const sql = await questionToSql(dataSourceId, question)
+  log.debug("sql from python", { sql })
+
+  const data = await runQuery(dataSource, sql)
+  log.debug("got data from snowflake")
 
   return {
     question: questionRecord,
@@ -76,7 +77,11 @@ function escapeShell(cmd: string) {
 export async function questionToSql(
   dataSourceId: number,
   naturalQuestion: string
-) {
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    resolve("SELECT * FROM ORDERS LIMIT 10")
+  })
+
   return new Promise((resolve, reject) => {
     const pythonPath = pythonCommand()
     log.debug("sending question to python", {

@@ -2,7 +2,8 @@ import { useState } from "react"
 import { z } from "zod"
 import { zx } from "zodix"
 
-import { ActionArgs, LoaderFunction, redirect } from "@remix-run/node"
+import type { ActionArgs } from "@remix-run/node"
+import { LoaderFunction, redirect } from "@remix-run/node"
 import { Form } from "@remix-run/react"
 
 import { Center, TextInput, Title } from "@mantine/core"

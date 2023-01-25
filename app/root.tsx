@@ -1,7 +1,8 @@
 import { getUser } from "./session.server"
 import { theme } from "./theme"
 
-import { MetaFunction, json } from "@remix-run/node"
+import type { MetaFunction } from "@remix-run/node"
+import { json } from "@remix-run/node"
 import {
   Links,
   LiveReload,
@@ -49,9 +50,4 @@ export default function App() {
       </html>
     </MantineProvider>
   )
-}
-
-export function CatchBoundary() {
-  const caught = useCatch()
-  return <h1>Caught error2: {caught.statusText}</h1>
 }
