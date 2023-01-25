@@ -2,8 +2,6 @@ import type { Question } from "@prisma/client"
 import path from "path"
 import { PythonShell } from "python-shell"
 
-import { linearGradientDef } from "@nivo/core"
-
 import { prisma } from "~/db.server"
 import { log } from "~/lib/logging.server"
 import { runQuery } from "~/lib/query-runner"
@@ -14,6 +12,7 @@ interface QuestionResult {
   data?: any[]
 }
 
+// TODO we should rip this out!
 export function fakeDataSource() {
   return {
     // TODO this is a total hack for not having a proper user
@@ -30,28 +29,90 @@ export function fakeDataSource() {
   }
 }
 
+// if you have a question, and just want the results from the warehouse
+export async function getResultsFromQuestion(
+  question: Question
+): Promise<QuestionResult> {
+  const dataSource = fakeDataSource()
+  const data = await runQuery(dataSource, question.codexSql)
+
+  return {
+    question: question,
+    status: "success",
+    data: data,
+  }
+}
+
+// if the user wants to update the SQL directly
+export async function updateQuestion(
+  question: Question,
+  userSql: string
+): Promise<QuestionResult> {
+  // updated SQL has been provided by the user, update the question record and
+  // get updated results data
+
+  const updateUser = await prisma.question.update({
+    where: {
+      id: question.id,
+    },
+    data: {
+      userSql: userSql,
+    },
+  })
+
+  const dataSource = fakeDataSource()
+  log.debug("sending updated query to snowflake")
+  const results = await runQuery(dataSource, userSql)
+
+  return {
+    question: question,
+    status: "success",
+    data: results,
+  }
+}
+
 export async function processQuestion(
   userId: number,
   dataSourceId: number,
-  question: string
+  question: string,
+  questionGroupId?: number
 ): Promise<QuestionResult> {
   const dataSource = fakeDataSource()
 
-  const questionRecord = await prisma.question.create({
+  if (!questionGroupId) {
+    const questionGroup = await prisma.questionGroup.create({
+      data: {
+        userId: userId,
+      },
+    })
+
+    questionGroupId = questionGroup.id
+  }
+
+  // create the question first, in case open AI fails
+  let questionRecord = await prisma.question.create({
     data: {
       userId: userId,
       dataSourceId: dataSourceId,
-
+      questionGroupId: questionGroupId,
       question: question,
     },
   })
 
-  // codexSql: sql,
-
-  // TODO handle invalid query error
+  // TODO handle open AI failure here
   const sql = await questionToSql(dataSourceId, question)
   log.debug("sql from python", { sql })
 
+  questionRecord = await prisma.question.update({
+    where: {
+      id: questionRecord.id,
+    },
+    data: {
+      codexSql: sql,
+    },
+  })
+
+  // TODO catch and mark as invalid if this fails
   const data = await runQuery(dataSource, sql)
   log.debug("got data from snowflake")
 
@@ -78,9 +139,12 @@ export async function questionToSql(
   dataSourceId: number,
   naturalQuestion: string
 ): Promise<string> {
-  return new Promise((resolve, reject) => {
-    resolve("SELECT * FROM ORDERS LIMIT 10")
-  })
+  // TODO remove me! Use mock server once we have a python API
+  if (process.env.MOCKED_QUESTION_RESPONSE === "true") {
+    return new Promise((resolve, reject) => {
+      resolve("SELECT * FROM ORDERS LIMIT 10")
+    })
+  }
 
   return new Promise((resolve, reject) => {
     const pythonPath = pythonCommand()

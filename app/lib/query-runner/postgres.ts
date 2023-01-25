@@ -7,7 +7,10 @@ function getConnection() {
   })
 }
 
-export async function runQuery(datasource: any, querySQL: string) {
+export async function runQuery(
+  datasource: any,
+  querySQL: string
+): Promise<any[]> {
   const db = getConnection()
   await db.connect()
   const result = await db.query(querySQL)

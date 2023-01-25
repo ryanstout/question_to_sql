@@ -40,7 +40,10 @@ async function snowflakeConnection(dataSource: any) {
   return snowflake
 }
 
-export async function runQuery(dataSource: any, querySQL: string) {
+export async function runQuery(
+  dataSource: any,
+  querySQL: string
+): Promise<any[]> {
   const snowflake = await snowflakeConnection(dataSource)
   return executeSQL(snowflake, querySQL)
 }
