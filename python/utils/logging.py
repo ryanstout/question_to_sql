@@ -1,11 +1,14 @@
 import logging
+import os
 
 import structlog
 from decouple import config
-from rich.traceback import install
 
-# not really logging, but this is a good place to set this up
-install(show_locals=True)
+if not os.getenv("SKIP_RICH"):
+    from rich.traceback import install
+
+    # not really logging, but this is a good place to set this up
+    install(show_locals=True)
 
 
 def setLevel(level):

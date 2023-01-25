@@ -3,15 +3,16 @@ from decouple import config
 
 from python.schema.ranker import Ranker
 from python.schema.schema_builder import SchemaBuilder
+from python.sql.post_transform import PostTransform
 from python.utils.connections import Connections
 from python.utils.logging import log
 
 openai.api_key = config("OPENAI_KEY")
 
 
-from python.setup import log
-
 import typing as t
+
+from python.setup import log
 
 
 def question_with_data_source_to_sql(data_source_id: int, question: str) -> str:
@@ -21,6 +22,10 @@ def question_with_data_source_to_sql(data_source_id: int, question: str) -> str:
     ranked_structure = Ranker(db, data_source_id).rank(question)
     table_schema_limited_by_token_size = SchemaBuilder(db).build(ranked_structure)
     sql = question_with_schema_to_sql(table_schema_limited_by_token_size, question)
+
+    # AST based tranform of the SQL to fix up common issues
+    sql = PostTransform(data_source_id).run(sql)
+
     return sql
 
 

@@ -1,8 +1,7 @@
-from python.setup import log
-
 import click
 
 from python.questions import question_with_data_source_to_sql
+from python.setup import log
 
 
 @click.command()

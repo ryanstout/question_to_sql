@@ -63,6 +63,7 @@ Goal: EOD Tuesday
 - [ ] Columns with the name "DEFAULT" or "VALUES" (and maybe other sql keywords don't seem to work with snowflake)
 - [ ] Test adding column name in front of value for more context in embedding
 - [ ] Look at primary key index annotations in schema
+- [ ] Question model needs a dataSourceId
 
 # SQL snowflowflakification
 
