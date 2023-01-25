@@ -22,6 +22,7 @@ sentence-transformers = "^2.2.2"
 structlog = "^22.3.0"
 click = "^8.1.3"
 numpy = "^1.24.1"
+backoff-utils = "^1.0.1"
 
 
 [tool.poetry.group.dev.dependencies]
