@@ -2,7 +2,8 @@
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
+    "source.fixAll.eslint": true,
+    "source.organizeImports": true
   },
   "[prisma]": {
     "editor.defaultFormatter": "Prisma.prisma"
@@ -20,10 +21,8 @@
   "cSpell.ignoreRegExpList": ["/from\\s+(['\"]).*\\1/"],
   "cSpell.words": ["AIRBYTE"],
   "[python]": {
-    "editor.defaultFormatter": "ms-python.python",
-    "editor.codeActionsOnSave": {
-      "source.organizeImports": true
-    }
+    // https://discuss.python.org/t/autopep8-isort-how-do-i-sort-using-autoformatting-absolute-imports-for-user-defined-modules-in-vs-code/20973
+    "editor.defaultFormatter": "ms-python.python"
   },
   "python.linting.lintOnSave": true,
   "python.formatting.provider": "black",
