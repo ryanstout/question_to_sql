@@ -11,16 +11,20 @@ import { Link, Outlet, useActionData, useLocation } from "@remix-run/react"
 import { AppShell } from "@mantine/core"
 
 import Search from "~/components/dashboard/search"
+
 import QueryFeedback from "~/components/dashboard/queryFeedback"
 import { questionToSql } from "~/lib/question.server"
+import { processQuestion } from "~/lib/question.server"
 import { useOptionalUser } from "~/utils"
 
+// this is executed on the server side
 export const action = async ({ request }: ActionArgs) => {
   const { q } = await zx.parseForm(request, {
     q: z.string().optional(),
   })
 
-  const sql = await questionToSql(q)
+  const dataSourceId = 1
+  const result = await processQuestion(dataSourceId, q)
 
   return json({ q, sql })
 }

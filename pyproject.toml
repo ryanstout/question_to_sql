@@ -35,6 +35,11 @@ rich = "^13.2.0"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "WARN"
+addopts = "--pdbcls=IPython.terminal.debugger:Pdb"
+
 [tool.black]
 line-length=150
 target-version=['py39']
