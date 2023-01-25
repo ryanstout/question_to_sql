@@ -48,6 +48,7 @@ model QuestionGroup {
 }
 
 enum FeedbackState {
+  INVALID
   UNANSWERED
   UNKNOWN
   CORRECT
@@ -63,8 +64,11 @@ model Question {
   codexSql String // the original query generated from openai
 
   // should be unset initially, and result is only stored if the
-  feedbackState FeedbackState
+  feedbackState FeedbackState @default(UNANSWERED)
   resultData    Json?
+
+  dataSourceId Int?
+  dataSource   DataSource? @relation(fields: [dataSourceId], references: [id])
 
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId Int
@@ -107,6 +111,7 @@ model DataSource {
 
   dataSourceTableDescriptions DataSourceTableDescription[]
   EmbeddingLink               EmbeddingLink[]
+  Question                    Question[]
 }
 
 model DataSourceTableDescription {
