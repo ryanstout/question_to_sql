@@ -7,10 +7,10 @@ import { Form } from "@remix-run/react"
 
 import { Center, TextInput, Title } from "@mantine/core"
 
-import { prisma } from "~/db.server"
 import { HeaderMenu } from "~/components/dashboard/headerMenu"
-import { Hero } from "~/routes/hero"
+import { prisma } from "~/db.server"
 import { findOrCreateQuestionGroup } from "~/routes/admin/$questionGroupId"
+import { Hero } from "~/routes/hero"
 import { requireUserId } from "~/session.server"
 import { useOptionalUser } from "~/utils"
 
@@ -26,12 +26,12 @@ export async function action({ request }: ActionArgs) {
 
   if (q) {
     return redirect(
-      `/query/${questionGroup.id}/chart/raw?q=${encodeURIComponent(
+      `/admin/${questionGroup.id}/chart/raw?q=${encodeURIComponent(
         q as string
       )}`
     )
   } else {
-    return redirect(`/query/${questionGroup.id}/chart/raw`)
+    return redirect(`/admin/${questionGroup.id}/chart/raw`)
   }
 }
 
@@ -45,7 +45,7 @@ export default function Index() {
       <main>
         <Center sx={{ height: "100vh" }}>
           {/* TODO I don't think we need an explicit action here? */}
-          <Form action="/query" method="post">
+          <Form action="/admin" method="post">
             <Title>What would you like to know?</Title>
             <TextInput
               name="q"

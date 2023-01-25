@@ -37,13 +37,13 @@ import {
   TextInput,
 } from "@mantine/core"
 
+import { Footer } from "~/components/admin/footer"
 import { prisma } from "~/db.server"
 import queryRunner from "~/lib/query-runner"
 import {
   EnhanceSqlQuery,
   GenerateSqlQuery,
 } from "~/models/language_model/query_generator.server"
-import { Footer } from "~/components/admin/footer"
 import { requireUserId } from "~/session.server"
 
 type QuestionInBrowser = Pick<
@@ -221,10 +221,10 @@ export async function action({ request }: ActionArgs) {
 
   if (q) {
     return redirect(
-      `/query/${questionGroup.id}/chart/raw?q=${encodeURIComponent(q || "")}`
+      `/admin/${questionGroup.id}/chart/raw?q=${encodeURIComponent(q || "")}`
     )
   } else {
-    return redirect(`/query/${questionGroup.id}/chart/raw`)
+    return redirect(`/admin/${questionGroup.id}/chart/raw`)
   }
 }
 
@@ -414,7 +414,7 @@ function QueryHeader({ data }: { data: LoaderData }) {
 
               <Flex>
                 <Box w="100%">
-                  <Form method="post" action="/query">
+                  <Form method="post" action="/admin">
                     <Button type="submit" w="100%">
                       New Question
                     </Button>

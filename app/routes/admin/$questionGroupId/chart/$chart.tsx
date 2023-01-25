@@ -126,7 +126,7 @@ export default function VisualizeMethod() {
   let question = searchParams.get("q") || ""
 
   const match = useMatches().find(
-    (match) => match.id === "routes/query/$questionGroupId"
+    (match) => match.id === "routes/admin/$questionGroupId"
   )
   const data = match?.data ? (match.data as GroupLoaderData) : null
 
@@ -136,7 +136,7 @@ export default function VisualizeMethod() {
   function changeTab(value: string | null) {
     if (value) {
       navigate(
-        `/query/${params.questionGroupId}/chart/${value}?q=` +
+        `/admin/${params.questionGroupId}/chart/${value}?q=` +
           encodeURIComponent(question),
         { preventScrollReset: true }
       )
