@@ -1,7 +1,10 @@
 # Create the schema for a DataSource by querying the embedding indexes and
 # deciding which tables, columns, and value hints to include in the prompt.
 
+from python.setup import log
+
 import re
+import time
 import typing as t
 
 import tiktoken
@@ -46,8 +49,12 @@ class SchemaBuilder:
         return self.generate_sql_from_element_rank(ranked_schema)
 
     def estimate_token_count(self, text: str) -> int:
+        t1 = time.time()
         enc = tiktoken.get_encoding("gpt2")
-        return len(enc.encode(text))
+        token_count = len(enc.encode(text))
+        t2 = time.time()
+        log.debug("tokenize time: ", tokenize_time=(t2 - t1))
+        return token_count
 
     def generate_column_describe(self, column_id: int, hints: t.List[str]) -> str:
         # TODO should we filter by kind?
@@ -99,7 +106,9 @@ class SchemaBuilder:
             # first, let's check to see if the new schema is above the token limit
             new_table_sql = self.generate_sql_describe(table_ranks)
 
-            if self.estimate_token_count(new_table_sql) > self.TOKEN_COUNT_LIMIT:
+            token_count = self.estimate_token_count(new_table_sql)
+            if token_count > self.TOKEN_COUNT_LIMIT:
+                log.debug("schema token count", token_count=token_count)
                 return sql
             else:
                 sql = new_table_sql
@@ -135,6 +144,8 @@ class SchemaBuilder:
                     }
                     table_rank["columns"].append(column_rank)
 
+        token_count = self.estimate_token_count(new_table_sql)
+        log.debug("schema token count", token_count=token_count)
         return sql
 
 

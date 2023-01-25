@@ -15,6 +15,7 @@ from prisma.models import (
 
 import python.utils.sql as sql
 from python.embeddings.ann_index import AnnIndex
+from python.utils.connections import Connections
 from python.utils.entropy import token_entropy
 from python.utils.logging import log
 
@@ -37,10 +38,11 @@ def in_groups_of(l, n):
 
 
 class EmbeddingBuilder:
-    def __init__(self, prisma_db, snowflake_cursor, datasource: DataSource):
+    def __init__(self, datasource: DataSource):
         # TODO these two should be pulled from the input datasource
-        self.db = prisma_db
-        self.snowflake_cursor = snowflake_cursor
+        self.connection = Connections()
+
+        self.db = self.connection.open()
 
         self.datasource = datasource
 
@@ -109,7 +111,11 @@ class EmbeddingBuilder:
 
         # wait sync for all AsyncResults to complete
         for result in column_add_results:
-            result.wait(60)
+            # try:
+            result.get()
+            # except ValueError:
+            #     # TODO: should probably fail fully and we can figure it out
+            #     log.error("async result timed out")
 
         log.debug("async results complete", total=len(column_add_results), successful=len([r for r in column_add_results if r.successful()]))
 
@@ -127,8 +133,10 @@ class EmbeddingBuilder:
             log.debug("skipping embeddings for column, not varchar", column_name=column.name)
             return
 
+        snowflake_cursor = self.connection.snowflake_cursor()
+
         # Get all the values for this column
-        values = self.snowflake_cursor.execute(
+        values = snowflake_cursor.execute(
             f"""
             SELECT DISTINCT({column.name})
             AS VALUE FROM {sql.normalize_fqn_quoting(table.fullyQualifiedName)}

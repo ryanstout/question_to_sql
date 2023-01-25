@@ -1,3 +1,5 @@
+from python.setup import log
+
 import sys
 import typing as t
 
@@ -46,25 +48,28 @@ class Ranker:
         query: str,
         embedder=OpenAIEmbeddings,
         cache_results=True,
-        table_weights=[10.0, 10.0, 1.0],
-        column_weights=[1.0, 1.0, 1.0],
+        table_weights=[1.0, 0.0, 0.0],
+        column_weights=[1.0, 0.0, 0.0],
         value_weights=[1.0],
     ) -> SCHEMA_RANKING_TYPE:
 
         query_embedding = Embedding(self.db, query, embedder=embedder, cache_results=cache_results).embedding_numpy
 
+        log.debug("Start faiss lookups")
         # Fetch ranked table id
         table_matches = self.idx_table_names.search(query_embedding, 1000)
         tables_with_columns_matches = self.idx_column_names.search(query_embedding, 1000)
 
-        columns_matches = self.idx_column_names.search(query_embedding, 100000)
-        column_name_and_all_column_values_matches = self.idx_column_name_and_all_column_values.search(query_embedding, 100000)
+        columns_matches = self.idx_column_names.search(query_embedding, 10000)
+        column_name_and_all_column_values_matches = self.idx_column_name_and_all_column_values.search(query_embedding, 1000)
 
-        value_matches = self.idx_values.search(query_embedding, 10000)
+        value_matches = self.idx_values.search(query_embedding, 1000)
 
         tables = self.merge_ranks([table_matches, tables_with_columns_matches, value_matches], table_weights, 0)
         columns = self.merge_ranks([columns_matches, column_name_and_all_column_values_matches, value_matches], column_weights, 1)
         values = self.merge_ranks([value_matches], value_weights, 2)
+
+        log.debug("End faiss lookups")
 
         rankings = list(map(lambda x: ElementRank(table_id=x[1][0], column_id=x[1][1], value_hint=x[1][2], score=x[0]), tables + columns + values))
 
