@@ -65,7 +65,7 @@ export async function updateQuestion(
   const results = await runQuery(dataSource, userSql)
 
   return {
-    question: question,
+    question: updateUser,
     status: "success",
     data: results,
   }
