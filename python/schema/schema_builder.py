@@ -58,11 +58,11 @@ class SchemaBuilder:
 
     def generate_column_describe(self, column_id: int, hints: t.List[str]) -> str:
         # TODO should we filter by kind?
-        column = self.cached_columns[column_id]
+        column = self.cached_columns.get(column_id, None)
 
         # not caching the columns was creating a massive slowdown in schema generation
         if not column:
-            self.cached_columns[column_id] = self.db.datasourcetablecolumn.find_first(where={"id": column_id})
+            column = self.cached_columns[column_id] = self.db.datasourcetablecolumn.find_first(where={"id": column_id})
 
         if column is None:
             raise Exception(f"column not found {column_id}")

@@ -32,6 +32,8 @@ class AnnFaiss:
             # self.index = faiss.index_factory(min(1000, rows), "HNSW", faiss.METRIC_INNER_PRODUCT)
             # self.index = faiss.IndexHNSWFlat(dimensions, faiss.METRIC_INNER_PRODUCT)
             self.index = faiss.IndexFlatIP(dimensions)
+        elif True:
+            self.index = faiss.index_factory(dimensions, "HNSW", faiss.METRIC_INNER_PRODUCT)
         else:
             quantizer = faiss.IndexFlatL2(dimensions)
             self.index = faiss.IndexIVFFlat(quantizer, dimensions, min(1000, rows), faiss.METRIC_INNER_PRODUCT)
@@ -67,8 +69,8 @@ class AnnFaiss:
     def query(self, query, number_of_matches):
         t1 = time.time()
         query = np.expand_dims(query, axis=0)
-        if query.shape[0] > 1:
-            faiss.normalize_L2(query)
+        # if query.shape[0] > 1:
+        faiss.normalize_L2(query)
         scores, indexes = self.index.search(query, number_of_matches)
         t2 = time.time()
 

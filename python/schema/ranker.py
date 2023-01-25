@@ -49,7 +49,7 @@ class Ranker:
         embedder=OpenAIEmbeddings,
         cache_results=True,
         table_weights=[1.0, 0.0, 0.0],
-        column_weights=[1.0, 0.0, 0.0],
+        column_weights=[0.1, 0.0, 0.0],
         value_weights=[1.0],
     ) -> SCHEMA_RANKING_TYPE:
 
