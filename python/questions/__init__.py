@@ -11,9 +11,9 @@ from python.utils.logging import log
 openai.api_key = config("OPENAI_KEY")
 
 
-import typing as t
-
 from python.setup import log
+
+import typing as t
 
 
 def question_with_data_source_to_sql(data_source_id: int, question: str) -> str:
@@ -21,7 +21,9 @@ def question_with_data_source_to_sql(data_source_id: int, question: str) -> str:
     db = connections.open()
 
     ranked_structure = Ranker(db, data_source_id).rank(question)
+    log.debug("Building Schema")
     table_schema_limited_by_token_size = SchemaBuilder(db).build(ranked_structure)
+    log.debug("Convert Question to SQL")
     sql = question_with_schema_to_sql(table_schema_limited_by_token_size, question)
 
     # AST based tranform of the SQL to fix up common issues

@@ -21,7 +21,12 @@ class Connections:
         return self.db
 
     def snowflake_cursor(self):
-        return self.snowflake_connection.cursor(cursor_class=DictCursor)
+        cursor = self.snowflake_connection.cursor(cursor_class=DictCursor)
+
+        # TODO: Move this into a DataSource
+        cursor.execute("use warehouse COMPUTE_WH;")
+
+        return cursor
 
     def close(self):
         self.db.disconnect()

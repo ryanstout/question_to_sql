@@ -1,3 +1,5 @@
+from python.setup import log
+
 import os
 
 import numpy as np
@@ -9,8 +11,9 @@ openai.api_key = config("OPENAI_KEY")
 
 
 class OpenAIEmbeddings:
-    @apply_backoff(max_tries=5)
+    # @apply_backoff(max_tries=5)
     def encode(content: str):
+        # log.debug("Encoding with OpenAI", content=content)
         result = openai.Embedding.create(model="text-embedding-ada-002", input=content)
 
         emb = np.array(result.data[0].embedding, dtype=np.float32)

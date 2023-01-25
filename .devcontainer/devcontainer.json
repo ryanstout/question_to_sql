@@ -1,0 +1,22 @@
+// adapted from: https://github.com/iloveitaly/asdf-devcontainer/blob/main/.devcontainer/devcontainer.json
+// https://aka.ms/devcontainer.json
+{
+  "name": "Base Container with Docker for Building Docker Images",
+  // `http https://mcr.microsoft.com/v2/vscode/devcontainers/base/tags/list | fzf`
+  "image": "mcr.microsoft.com/devcontainers/base:dev-ubuntu",
+
+  "forwardPorts": [],
+  "remoteUser": "vscode",
+
+  "features": {
+    "homebrew": "latest",
+    // you can view all of the features here: https://github.com/devcontainers/features/tree/main/src
+    "ghcr.io/devcontainers/features/sshd:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:1": {
+      "version": "latest",
+      "dockerDashComposeVersion": "v2"
+    }
+  }
+}

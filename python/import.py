@@ -56,7 +56,6 @@ THREAD_POOL_SIZE = 20
 class Import:
     def __init__(self, user_id, database_name, table_limit, column_limit, column_value_limit):
         self.column_pool = ThreadPool(processes=THREAD_POOL_SIZE)
-
         self.connections = Connections()
         self.connections.open()
 
@@ -77,7 +76,7 @@ class Import:
             # Dump the data from each table into the database
             self.snowflake_cursor = self.connections.snowflake_cursor()
 
-            self.embedding_builder = EmbeddingBuilder(self.db, self.snowflake_cursor, datasource)
+            self.embedding_builder = EmbeddingBuilder(datasource)
 
             # TODO pull this from the user credentials
             self.snowflake_cursor.execute("use warehouse COMPUTE_WH;")
@@ -138,13 +137,17 @@ class Import:
             """
         ).fetchall()
 
-        log.debug("inspecting columns", full_count=len(raw_column_list), limit=limit)
+        log.debug("inspecting columns", table_name=table_description.fullyQualifiedName, full_count=len(raw_column_list), limit=limit)
 
         column_list = raw_column_list[0:limit]
 
+        futures = []
         for column in column_list:
-            self.column_pool.apply_async(self.create_column_record, args=(table_description, column, row_count))
+            futures.append(self.column_pool.apply_async(self.create_column_record, args=(table_description, column, row_count)))
             # result is not important, otherwise we would `async_task.get()`
+
+        # Wait for futures to finsish
+        [future.get() for future in futures]
 
     def create_column_record(self, table_description: DataSourceTableDescription, column, row_count: int) -> None:
         name = column["name"]
@@ -154,7 +157,7 @@ class Import:
             log.debug("skipping column", column=name)
             return
 
-        log.info("inspecting column", name=name, type=type)
+        log.info("inspecting column", table_name=table_description.fullyQualifiedName, name=name, type=type, column=name)
 
         # since we are in a thread pool, we want to use a unique cursor to avoid any state issues
         cursor = self.connections.snowflake_cursor()
@@ -194,7 +197,7 @@ class Import:
         # Gets the distinct rows for the column and the total rows
         counts = cursor.execute(
             f"""
-            SELECT COUNT(DISTINCT({table_description.fullyQualifiedName}.{sql.normalize_fqn_quoting(name)}")) as count
+            SELECT COUNT(DISTINCT({sql.normalize_fqn_quoting(table_description.fullyQualifiedName)}.{sql.normalize_fqn_quoting(name)})) as count
             FROM {sql.normalize_fqn_quoting(table_description.fullyQualifiedName)}
             """
         )
