@@ -11,6 +11,7 @@ import { Link, Outlet, useActionData, useLocation } from "@remix-run/react"
 import { AppShell } from "@mantine/core"
 
 import Search from "~/components/dashboard/search"
+import QueryFeedback from "~/components/dashboard/queryFeedback"
 import { questionToSql } from "~/lib/question.server"
 import { useOptionalUser } from "~/utils"
 
@@ -27,11 +28,12 @@ export const action = async ({ request }: ActionArgs) => {
 export default function Index() {
   const user = useOptionalUser()
   const loader = useActionData()
-
+  console.log(loader);
   return (
     <AppShell footer={<AppFooter />}>
       <HeaderMenu user={user} />
       <Search question={loader ? loader.q : ""} />
+      <QueryFeedback feedback = {loader ? loader : {}}/>
     </AppShell>
   )
 }

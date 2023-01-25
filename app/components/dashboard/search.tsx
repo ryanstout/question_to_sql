@@ -1,45 +1,32 @@
 import { IconSearch } from "@tabler/icons"
-import { useEffect, useState } from "react"
-import { z } from "zod"
-import { zx } from "zodix"
-
-import type { ActionArgs } from "@remix-run/node"
-import { LoaderArgs, LoaderFunction, json, redirect } from "@remix-run/node"
 import {
-  Form,
-  useLoaderData,
-  useLocation,
-  useSearchParams,
+  Form
 } from "@remix-run/react"
+
+import {useState} from "react"
 
 import { Center, Grid, Loader, TextInput, Title } from "@mantine/core"
 
-import { Hero } from "~/routes/hero"
-import { requireUserId } from "~/session.server"
-import { useOptionalUser } from "~/utils"
-
-type LoaderData = {
-  id: string
-} | null
-
-// export let loader: LoaderFunction = async ({
-//   params,
-//   request,
-// }): Promise<LoaderData> => {
-//   const userId = await requireUserId(request)
-//   console.log("REQUEST", request);
-//   console.log("PARAMS", params);
-
-//   return {
-//     id: "EXAMPLE"
-//   }
-// }
-
 export default function Search({ question }: { question: string }) {
-  const user = useOptionalUser()
+  
+  const [isLoading, setIsLoading] = useState(false)  
+  const [userQuery, setUserQuery] = useState("");
 
-  if (!question) {
-    question = "How many cameras did we sell?"
+  let loader;
+
+  if(isLoading && question){
+    setIsLoading(false);
+  }
+
+  if(isLoading){
+    loader = (
+      <Loader size="xs" />
+    );
+  }
+
+  const handleSubmit = () => {
+    setIsLoading(true);
+    setUserQuery('');
   }
 
   return (
@@ -47,11 +34,17 @@ export default function Search({ question }: { question: string }) {
       <main>
         <Grid>
           <Grid.Col span={4} offset={4}>
-            <Form action="?index" method="post">
+            <Form 
+              action="?index" 
+              method="post"
+              onSubmit={(e) => {handleSubmit()}}
+            >
               <TextInput
                 width={100}
                 name="q"
-                defaultValue={question}
+                rightSection={loader}
+                onChange={(e) => setUserQuery(e.target.value)}
+                value={userQuery}
                 icon={<IconSearch size={18} />}
               />
             </Form>
