@@ -60,16 +60,21 @@ class SchemaBuilder:
     def build(self, ranked_schema: SCHEMA_RANKING_TYPE) -> str:
         return self.generate_sql_from_element_rank(ranked_schema)
 
-    def generate_column_describe(self, column_id: int, hints: t.List[str]) -> str:
-        # TODO should we filter by kind?
-        column = self.cached_columns.get(column_id, None)
+    # not caching the columns was creating a massive slowdown in schema generation
+    def get_data_source_table_column(self, column_id: int) -> DataSourceTableColumn:
+        if column := self.cached_columns.get(column_id, None):
+            return column
 
-        # not caching the columns was creating a massive slowdown in schema generation
-        if not column:
-            column = self.cached_columns[column_id] = self.db.datasourcetablecolumn.find_first(where={"id": column_id})
+        column = self.cached_columns[column_id] = self.db.datasourcetablecolumn.find_first(where={"id": column_id})
 
         if column is None:
             raise Exception(f"column not found {column_id}")
+
+        return column
+
+    def generate_column_describe(self, column_id: int, hints: t.List[str]) -> str:
+        # TODO should we filter by kind?
+        column = self.get_data_source_table_column(column_id)
 
         if column.type == "VARCHAR(256)":
             col_type = "VARCHAR"
@@ -150,7 +155,7 @@ class SchemaBuilder:
         }
 
     def create_column_rank(self, column_rank: ElementRank) -> ColumnRank:
-        column = self.db.datasourcetablecolumn.find_first(where={"id": column_rank["column_id"]})
+        column = self.get_data_source_table_column(column_rank["column_id"])
 
         return {
             "name": column.name,
