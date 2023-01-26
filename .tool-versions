@@ -1,4 +1,9 @@
-bun 0.4.0
+# bun 0.4.0
 poetry 1.3.2
 # python 3.11.1
+
+# these are defined in other legacy version files, but in order
+# for the docker setup to extract the versions easily we define
+# them here.
 python 3.9.9
+nodejs 19.2.0
