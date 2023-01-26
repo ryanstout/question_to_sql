@@ -1,16 +1,16 @@
-import { Center, TextInput, Title } from "@mantine/core"
-import type { ActionArgs } from "@remix-run/node"
-import { LoaderFunction, redirect } from "@remix-run/node"
-import { Form } from "@remix-run/react"
 import { useState } from "react"
 import { z } from "zod"
 import { zx } from "zodix"
+
+import type { ActionArgs } from "@remix-run/node"
+import { LoaderFunction, redirect } from "@remix-run/node"
+import { Form } from "@remix-run/react"
+
+import { Center, TextInput, Title } from "@mantine/core"
+
 import { findOrCreateQuestionGroup } from "~/routes/admin/$questionGroupId"
 import { requireUserId } from "~/session.server"
 import { useOptionalUser } from "~/utils"
-
-
-
 
 export async function action({ request }: ActionArgs) {
   const userId = await requireUserId(request)
@@ -35,6 +35,7 @@ export async function action({ request }: ActionArgs) {
 
 export const loader: LoaderFunction = async ({ request }) => {
   await requireUserId(request)
+  return {}
 }
 
 export default function Index() {

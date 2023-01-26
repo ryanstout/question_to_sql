@@ -1,13 +1,13 @@
 import { sql } from "@codemirror/lang-sql"
 import { EditorView } from "@codemirror/view"
-import {
-  AppShell,
-  Box,
-  Button, Divider, Flex,
-  Grid, Stack, Text
-} from "@mantine/core"
 import type { Question } from "@prisma/client"
 import { FeedbackState } from "@prisma/client"
+import CodeMirror from "@uiw/react-codemirror"
+import beautify from "json-beautify"
+import { useEffect, useState } from "react"
+import { z } from "zod"
+import { zx } from "zodix"
+
 import type { ActionArgs, LoaderFunction } from "@remix-run/node"
 import { redirect } from "@remix-run/node"
 import {
@@ -18,13 +18,20 @@ import {
   useNavigation,
   useParams,
   useSearchParams,
-  useSubmit
+  useSubmit,
 } from "@remix-run/react"
-import CodeMirror from "@uiw/react-codemirror"
-import beautify from "json-beautify"
-import { useEffect, useState } from "react"
-import { z } from "zod"
-import { zx } from "zodix"
+
+import {
+  AppShell,
+  Box,
+  Button,
+  Divider,
+  Flex,
+  Grid,
+  Stack,
+  Text,
+} from "@mantine/core"
+
 import ConsoleSearch from "~/components/dashboard/consoleSearch"
 import AppFooter from "~/components/dashboard/footer"
 import HeaderMenu from "~/components/dashboard/headerMenu"
@@ -259,7 +266,7 @@ export let loader: LoaderFunction = async ({
     const dataSource = fakeDataSource()
 
     try {
-      const sql = await questionToSql(dataSource.id, question)
+      const sql = await questionToSql(dataSource.id, question.question)
       log.debug("sql from python", { sql })
 
       const results = await runQuery(dataSource, sql)
@@ -282,8 +289,6 @@ export let loader: LoaderFunction = async ({
 }
 
 function QueryHeader({ data }: { data: LoaderData }) {
-  
-
   const params = useParams()
 
   const [searchParams] = useSearchParams()
@@ -371,105 +376,106 @@ function QueryHeader({ data }: { data: LoaderData }) {
 
   return (
     <>
-        <Grid p="0" m="0">
-          <Grid.Col span={5} p="lg">
-            <Stack justify="space-between" sx={{ height: "100%" }}>
-            <ConsoleSearch currentQuestionState={{
-              question: currentQuestion?.question, 
-              questionGroupId: questionGroupId,
-              navigationState: navigation.state,
-              previousQuestions: previousQuestions
-            }} />
-              <Flex>
-                <Box w="100%">
-                  <Form method="post" action="/admin">
-                    <Button type="submit" w="100%">
-                      New Question
-                    </Button>
-                  </Form>
-                </Box>
-                <Box w="100%">
-                  <Form method="post">
-                    <input
-                      type="hidden"
-                      name="action_name"
-                      value="mark_correct"
-                    />
-                    <input
-                      type="hidden"
-                      name="questionGroupId"
-                      value={questionGroupId}
-                    />
-                    <Button w="100%" type="submit" color="green">
-                      {currentQuestion?.feedbackState === FeedbackState.CORRECT
-                        ? "✓"
-                        : ""}
-                      Mark Correct
-                    </Button>
-                  </Form>
-                </Box>
-                <Box w="100%">
-                  <Form method="post">
-                    <input
-                      type="hidden"
-                      name="action_name"
-                      value="mark_incorrect"
-                    />
-                    <input
-                      type="hidden"
-                      name="questionGroupId"
-                      value={questionGroupId}
-                    />
-                    <Button w="100%" type="submit" color="red">
-                      {currentQuestion?.feedbackState ===
-                      FeedbackState.INCORRECT
-                        ? "✓"
-                        : ""}
-                      Mark Incorrect
-                    </Button>
-                  </Form>
-                </Box>
-              </Flex>
-            </Stack>
-          </Grid.Col>
-          <Grid.Col span={1} p="lg"></Grid.Col>
-          <Grid.Col span={6} p="0" sx={{ position: "relative" }}>
-            <CodeMirror
-              height="250px"
-              value={getQuery}
-              extensions={[sql({}), EditorView.lineWrapping]}
-              onChange={(e) => setQuery(e)}
-              onKeyDownCapture={(e) => {
-                // shift+enter to edit the query
-                if (e.shiftKey && e.key === "Enter") {
-                  e.stopPropagation()
-                  e.preventDefault()
-                  updateSqlQuery()
-                }
+      <Grid p="0" m="0">
+        <Grid.Col span={5} p="lg">
+          <Stack justify="space-between" sx={{ height: "100%" }}>
+            <ConsoleSearch
+              currentQuestionState={{
+                question: currentQuestion?.question,
+                questionGroupId: questionGroupId,
+                navigationState: navigation.state,
+                previousQuestions: previousQuestions,
               }}
             />
+            <Flex>
+              <Box w="100%">
+                <Form method="post" action="/admin">
+                  <Button type="submit" w="100%">
+                    New Question
+                  </Button>
+                </Form>
+              </Box>
+              <Box w="100%">
+                <Form method="post">
+                  <input
+                    type="hidden"
+                    name="action_name"
+                    value="mark_correct"
+                  />
+                  <input
+                    type="hidden"
+                    name="questionGroupId"
+                    value={questionGroupId}
+                  />
+                  <Button w="100%" type="submit" color="green">
+                    {currentQuestion?.feedbackState === FeedbackState.CORRECT
+                      ? "✓"
+                      : ""}
+                    Mark Correct
+                  </Button>
+                </Form>
+              </Box>
+              <Box w="100%">
+                <Form method="post">
+                  <input
+                    type="hidden"
+                    name="action_name"
+                    value="mark_incorrect"
+                  />
+                  <input
+                    type="hidden"
+                    name="questionGroupId"
+                    value={questionGroupId}
+                  />
+                  <Button w="100%" type="submit" color="red">
+                    {currentQuestion?.feedbackState === FeedbackState.INCORRECT
+                      ? "✓"
+                      : ""}
+                    Mark Incorrect
+                  </Button>
+                </Form>
+              </Box>
+            </Flex>
+          </Stack>
+        </Grid.Col>
+        <Grid.Col span={1} p="lg"></Grid.Col>
+        <Grid.Col span={6} p="0" sx={{ position: "relative" }}>
+          <CodeMirror
+            height="250px"
+            value={getQuery}
+            extensions={[sql({}), EditorView.lineWrapping]}
+            onChange={(e) => setQuery(e)}
+            onKeyDownCapture={(e) => {
+              // shift+enter to edit the query
+              if (e.shiftKey && e.key === "Enter") {
+                e.stopPropagation()
+                e.preventDefault()
+                updateSqlQuery()
+              }
+            }}
+          />
 
-            <Box
-              sx={{
-                position: "absolute",
-                bottom: "0px",
-                left: "0px",
-                right: "0px",
-              }}
-            >
-              <Text c="dimmed" align="center">
-                <span
-                  style={{
-                    padding: "5px",
-                    backgroundColor: "rgba(128,128,128,0.1)",
-                  }}
-                >
-                  Press Shift+Enter to execute an updated query
-                </span>
-              </Text>
-            </Box>
-          </Grid.Col>
-        </Grid>
+          <Box
+            sx={{
+              position: "absolute",
+              bottom: "0px",
+              left: "0px",
+              right: "0px",
+            }}
+          >
+            <Text c="dimmed" align="center">
+              <span
+                style={{
+                  padding: "5px",
+                  backgroundColor: "rgba(128,128,128,0.1)",
+                }}
+              >
+                Press Shift+Enter to execute an updated query
+              </span>
+            </Text>
+          </Box>
+        </Grid.Col>
+      </Grid>
     </>
   )
 }
@@ -477,7 +483,7 @@ function QueryHeader({ data }: { data: LoaderData }) {
 export default function QuestionGroup() {
   let data = useLoaderData<LoaderData>()
   const params = useParams()
-  
+
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
@@ -497,7 +503,7 @@ export default function QuestionGroup() {
           },
         })}
       >
-        <HeaderMenu/>
+        <HeaderMenu />
         <QueryHeader data={data} />
         <Divider my="sm" variant="dotted" />
         <Outlet />
