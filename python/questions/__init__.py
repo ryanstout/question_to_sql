@@ -1,6 +1,7 @@
+import backoff
 import openai
-from backoff_utils import apply_backoff
 from decouple import config
+from openai.error import OpenAIError
 
 from python.schema.ranker import Ranker
 from python.schema.schema_builder import SchemaBuilder
@@ -57,7 +58,7 @@ class OpenAIResponse(t.TypedDict):
     usage: Usage
 
 
-@apply_backoff(max_tries=5)
+@backoff.on_exception(backoff.expo, OpenAIError, factor=60, max_tries=5)
 def question_with_schema_to_sql(schema: str, question: str) -> str:
     prompt = f"-- Postgres SQL schema\n{schema}\n\n-- {question}\nSELECT "
 

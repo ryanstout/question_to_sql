@@ -177,6 +177,7 @@ class EmbeddingBuilder:
             full_column_str = column.name + "\n" + col_value_group
             self.idx_column_name_and_all_column_values.add(self.datasource.id, full_column_str, table.id, column.id, None)
 
+    # this is an expensive operation, do this as minimially as we can!
     def save(self):
         # Write out the indexes
         self.idx_table_names.save()

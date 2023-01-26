@@ -20,11 +20,12 @@ class AnnIndex:
         self.lock = Lock()
 
     def add(self, datasource_id: int, content: str, table_id: Union[int, None], column_id: Union[int, None], value: Union[str, None]):
+        embedding = Embedding(self.db, content)
+
         # Needs the mutex to prevent parallel columns from adding to it at the
-        # same time
+        # same time. The index_offset is important for the vector indexing.
         self.lock.acquire()
 
-        embedding = Embedding(self.db, content)
         previous_offset = self.index_offset
 
         self.embeddings.append(embedding.embedding_numpy)
