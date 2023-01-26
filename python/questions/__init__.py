@@ -60,7 +60,7 @@ class OpenAIResponse(t.TypedDict):
 
 @backoff.on_exception(backoff.expo, OpenAIError, factor=60, max_tries=5)
 def question_with_schema_to_sql(schema: str, question: str) -> str:
-    prompt = f"-- Postgres SQL schema\n{schema}\n\n-- {question}\nSELECT "
+    prompt = f"-- {PostTransform.in_dialect} SQL schema\n{schema}\n\n-- {question}\nSELECT "
 
     log.debug("sending prompt to openai", prompt=prompt)
 

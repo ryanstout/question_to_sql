@@ -20,6 +20,7 @@ import python.utils as utils
 from prisma import Prisma
 from python.schema.full_schema import FullSchema
 from python.schema.ranker import SCHEMA_RANKING_TYPE, ElementRank
+from python.sql.post_transform import PostTransform
 
 # TODO looks like we cannot set default values on typeddict: https://github.com/python/mypy/issues/6131
 
@@ -74,7 +75,11 @@ class SchemaBuilder:
         elif re.search("^VARIANT", column.type):
             return None  # skip this column
         elif re.search("^NUMBER", column.type):
-            col_type = column.type.replace("NUMBER", "NUMERIC")
+            if PostTransform.in_dialect == "postgres":
+                col_type = column.type.replace("NUMBER", "NUMERIC")
+            else:
+                # Don't replace it if it's snowflake
+                col_type = column.type
         else:
             col_type = column.type
 

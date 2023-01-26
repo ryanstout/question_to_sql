@@ -48,9 +48,9 @@ class Ranker:
         query: str,
         embedder=OpenAIEmbeddings,
         cache_results=True,
-        table_weights=[1.0, 0.0, 0.1],
+        table_weights=[1.0, 1.0, 0.1],
         column_weights=[0.1, 0.0, 0.0],
-        value_weights=[1.0],
+        value_weights=[0.1],
     ) -> SCHEMA_RANKING_TYPE:
 
         query_embedding = Embedding(self.db, query, embedder=embedder, cache_results=cache_results).embedding_numpy
@@ -59,11 +59,11 @@ class Ranker:
         # Fetch ranked table id
         table_matches = self.idx_table_names.search(query_embedding, 1000)
         tables_with_columns_matches = self.idx_column_names.search(query_embedding, 1000)
-        log.debug("Table matches", matches=table_matches)
+        # log.debug("Table matches", matches=table_matches)
 
         columns_matches = self.idx_column_names.search(query_embedding, 10000)
         column_name_and_all_column_values_matches = self.idx_column_name_and_all_column_values.search(query_embedding, 1000)
-        log.debug("Column matches", matches=columns_matches)
+        # log.debug("Column matches", matches=columns_matches)
 
         value_matches = self.idx_values.search(query_embedding, 1000)
 
@@ -74,7 +74,7 @@ class Ranker:
         log.debug("End faiss lookups")
 
         # rankings = list(map(lambda x: ElementRank(table_id=x[1][0], column_id=x[1][1], value_hint=x[1][2], score=x[0]), tables + columns + values))
-        rankings = list(map(lambda x: ElementRank(table_id=x[1][0], column_id=x[1][1], value_hint=x[1][2], score=x[0]), tables + columns))
+        rankings = list(map(lambda x: ElementRank(table_id=x[1][0], column_id=x[1][1], value_hint=x[1][2], score=x[0]), tables + columns + values))
 
         # Sort rankings by score
         rankings.sort(key=lambda x: x["score"], reverse=True)

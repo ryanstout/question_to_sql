@@ -64,6 +64,10 @@ SNOWFLAKE_KEYWORDS = [
 
 
 class PostTransform:
+    in_dialect = "postgres"
+    # in_dialect = "snowflake"
+    out_dialect = "snowflake"
+
     def __init__(self, datasource_id: int):
         self.connections = Connections()
         self.connections.open()
@@ -71,18 +75,14 @@ class PostTransform:
         self.db = self.connections.db
         self.datasource_id = datasource_id
 
-        self.in_dialect = "postgres"
-        self.out_dialect = "snowflake"
-
     def run(self, sql: str):
-        ast = parse_one(sql, self.in_dialect)
+        ast = parse_one(sql, self.__class__.in_dialect)
 
         ast = ast.transform(self.cast_divides_to_float)
         ast = ast.transform(self.add_fully_qualified_name)
 
-        sql = transpile(ast.sql(), read=self.in_dialect, write=self.out_dialect)[0]
-        print("SQL1: ", sql)
-        ast = parse_one(sql, self.out_dialect)
+        sql = transpile(ast.sql(), read=self.__class__.in_dialect, write=self.__class__.out_dialect)[0]
+        ast = parse_one(sql, self.__class__.out_dialect)
         return ast.sql(pretty=True, max_text_width=40)
 
     def cast_divides_to_float(self, node):
@@ -119,10 +119,14 @@ class PostTransform:
                 log.error("Could not find table in db", table_name=node.name)
                 return node
 
-            name_parts = db_table.fullyQualifiedName.split(".")
-            wrapped = list(map(lambda x: self.quote_if_keyword(x), name_parts))
-            new_name = ".".join(wrapped)
-            return parse_one(new_name, self.in_dialect)
+            # FQN everything
+            if False:
+                name_parts = db_table.fullyQualifiedName.split(".")
+                wrapped = list(map(lambda x: self.quote_if_keyword(x), name_parts))
+                new_name = ".".join(wrapped)
+            else:
+                new_name = self.quote_if_keyword(db_table.fullyQualifiedName.split(".")[-1])
+            return parse_one(new_name, self.__class__.in_dialect)
 
         return node
 
@@ -137,8 +141,8 @@ if __name__ == "__main__":
     # """
     # )
 
-    #     result = PostTransform(1).run(
-    #         """
+    # result = PostTransform(1).run(
+    #     """
     #     SELECT TOP 1
     #         PRODUCT.TITLE,
     #         COUNT(*) AS SALES
@@ -153,11 +157,11 @@ if __name__ == "__main__":
     # ORDER BY
     #         SALES DESC;
     #     """
-    #     )
-    #     print(result)
+    # )
+    # print(result)
 
-    #     result = PostTransform(1).run(
-    #         """
+    # result = PostTransform(1).run(
+    #     """
     #     SELECT PRODUCT.TITLE, SUM(ORDER_LINE.QUANTITY) AS QUANTITY
     # FROM ORDER_LINE
     # JOIN ORDER ON ORDER_LINE.ORDER_ID = ORDER.ID
@@ -167,20 +171,23 @@ if __name__ == "__main__":
     # ORDER BY QUANTITY DESC
     # LIMIT 1;
     #     """
-    #     )
-    #     print(result)
+    # )
+    # print(result)
 
     result = PostTransform(1).run(
         """
-    
-    SELECT TOP 10
-        PRODUCT.TITLE,
-        PRODUCT.VENDOR,
-        PRODUCT.HANDLE,
-        PRODUCT.PRODUCT_TYPE,
-        PRODUCT.STATUS,
-        PRODUCT.
-
-    """
+        SELECT
+            COUNT(*)
+        FROM "ORDER"
+        WHERE
+            customer_id = (
+                SELECT
+                id
+                FROM CUSTOMER
+                WHERE
+                first_name = 'Daniel'
+                AND last_name = 'Whitehouse' LIMIT 1
+            )
+        """
     )
     print(result)
