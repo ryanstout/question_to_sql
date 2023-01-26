@@ -1,0 +1,28 @@
+#!/usr/bin/env zsh
+
+set -e
+
+`cd "${0%/*}/.."`
+
+if [ -z "$DATABASE_URL" ]; then
+  echo "DATABASE_URL is not set"
+  exit 1
+fi
+
+local archive=database-archive
+mkdir $archive > /dev/null
+
+echo "Dumping postgres..."
+local postgres_archive=$archive/postgres.dump
+pg_dump --dbname=$DATABASE_URL -f $postgres_archive
+
+echo "Archiving faiss indexes..."
+# note: use relative paths here so the archive does not contain the abs path
+local indexes_path=python/indexes
+zip -r $archive/indexes.zip $indexes_path
+
+echo "Creating archive..."
+zip -r $archive.zip $archive
+
+rm -rf $archive
+echo "Complete"

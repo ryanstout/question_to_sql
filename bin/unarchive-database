@@ -1,0 +1,40 @@
+#!/usr/bin/env zsh
+
+# set -e
+
+`cd "${0%/*}/.."`
+
+local archive=database-archive.zip
+
+if [ ! -f $archive ]; then
+  echo "archive does not exist"
+  exit 1
+fi
+
+if [ -z "$DATABASE_URL" ]; then
+  echo "DATABASE_URL is not set"
+  exit 1
+fi
+
+echo "Unarchiving archive..."
+unzip -o $archive
+
+local indexes_archive=database-archive/indexes.zip
+local postgres_archive=database-archive/postgres.dump
+
+echo "Unarchiving indexes..."
+unzip -o $indexes_archive
+
+echo "Dropping existing DB..."
+local database_connection_without_name=${DATABASE_URL%/*}
+local database_name=${DATABASE_URL##*/}
+psql $database_connection_without_name -c "DROP DATABASE $database_name"
+psql $database_connection_without_name -c "CREATE DATABASE $database_name"
+
+echo "Importing new database..."
+psql --dbname=$DATABASE_URL < $postgres_archive
+
+rm $postgres_archive
+rm $indexes_archive
+rm $archive
+echo "Done"

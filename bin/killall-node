@@ -1,0 +1,4 @@
+#!/bin/bash
+# for some reason node takes it's time to quit unless you force a -9 on it
+killall -9 node
+
