@@ -42,9 +42,9 @@ model QuestionGroup {
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId Int
 
-  correctSql String?
+  questions Question[]
 
-  Question Question[]
+  correctSql String?
 }
 
 enum FeedbackState {
