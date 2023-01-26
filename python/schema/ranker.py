@@ -50,7 +50,7 @@ class Ranker:
         cache_results=True,
         table_weights=[1.0, 1.0, 0.1],
         column_weights=[0.1, 0.0, 0.0],
-        value_weights=[0.1],
+        value_weights=[0.3],
     ) -> SCHEMA_RANKING_TYPE:
 
         query_embedding = Embedding(self.db, query, embedder=embedder, cache_results=cache_results).embedding_numpy
@@ -71,13 +71,16 @@ class Ranker:
         columns = self.merge_ranks([columns_matches, column_name_and_all_column_values_matches, value_matches], column_weights, 1)
         values = self.merge_ranks([value_matches], value_weights, 2)
 
-        log.debug("End faiss lookups")
-
         # rankings = list(map(lambda x: ElementRank(table_id=x[1][0], column_id=x[1][1], value_hint=x[1][2], score=x[0]), tables + columns + values))
         rankings = list(map(lambda x: ElementRank(table_id=x[1][0], column_id=x[1][1], value_hint=x[1][2], score=x[0]), tables + columns + values))
 
         # Sort rankings by score
         rankings.sort(key=lambda x: x["score"], reverse=True)
+
+        for element_rank in rankings:
+            log.debug("rank: ", score=element_rank["score"], assoc=[element_rank["table_id"], element_rank["column_id"], element_rank["value_hint"]])
+
+        log.debug("End faiss lookups")
 
         return rankings
 
@@ -88,7 +91,6 @@ class Ranker:
         for idx, scores_and_assocs in enumerate(scores_and_associations):
             for score_and_assoc in scores_and_assocs:
                 # Multiply the scores by the the associated weight
-                log.debug("rank: ", score=score_and_assoc[0], weight=weights[idx], assoc=score_and_assoc[1])
                 merged.append((score_and_assoc[0] * weights[idx], score_and_assoc[1]))
 
         # Sort

@@ -46,8 +46,6 @@ class EmbeddingBuilder:
 
         self.datasource = datasource
 
-        self.db.embeddinglink.delete_many(where={"dataSourceId": datasource.id})
-
         # See docs/prompt_embeddings.md for info on index types
 
         # Table indexes
@@ -138,8 +136,11 @@ class EmbeddingBuilder:
         # Get all the values for this column
         values = snowflake_cursor.execute(
             f"""
-            SELECT DISTINCT({column.name})
-            AS VALUE FROM {sql.normalize_fqn_quoting(table.fullyQualifiedName)}
+            SELECT {column.name} as VALUE, COUNT(*) AS COUNT
+            FROM {sql.normalize_fqn_quoting(table.fullyQualifiedName)}
+            WHERE {column.name} IS NOT NULL
+            GROUP BY {column.name}
+            ORDER BY COUNT DESC
             LIMIT {column_value_limit}
             """
         )

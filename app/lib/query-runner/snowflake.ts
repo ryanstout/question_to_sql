@@ -16,12 +16,12 @@ async function executeSQL<T>(snowflake: Snowflake, sql: string) {
   })
 
   // TODO no idea why the return value is a list, and the type seems to indicate it's an object
-  if (result.length > 1) {
+  if (result.length > 3) {
     throw new Error("Expected only one return data")
   }
 
   // strip out undefined from the return types
-  const resultData = result[0].data
+  const resultData = result[2].data
   invariant(resultData !== undefined)
   return resultData
 }
@@ -49,5 +49,8 @@ export async function runQuery(
 ): Promise<any[]> {
   const snowflake = await snowflakeConnection(dataSource)
 
-  return executeSQL(snowflake, "use FIVETRAN_DATABASE.SHOPIFY;\n" + querySQL)
+  return executeSQL(
+    snowflake,
+    "use WAREHOUSE COMPUTE_WH; use FIVETRAN_DATABASE.SHOPIFY;\n" + querySQL
+  )
 }

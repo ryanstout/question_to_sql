@@ -266,7 +266,12 @@ export let loader: LoaderFunction = async ({
     const dataSource = fakeDataSource()
 
     try {
-      const sql = await questionToSql(dataSource.id, question.question)
+      let sql
+      if (question.userSql) {
+        sql = question.userSql
+      } else {
+        sql = await questionToSql(dataSource.id, question.question)
+      }
       log.debug("sql from python", { sql })
 
       const results = await runQuery(dataSource, sql)

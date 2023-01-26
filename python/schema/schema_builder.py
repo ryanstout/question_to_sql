@@ -24,6 +24,7 @@ from prisma import Prisma
 from python.schema.full_schema import FullSchema
 from python.schema.ranker import SCHEMA_RANKING_TYPE, ElementRank, Ranker
 from python.sql.post_transform import PostTransform
+from python.utils.batteries import unique
 
 # TODO looks like we cannot set default values on typeddict: https://github.com/python/mypy/issues/6131
 
@@ -94,13 +95,16 @@ class SchemaBuilder:
         rendered_choices = ""
 
         # remove Nones, empty string, duplicates, and whitespace string from hints
-        filtered_hints = set([hint.lower() for hint in hints if hint and hint.strip()])
+        filtered_hints = [hint.lower() for hint in hints if hint and hint.strip()]
+        filtered_hints = unique(filtered_hints)
 
         if filtered_hints:
+            # Limit the max value hints to 5
+            filtered_hints = filtered_hints[:5]
             raw_choice_list = repr(filtered_hints)
             # cut out the brackets in the repr render
             rendered_choice_list = raw_choice_list[1:-1]
-            rendered_choices = f" -- choices: {rendered_choice_list}"
+            rendered_choices = f" -- possible values include: {rendered_choice_list}"
 
         # `column1 datatype(length) column_contraint,`
         return f"\t{column.name} {col_type},{rendered_choices}".lower()

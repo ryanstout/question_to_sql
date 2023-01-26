@@ -7,6 +7,8 @@ import numpy as np
 from prisma import Prisma
 from python.embeddings.ann_faiss import AnnFaiss
 from python.embeddings.embedding import Embedding
+from python.embeddings.embedding_link_index import EmbeddingLinkIndex
+from python.utils.logging import log
 
 
 # ann = approximate nearest neighbor
@@ -19,6 +21,8 @@ class AnnIndex:
         self.embeddings = []
         self.lock = Lock()
 
+        self.embedding_link_index = EmbeddingLinkIndex(path)
+
     def add(self, datasource_id: int, content: str, table_id: Union[int, None], column_id: Union[int, None], value: Union[str, None]):
         embedding = Embedding(self.db, content)
 
@@ -28,31 +32,17 @@ class AnnIndex:
 
         previous_offset = self.index_offset
 
+        self.embedding_link_index.add(previous_offset, table_id, column_id, value)
+
         self.embeddings.append(embedding.embedding_numpy)
 
         self.index_offset += 1
 
         self.lock.release()
 
-        # Create a EmbeddingLink
-        embedding_link = self.db.embeddinglink.create(
-            data={
-                "dataSourceId": datasource_id,
-                "indexNumber": self.index_number,
-                "indexOffset": previous_offset,
-                "contentHash": embedding.content_hash,
-                "tableId": table_id,
-                "columnId": column_id,
-                "value": value,
-            }
-        )
-
-        if not embedding_link:
-            raise Exception("Failed to create embedding link")
-
     def save(self):
         embed_size = len(self.embeddings)
-        print("Build for index #{self.index_number}: ", embed_size)
+        log.debug(f"Build for index #{self.index_number}: ", embed_size=embed_size)
 
         if embed_size > 0:
             data = np.stack(self.embeddings, axis=0)
@@ -60,5 +50,7 @@ class AnnIndex:
             # Make output folder if it doesn't exist
             os.makedirs(os.path.dirname(self.path), exist_ok=True)
 
-            print(data.dtype, data.shape)
+            self.embedding_link_index.save()
+
+            log.debug("Build Faiss Index: ", dtype=data.dtype, size=data.shape)
             AnnFaiss().build_and_save(data, self.path)

@@ -60,7 +60,16 @@ class OpenAIResponse(t.TypedDict):
 
 @backoff.on_exception(backoff.expo, OpenAIError, factor=60, max_tries=5)
 def question_with_schema_to_sql(schema: str, question: str) -> str:
-    prompt = f"-- {PostTransform.in_dialect} SQL schema\n{schema}\n\n-- {question}\nSELECT "
+    prompt_parts = [
+        f"-- {PostTransform.in_dialect.capitalize()} SQL schema",
+        schema,
+        "",
+        # "-- Assuming the current date is January 25th, 2023",
+        f"-- {question}",
+        "SELECT ",
+    ]
+
+    prompt = "\n".join(prompt_parts)
 
     log.debug("sending prompt to openai", prompt=prompt)
 
