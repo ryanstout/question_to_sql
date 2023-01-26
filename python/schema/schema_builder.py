@@ -71,6 +71,10 @@ class SchemaBuilder:
             col_type = "VARCHAR"
         elif re.search("^TIMESTAMP_TZ", column.type):
             col_type = "TIMESTAMP"
+        elif re.search("^VARIANT", column.type):
+            return None  # skip this column
+        elif re.search("^NUMBER", column.type):
+            col_type = column.type.replace("NUMBER", "NUMERIC")
         else:
             col_type = column.type
 
@@ -86,16 +90,18 @@ class SchemaBuilder:
             rendered_choices = f" -- choices: {rendered_choice_list}"
 
         # `column1 datatype(length) column_contraint,`
-        return f"\t{column.name} {col_type},{rendered_choices}"
+        return f"\t{column.name} {col_type},{rendered_choices}".lower()
 
     def generate_sql_table_describe(self, table_rank: TableRank) -> str:
         column_sql = []
 
         for column_rank in table_rank["columns"]:
-            column_sql.append(self.generate_column_describe(column_rank["column_id"], column_rank["hints"]))
+            column_description = self.generate_column_describe(column_rank["column_id"], column_rank["hints"])
+            if column_description is not None:
+                column_sql.append(column_description)
 
         rendered_column_sql = "\n".join(column_sql)
-        rendered_table_name = utils.sql.unqualified_table_name(table_rank["fully_qualified_name"])
+        rendered_table_name = utils.sql.unqualified_table_name(table_rank["fully_qualified_name"]).lower()
 
         return f"CREATE TABLE {rendered_table_name} (\n{rendered_column_sql}\n);\n"
 

@@ -82,6 +82,7 @@ What questions are we trying to answer?
 - [ ] Test adding column name in front of value for more context in embedding
 - [ ] Look at primary key index annotations in schema
 - [ ] Question model needs a dataSourceId
+- [ ] Add versioning to EmbedLink, symlink swap links to Faiss files
 
 # SQL snowflowflakification
 

@@ -25,9 +25,12 @@ def question_with_data_source_to_sql(data_source_id: int, question: str) -> str:
     table_schema_limited_by_token_size = SchemaBuilder(db).build(ranked_structure)
     log.debug("Convert Question to SQL")
     sql = question_with_schema_to_sql(table_schema_limited_by_token_size, question)
+    log.debug("SQL pre transform: ", sql=sql)
 
     # AST based tranform of the SQL to fix up common issues
     sql = PostTransform(data_source_id).run(sql)
+
+    log.debug("SQL post transform: ", sql=sql)
 
     return sql
 
@@ -56,7 +59,7 @@ class OpenAIResponse(t.TypedDict):
 
 @apply_backoff(max_tries=5)
 def question_with_schema_to_sql(schema: str, question: str) -> str:
-    prompt = f"{schema}\n\n-- {question}\nSELECT "
+    prompt = f"-- Postgres SQL schema\n{schema}\n\n-- {question}\nSELECT "
 
     log.debug("sending prompt to openai", prompt=prompt)
 
