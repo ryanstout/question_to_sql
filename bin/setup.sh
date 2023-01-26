@@ -10,7 +10,7 @@ fi
 
 asdf install
 poetry install
-npm install
+npm install -g npm@9.4.0
 
 echo "Install libomp openblas for Mac for Faiss kNN library"
 brew install libomp openblas
