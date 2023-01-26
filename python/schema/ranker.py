@@ -1,5 +1,6 @@
 from python.setup import log
 
+import os
 import sys
 import typing as t
 
@@ -28,20 +29,22 @@ class Ranker:
     def __init__(self, db, datasource_id: int):
         self.db = db
 
+        indexes_path = os.environ["FAISS_INDEXES_PATH"]
+
         # Load the faiss indexes
-        self.idx_table_names = AnnSearch(db, datasource_id, 0, f"python/indexes/{datasource_id}/table_names")
-        self.idx_column_names = AnnSearch(db, datasource_id, 1, f"python/indexes/{datasource_id}/column_names")
-        self.idx_table_and_column_names = AnnSearch(db, datasource_id, 3, f"python/indexes/{datasource_id}/table_and_column_names")
+        self.idx_table_names = AnnSearch(db, datasource_id, 0, f"{indexes_path}/{datasource_id}/table_names")
+        self.idx_column_names = AnnSearch(db, datasource_id, 1, f"{indexes_path}/{datasource_id}/column_names")
+        self.idx_table_and_column_names = AnnSearch(db, datasource_id, 3, f"{indexes_path}/{datasource_id}/table_and_column_names")
 
         # Table and Columns indexes
         # self.idx_table_and_column_names_and_values = AnnSearch(
         #     db, datasource_id, 4, f"python/indexes/{datasource_id}/table_and_column_names_and_values")
         self.idx_column_name_and_all_column_values = AnnSearch(
-            db, datasource_id, 5, f"python/indexes/{datasource_id}/column_name_and_all_column_values"
+            db, datasource_id, 5, f"{indexes_path}/{datasource_id}/column_name_and_all_column_values"
         )
 
         # Cell values
-        self.idx_values = AnnSearch(self.db, datasource_id, 2, f"python/indexes/{datasource_id}/values")
+        self.idx_values = AnnSearch(self.db, datasource_id, 2, f"{indexes_path}/{datasource_id}/values")
 
     def rank(
         self,

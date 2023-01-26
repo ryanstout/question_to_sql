@@ -17,7 +17,7 @@ class EmbeddingLinkIndex:
     def load(self):
         # Load the index from disk memory mapped
         self.table_and_columns = np.load(self.path + ".table_cols.npy", mmap_mode="r")
-        self.values = np.load(self.path + ".values.npy", mmap_mode="r")
+        self.values = np.load(self.path + ".values.npy", allow_pickle=True)
 
     def save(self):
         # Find the max index in rows
@@ -28,7 +28,7 @@ class EmbeddingLinkIndex:
         # Create the numpy arrays for the table_id/column_id and the value
         # strings
         self.table_and_columns = np.zeros((max_index + 1, 2), dtype=np.int32)
-        self.values = np.empty(max_index + 1, dtype=np.str_)
+        self.values = np.empty(max_index + 1, dtype=object)
 
         # Loop through the rows and assign each now that we know the number
         # of rows.
@@ -37,7 +37,6 @@ class EmbeddingLinkIndex:
             self.table_and_columns[idx, 0] = row[1] or -1
             self.table_and_columns[idx, 1] = row[2] or -1
             self.values[idx] = row[3] or ""
-            print("Add: ", self.values[idx])
 
         # Seralize index to disk, just use .np format, not npz so we can jump
         # directly to the spot in memory

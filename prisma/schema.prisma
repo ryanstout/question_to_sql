@@ -114,7 +114,6 @@ model DataSource {
   businessId Int?
 
   dataSourceTableDescriptions DataSourceTableDescription[]
-  EmbeddingLink               EmbeddingLink[]
   Question                    Question[]
 }
 
@@ -137,8 +136,6 @@ model DataSourceTableDescription {
   // TODO can we enforce JSON schema inside this JSONB array
   // we could generate a bunch of different embedding and include as a JSON array
   embeddingsCache Json
-
-  embeddingLinks EmbeddingLink[]
 
   @@unique([dataSourceId, fullyQualifiedName])
 }
@@ -176,41 +173,6 @@ model DataSourceTableColumn {
   embeddingsCache              Json
   DataSourceTableDescription   DataSourceTableDescription? @relation(fields: [dataSourceTableDescriptionId], references: [id])
   dataSourceTableDescriptionId Int?
-
-  embeddingLinks EmbeddingLink[]
-}
-
-// When we query the embeddings stored in a Faiss index, the result is a list
-// of indexes into this table. This table points to the table and/or column.
-// NULL's are used if it only points to one or the other.
-model EmbeddingLink {
-  id Int @id @default(autoincrement())
-
-  DataSource   DataSource? @relation(fields: [dataSourceId], references: [id])
-  dataSourceId Int?
-
-  // Which index is this (see docs/prompt_embeddings.md)
-  indexNumber Int
-
-  // What is the position in the embedding matrix
-  indexOffset Int
-
-  // Hash of the string used to generate the embedding (so we can cache them)
-  contentHash String
-
-  table   DataSourceTableDescription? @relation(fields: [tableId], references: [id])
-  tableId Int?
-
-  column   DataSourceTableColumn? @relation(fields: [columnId], references: [id])
-  columnId Int?
-
-  // Store a copy (for now) of the cell value so we can construct the Value Hints
-  value String?
-
-  // The main way we do lookups (from faiss index)
-  @@index([dataSourceId, indexNumber, indexOffset], name: "faissIndex")
-  // When rebuilding, we'll want to look up
-  @@index([contentHash, tableId, columnId])
 }
 
 // Simple cache for contentHash -> embedding so we don't have to rehit the openai api
