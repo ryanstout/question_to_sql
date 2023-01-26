@@ -30,14 +30,43 @@ export function fakeDataSource() {
 }
 
 // if you have a question, and just want the results from the warehouse
-export async function getResultsFromQuestion(
-  question: Question
-): Promise<QuestionResult> {
+export async function getResultsFromQuestion({
+  questionRecord,
+  questionId,
+}: {
+  questionRecord?: Question
+  questionId?: number
+}): Promise<QuestionResult> {
+  let retrievedQuestionRecord: Question | null = null
+
+  if (questionRecord) {
+    retrievedQuestionRecord = questionRecord
+  }
+
+  if (!questionRecord && questionId) {
+    retrievedQuestionRecord = await prisma.question.findFirst({
+      where: {
+        id: questionId,
+      },
+      include: {
+        questionGroup: {
+          include: {
+            questions: true,
+          },
+        },
+      },
+    })
+  }
+
+  if (retrievedQuestionRecord === null) {
+    throw new Error("question record not found")
+  }
+
   const dataSource = fakeDataSource()
-  const data = await runQuery(dataSource, question.codexSql)
+  const data = await runQuery(dataSource, retrievedQuestionRecord.codexSql)
 
   return {
-    question: question,
+    question: retrievedQuestionRecord,
     status: "success",
     data: data,
   }
@@ -124,11 +153,11 @@ export async function processQuestion(
 }
 
 function rootDirectory() {
-  return path.resolve(__filename + "/../..")
+  return path.resolve(__filename + "/../../..")
 }
 
 function pythonCommand() {
-  return path.resolve(__filename + "/../../bin/python-wrapper")
+  return path.resolve(rootDirectory() + "/bin/python-wrapper")
 }
 
 function escapeShell(cmd: string) {

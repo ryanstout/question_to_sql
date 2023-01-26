@@ -9,9 +9,11 @@ import { log } from "~/lib/logging.server"
 
 async function main() {
   log.debug("Asking example question...")
+  const dataSourceId = 2
+  const userId = 1
   const questionResult = await processQuestion(
-    1,
-    1,
+    userId,
+    dataSourceId,
     "What is the total number of orders?"
   )
   log.debug("Question answered...")
@@ -27,9 +29,17 @@ async function main() {
   console.log(updatedQuestion)
 
   // now let's try just getting the results from an existing question
-  const results = await getResultsFromQuestion(questionResult.question)
+  const results = await getResultsFromQuestion({
+    questionRecord: questionResult.question,
+  })
   log.debug("got results from question")
   console.log(results)
+
+  // try getting the results just from the question ID
+  const resultsFromQuestion = await getResultsFromQuestion({
+    questionId: questionResult.question.id,
+  })
+  debugger
 }
 
 main()
