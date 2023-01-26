@@ -9,7 +9,7 @@ import { log } from "~/lib/logging.server"
 
 async function main() {
   log.debug("Asking example question...")
-  const dataSourceId = 2
+  const dataSourceId = 1
   const userId = 1
   const questionResult = await processQuestion(
     userId,

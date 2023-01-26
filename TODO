@@ -26,6 +26,10 @@ Goal: EOD Tuesday
 - [x] [mbianco] Python Query Improvements
   - [x] Input ranked dict, iteratively compute the output schema
   - [x] Maybe SQL transforms from OpenAI
+- [ ] [mbianco] Python server vs shelling
+  - [ ] Buildout API for the answering questions
+  - [ ] Replace shell stuff with an API call
+- [ ] [mbianco] export DB script
 
 # What do we need so daniel can run a query?
 
@@ -35,15 +39,19 @@ What questions are we trying to answer?
 2. Is the ML model failing?
 3. Look & feel
 
-- [ ] UI integration
-  - [ ] Question record creation
+- [ ] Ranking Improvements
+  - [ ] ENV config for face storage
+  - [ ] Iterate on the ranking
+- [x] UI integration
+  - [x] Question record creation
 - [ ] [kai] User login tied to data source
 - [ ] [kai] MVP UI
-  - [ ] Login page [mbianco]
-  - [ ] Search box [mbianco]
-  - [ ] Forced feedback state (complete/incomplete) [mbianco]
-  - [ ] Read-only SQL editor [mbianco]
-  - [ ] Basic JSON result [mbianco]
+  - [x] Login page
+  - [x] Search box
+  - [ ] Forced feedback state (complete/incomplete)
+  - [x] Read-write SQL editor
+  - [x] Basic JSON result
+  - [ ] Refactor to use `~/lib/` for all business logic
 - [ ] [mbianco] Deploy
   - [ ] Docker Build
   - [ ] File system access

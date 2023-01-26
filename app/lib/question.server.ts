@@ -1,6 +1,4 @@
 import type { Question } from "@prisma/client"
-import path from "path"
-import { PythonShell } from "python-shell"
 
 import { prisma } from "~/db.server"
 import { log } from "~/lib/logging.server"
@@ -152,18 +150,6 @@ export async function processQuestion(
   }
 }
 
-function rootDirectory() {
-  return path.resolve(__filename + "/../../..")
-}
-
-function pythonCommand() {
-  return path.resolve(rootDirectory() + "/bin/python-wrapper")
-}
-
-function escapeShell(cmd: string) {
-  return '"' + cmd.replace(/(["'$`\\])/g, "\\$1") + '"'
-}
-
 export async function questionToSql(
   dataSourceId: number,
   naturalQuestion: string
@@ -175,34 +161,19 @@ export async function questionToSql(
     })
   }
 
-  return new Promise((resolve, reject) => {
-    const pythonPath = pythonCommand()
-    log.debug("sending question to python", {
-      question: naturalQuestion,
-      path: pythonPath,
-    })
+  const serverHost = process.env.PYTHON_SERVER
 
-    PythonShell.run(
-      "python/answer.py",
-      {
-        pythonPath: pythonPath,
-        mode: "text",
-        cwd: rootDirectory(),
-        args: [
-          "--data-source-id",
-          dataSourceId.toString(),
-          "--question",
-          escapeShell(naturalQuestion),
-        ],
-      },
-      (err, results) => {
-        if (err) {
-          log.error("error running python", { results })
-          reject(err)
-        } else {
-          resolve(results!.join("\n"))
-        }
-      }
-    )
+  const response = await fetch(`${serverHost}/question`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      data_source_id: dataSourceId,
+      question: naturalQuestion,
+    }),
   })
+
+  const json = await response.json()
+  return json["sql"]
 }

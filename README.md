@@ -18,10 +18,24 @@ Generate the python and ts schemas with:
 
 # Frontend
 
-- All route logic is very thin
+- All route logic is very thin: business logic should be pushed into `~/lib/`, view logic should validate params, redirect, hit lib logic, and then pass props to components for rendering.
 - All `~/components` should not use "top-level state"
 - All `action` and `loader` exports should be thin and pass to a `~/lib/*.server` file (this is the "frontend of the backend")
 - `action` and `loader` exports should do all input validation and state retrieval before passing to the `*.server` functions
+
+# Python API
+
+Start the server:
+
+```shell
+poetry run python python/server.py
+```
+
+Ask a question:
+
+```shell
+http POST http://127.0.0.1:5000/ 'question:="my question"' data_source_id:=1
+```
 
 # CLI Tools
 
@@ -32,8 +46,8 @@ poetry run python python/import.py \
   --user-id=1 \
   --database-name=FIVETRAN_DATABASE \
   --table-limit=100 \
-  --column-limit=100 \
-  --column-value-limit=100
+  --column-limit=1000 \
+  --column-value-limit=1000
 ```
 
 Once everything is imported, we can ask questions:
