@@ -252,7 +252,7 @@ class Import:
 
 
 @click.command()
-@click.option("--user-id", type=int)
+@click.option("--user-id", type=int, required=True)
 @click.option("--database-name", type=str)
 @click.option("--table-limit", type=int)
 @click.option("--column-limit", type=int)
