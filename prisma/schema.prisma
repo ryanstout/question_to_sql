@@ -60,13 +60,7 @@ model Question {
   id       Int    @id @default(autoincrement())
   question String
 
-  userSql  String? // the query, starts with the codex model output, then can be updated by the user
-  codexSql String? // the original query generated from openai
-
-  // should be unset initially, and result is only stored if the
-  feedbackState FeedbackState @default(UNANSWERED)
-  resultData    Json?
-
+  // TODO this should be required in the future
   dataSourceId Int?
   dataSource   DataSource? @relation(fields: [dataSourceId], references: [id])
 
@@ -75,6 +69,16 @@ model Question {
 
   questionGroup   QuestionGroup @relation(fields: [questionGroupId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   questionGroupId Int
+
+  // if codex is empty, openai failed
+  codexSql String? // the original query generated from openai
+  userSql  String? // the query, starts with the codex model output, then can be updated by the user
+
+  // TODO we should not store the results
+  resultData Json?
+
+  // should be unset initially, and result is only stored if the
+  feedbackState FeedbackState @default(UNANSWERED)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
