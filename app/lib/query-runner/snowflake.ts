@@ -48,5 +48,6 @@ export async function runQuery(
   querySQL: string
 ): Promise<any[]> {
   const snowflake = await snowflakeConnection(dataSource)
-  return executeSQL(snowflake, querySQL)
+
+  return executeSQL(snowflake, "use FIVETRAN_DATABASE.SHOPIFY;\n" + querySQL)
 }
