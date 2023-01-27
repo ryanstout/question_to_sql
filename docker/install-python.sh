@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 set -eux
 
@@ -13,13 +13,21 @@ packages=(
   # for prisma
   ca-certificates openssl
   # for node-gyp
-  python-is-python3 libpq-dev g++ make
+  libpq-dev g++ make
 )
 packages=("${packages[@]}" "${utilities[@]}")
 
 apt-get -y install --no-install-recommends ${packages[@]}
 
+poetry_version=$(grep -o '^poetry.*' .tool-versions | grep -o "[0-9.]\+")
+
+pip install --upgrade pip
+pip install poetry==$poetry_version
+poetry config virtualenvs.create false
+
+curl -fsSL https://deb.nodesource.com/setup_19.x | bash -
+apt-get install -y nodejs
+
 npm install -g npm@9.4.0
 
 apt-get clean
-
