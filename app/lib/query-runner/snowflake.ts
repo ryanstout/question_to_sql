@@ -22,7 +22,7 @@ async function executeSQL<T>(snowflake: Snowflake, sql: string) {
 
   // strip out undefined from the return types
   const resultData = result[2].data
-  invariant(resultData !== undefined)
+  invariant(resultData !== undefined, "Expected result data from snowflake")
   return resultData
 }
 
