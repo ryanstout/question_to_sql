@@ -9,8 +9,6 @@ readme = "README.md"
 python = "^3.9"
 sqlglot = "^10.4.3"
 snowflake-connector-python = "^2.9.0"
-prisma-client = "^0.2.1"
-prisma = "^0.8.0"
 python-decouple = "^3.7"
 openai = {extras = ["embeddings"], version = "^0.26.1"}
 python-dotenv = "^0.21.0"
@@ -25,6 +23,11 @@ numpy = "^1.24.1"
 backoff = "^2.2.1"
 flask = "^2.2.2"
 
+# use a separate group for prisma stuff to avoid installing *everything*
+# in order to generate the prisma bindings
+[tool.poetry.group.prisma.dependencies]
+prisma-client = "^0.2.1"
+prisma = "^0.8.0"
 
 [tool.poetry.group.dev.dependencies]
 autopep8 = "^2.0.1"
