@@ -2924,21 +2924,13 @@ files = [
 
 [[package]]
 name = "torch"
-version = "1.13.1+cpu"
+version = "1.13.1"
 description = "Tensors and Dynamic neural networks in Python with strong GPU acceleration"
 category = "main"
 optional = false
 python-versions = ">=3.7.0"
 files = [
-    {file = "torch-1.13.1+cpu-cp310-cp310-linux_x86_64.whl", hash = "sha256:11692523b87c45b79ddfb5148b12a713d85235d399915490d94e079521f7e014"},
-    {file = "torch-1.13.1+cpu-cp310-cp310-win_amd64.whl", hash = "sha256:207ab3700cd9c4349f4fd1892597eb3d385eb78221c0f2974ec54b8ea903aa00"},
-    {file = "torch-1.13.1+cpu-cp311-cp311-linux_x86_64.whl", hash = "sha256:dc185f2fdbb1f84855929d3ba7b36c74f218789d26a0e0268cb0586d466c8c24"},
-    {file = "torch-1.13.1+cpu-cp37-cp37m-linux_x86_64.whl", hash = "sha256:2dd7e5f584c7ea5d8f038fd1fa40465785f797df0c7d06c432f5e72d9817115a"},
-    {file = "torch-1.13.1+cpu-cp37-cp37m-win_amd64.whl", hash = "sha256:02e387834a3489396f1871f83f7a795610d09ef3da01aa431493b08eac5c6666"},
-    {file = "torch-1.13.1+cpu-cp38-cp38-linux_x86_64.whl", hash = "sha256:4a8b84834eb12b3428c24e9f264c9bd6a2cf449fffc191374e7dbb2b950fc6d7"},
-    {file = "torch-1.13.1+cpu-cp38-cp38-win_amd64.whl", hash = "sha256:43394e66487543c112044194e9bdecc6f48c869d692a9d0c755b95d642b29535"},
-    {file = "torch-1.13.1+cpu-cp39-cp39-linux_x86_64.whl", hash = "sha256:71636a5c21927236f4974d2355fb3f66a0b707c28219b0135ff65ed0f0e61287"},
-    {file = "torch-1.13.1+cpu-cp39-cp39-win_amd64.whl", hash = "sha256:988ee77c0975b4c3f570dfc62277b1e300bbbe7cc000ce2720e2e8c730fb9ce5"},
+    {file = "torch-1.13.1-cp39-none-macosx_11_0_arm64.whl", hash = "sha256:e0df902a7c7dd6c795698532ee5970ce898672625635d885eade9976e5a04949"},
 ]
 
 [package.dependencies]
@@ -2948,10 +2940,28 @@ typing-extensions = "*"
 opt-einsum = ["opt-einsum (>=3.3)"]
 
 [package.source]
-type = "legacy"
-url = "https://eternalphane.github.io/pytorch-pypi"
-reference = "torch"
+type = "url"
+url = "https://download.pytorch.org/whl/cpu/torch-1.13.1-cp39-none-macosx_11_0_arm64.whl"
+[[package]]
+name = "torch"
+version = "1.13.1+cpu"
+description = "Tensors and Dynamic neural networks in Python with strong GPU acceleration"
+category = "main"
+optional = false
+python-versions = ">=3.7.0"
+files = [
+    {file = "torch-1.13.1%2Bcpu-cp39-cp39-linux_x86_64.whl", hash = "sha256:71636a5c21927236f4974d2355fb3f66a0b707c28219b0135ff65ed0f0e61287"},
+]
 
+[package.dependencies]
+typing-extensions = "*"
+
+[package.extras]
+opt-einsum = ["opt-einsum (>=3.3)"]
+
+[package.source]
+type = "url"
+url = "https://download.pytorch.org/whl/cpu/torch-1.13.1%2Bcpu-cp39-cp39-linux_x86_64.whl"
 [[package]]
 name = "torchvision"
 version = "0.14.1+rocm5.2"
@@ -2978,7 +2988,7 @@ scipy = ["scipy"]
 
 [package.source]
 type = "legacy"
-url = "https://eternalphane.github.io/pytorch-pypi"
+url = "https://download.pytorch.org/whl/torch_stable.html"
 reference = "torch"
 
 [[package]]
@@ -3359,4 +3369,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "f134c4a2bb9616387242c7badd2427d3069b041dcfcbaea8d4ac1c0d6715035e"
+content-hash = "51f477e25a0e1f64a724f1427ba1193dfaaf84c4ffc0906a7b2f4f849235cae4"

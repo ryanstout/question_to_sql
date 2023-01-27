@@ -5,9 +5,10 @@ description = ""
 authors = ["Ryan Stout <ryanstout@gmail.com>"]
 readme = "README.md"
 
+# https://stackoverflow.com/questions/51730880/where-do-i-get-a-cpu-only-version-of-pytorch
 [[tool.poetry.source]]
 name = "torch"
-url = "https://eternalphane.github.io/pytorch-pypi/"
+url = "https://download.pytorch.org/whl/torch_stable.html"
 secondary = true
 
 [tool.poetry.dependencies]
@@ -27,8 +28,15 @@ click = "^8.1.3"
 numpy = "^1.24.1"
 backoff = "^2.2.1"
 flask = "^2.2.2"
+torch = [
+  {url = "https://download.pytorch.org/whl/cpu/torch-1.13.1%2Bcpu-cp39-cp39-linux_x86_64.whl", "platform" = "linux"},
+  # {url = "https://download.pytorch.org/whl/nightly/cpu/torch-1.13.1.dev20220409%2Bcpu-cp310-cp310-win_amd64.whl", "platform" = "win32"},
+  {url = "https://download.pytorch.org/whl/cpu/torch-1.13.1-cp39-none-macosx_11_0_arm64.whl", "platform" = "darwin" , markers = "platform_machine == 'arm64'" }
+]
+
 # torch = { version = "*", source = "torchcpu", markers = "sys_platform == 'linux'" }
-torch = "1.13.1+cpu"
+# torch = "1.13.1+cpu"
+# torch = {version = "1.13.1", extras = ["cpu"]}
 
 # use a separate group for prisma stuff to avoid installing *everything*
 # in order to generate the prisma bindings
