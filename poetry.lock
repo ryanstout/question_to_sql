@@ -2964,16 +2964,37 @@ type = "url"
 url = "https://download.pytorch.org/whl/cpu/torch-1.13.1%2Bcpu-cp39-cp39-linux_x86_64.whl"
 [[package]]
 name = "torchvision"
-version = "0.14.1+rocm5.2"
+version = "0.14.1"
 description = "image and video datasets and models for torch deep learning"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "torchvision-0.14.1+rocm5.2-cp310-cp310-linux_x86_64.whl", hash = "sha256:a01606fcaedb824c6ed14be6c92d94d6e7762e4150fc26ab731a4427dc733184"},
-    {file = "torchvision-0.14.1+rocm5.2-cp37-cp37m-linux_x86_64.whl", hash = "sha256:56fb526d19779cbe58e5f3746aa883eaff9817ee7afc926125215c13b6949425"},
-    {file = "torchvision-0.14.1+rocm5.2-cp38-cp38-linux_x86_64.whl", hash = "sha256:00bb7560176efbcdd79ac868f4f2faeb9bcabfd6809b696d91caeebf615ccd24"},
-    {file = "torchvision-0.14.1+rocm5.2-cp39-cp39-linux_x86_64.whl", hash = "sha256:6b9fc8c5506f52bc173295d16df26321bafdff75c6d06b1172499f7d4c10d023"},
+    {file = "torchvision-0.14.1-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:758b20d079e810b4740bd60d1eb16e49da830e3360f9be379eb177ee221fa5d4"},
+]
+
+[package.dependencies]
+numpy = "*"
+pillow = ">=5.3.0,<8.3.0 || >=8.4.0"
+requests = "*"
+torch = "*"
+typing-extensions = "*"
+
+[package.extras]
+scipy = ["scipy"]
+
+[package.source]
+type = "url"
+url = "https://download.pytorch.org/whl/cpu/torchvision-0.14.1-cp39-cp39-macosx_11_0_arm64.whl"
+[[package]]
+name = "torchvision"
+version = "0.14.1+cpu"
+description = "image and video datasets and models for torch deep learning"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "torchvision-0.14.1%2Bcpu-cp39-cp39-linux_x86_64.whl", hash = "sha256:5d2b67028e2782e60fd667a8e95f071bf612282411cba7ae88720213c58a651a"},
 ]
 
 [package.dependencies]
@@ -2987,10 +3008,8 @@ typing-extensions = "*"
 scipy = ["scipy"]
 
 [package.source]
-type = "legacy"
-url = "https://download.pytorch.org/whl/torch_stable.html"
-reference = "torch"
-
+type = "url"
+url = "https://download.pytorch.org/whl/cpu/torchvision-0.14.1%2Bcpu-cp39-cp39-linux_x86_64.whl"
 [[package]]
 name = "tqdm"
 version = "4.64.1"
@@ -3369,4 +3388,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "51f477e25a0e1f64a724f1427ba1193dfaaf84c4ffc0906a7b2f4f849235cae4"
+content-hash = "72d7bdec478a4434a964a63885b3aeac9de3bf226ee320cc0455f54c784744f7"

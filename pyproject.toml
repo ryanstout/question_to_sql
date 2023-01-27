@@ -33,6 +33,11 @@ torch = [
   # {url = "https://download.pytorch.org/whl/nightly/cpu/torch-1.13.1.dev20220409%2Bcpu-cp310-cp310-win_amd64.whl", "platform" = "win32"},
   {url = "https://download.pytorch.org/whl/cpu/torch-1.13.1-cp39-none-macosx_11_0_arm64.whl", "platform" = "darwin" , markers = "platform_machine == 'arm64'" }
 ]
+torchvision = [
+  {url = "https://download.pytorch.org/whl/cpu/torchvision-0.14.1%2Bcpu-cp39-cp39-linux_x86_64.whl", "platform" = "linux"},
+  # {url = "https://download.pytorch.org/whl/nightly/cpu/torch-0.14.1.dev20220409%2Bcpu-cp310-cp310-win_amd64.whl", "platform" = "win32"},
+  {url = "https://download.pytorch.org/whl/cpu/torchvision-0.14.1-cp39-cp39-macosx_11_0_arm64.whl", "platform" = "darwin" , markers = "platform_machine == 'arm64'" }
+]
 
 # torch = { version = "*", source = "torchcpu", markers = "sys_platform == 'linux'" }
 # torch = "1.13.1+cpu"
