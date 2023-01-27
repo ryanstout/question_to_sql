@@ -1,22 +1,22 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -eux
 
-apt-get update && export DEBIAN_FRONTEND=noninteractive \
-  && apt-get -y install --no-install-recommends \
-  # simple python installation for prisma
-  # python-is-python3 python3-pip \
-  # for prisma
-  ca-certificates openssl \
-  # for node-gyp
-  libpq-dev g++ make \
-  automake \
+apt-get update
+export DEBIAN_FRONTEND=noninteractive
+
+# for prisma
+ # for node-gyp
   # because I like it
-  nano bash ncdu git; \
-  # cleanup
-  apt-get clean
+apt-get -y install --no-install-recommends \
+  ca-certificates openssl \
+  python-is-python3 libpq-dev g++ make \
+  nano zsh ncdu git \
+
+
+apt-get clean
 
 npm install -g npm@9.4.0
-pip install --upgrade pip
-pip install poetry==$(grep -o '^poetry.*' .tool-versions | grep -o "[0-9.]\+")
-poetry config virtualenvs.create false
+
+echo -e "#\!/bin/bash\necho 'stubbed prisma-client-py'" > /usr/bin/prisma-client-py
+chmod +x /usr/bin/prisma-client-py
