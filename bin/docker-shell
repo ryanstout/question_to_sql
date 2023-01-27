@@ -1,2 +1,10 @@
 #!/usr/bin/env bash
-docker run --rm -it $@ bash -l
+
+# are no arguments given?
+if [ $# -eq 0 ]; then
+  image_name=$(docker images --format "{{.ID}}" | head -n 1)
+else
+  image_name=$@
+fi
+
+docker run --rm -it $image_name bash -l
