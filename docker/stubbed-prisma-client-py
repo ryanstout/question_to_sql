@@ -1,0 +1,8 @@
+#!/bin/bash
+echo 'running stubbed prisma-client-py'
+env
+echo "environment"
+# echo < /dev/stdin
+less "$@" <&0
+echo $@
+

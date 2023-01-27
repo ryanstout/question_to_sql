@@ -1,5 +1,5 @@
-# base node image
-FROM node:19-bullseye-slim as base
+# TODO extract node version from tool-versions
+FROM node:19.2.0-bullseye-slim
 
 ENV APP_DIR=/app
 WORKDIR $APP_DIR
@@ -7,20 +7,12 @@ WORKDIR $APP_DIR
 # set for base and all layer that inherit from it
 ENV NODE_ENV production
 
+# add only the install script so we can iterate on other scripts without reinstalling everything
+ADD docker/install-node.sh ./
+# ADD docker/stubbed-prisma-client-py /usr/bin/prisma-client-py
+RUN ./install-node.sh && rm install-node.sh
+
 ADD . .
+RUN docker/build-node.sh
 
-# adding a bunch of packages to avoid warnings and build errors over the main languages I use with asdf
-RUN install-node.sh
-
-SHELL ["/bin/bash", "-c"]
-
-RUN npm install --omit-dev=false
-RUN poetry install --only prisma
-
-RUN npm prune --omit=dev
-
-# RUN npx prisma generate
-
-# RUN npm run build
-
-# CMD ["npm", "start"]
+CMD ["docker/run-node.sh"]
