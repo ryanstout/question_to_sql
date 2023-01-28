@@ -3,7 +3,10 @@
 set -eux
 `cd "${0%/*}/.."`
 
-function install_only_prisma() {
+function install_only_prisma {
+  # SELLOPTS are NOT inherited by functions!
+  set -eux
+
   # this is absolutely insane:
   #
   #   1. You cannot install a NPM package locally without installing everything in your package json

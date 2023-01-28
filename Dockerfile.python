@@ -21,7 +21,7 @@ ADD docker/install-python.sh docker/shared.sh ./docker/
 ADD .tool-versions ./
 RUN docker/install-python.sh
 
-ADD poetry.lock pyproject.toml ./
+ADD poetry.lock pyproject.toml package.json package-lock.json ./
 ADD docker/python-package.sh ./docker/
 RUN docker/python-package.sh
 
