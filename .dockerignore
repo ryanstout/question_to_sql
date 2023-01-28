@@ -1,8 +1,12 @@
 /node_modules
 *.log
 .DS_Store
-.env
+/.env
+/.envrc
+/.env.example
 /.cache
+/.pytest_cache
+/.ipynb_checkpoints
 /public/build
 /build
 /tmp
