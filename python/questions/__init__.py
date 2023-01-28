@@ -1,3 +1,5 @@
+import time
+
 import backoff
 import openai
 from decouple import config
@@ -23,10 +25,13 @@ def question_with_data_source_to_sql(data_source_id: int, question: str) -> str:
 
     ranked_structure = Ranker(db, data_source_id).rank(question)
     log.debug("Building Schema")
+    t1 = time.time()
     table_schema_limited_by_token_size = SchemaBuilder(db).build(ranked_structure)
-    log.debug("Convert Question to SQL")
+    t2 = time.time()
+    log.debug("Convert Question to SQL", time=t2 - t1)
     sql = question_with_schema_to_sql(table_schema_limited_by_token_size, question)
-    log.debug("SQL pre transform: ", sql=sql)
+    t3 = time.time()
+    log.debug("SQL pre transform: ", sql=sql, time=t3 - t2)
 
     # AST based tranform of the SQL to fix up common issues
     sql = PostTransform(data_source_id).run(sql)
@@ -58,13 +63,32 @@ class OpenAIResponse(t.TypedDict):
     usage: Usage
 
 
-@backoff.on_exception(backoff.expo, OpenAIError, factor=60, max_tries=5)
+@backoff.on_exception(backoff.expo, OpenAIError, factor=60, max_tries=5, logger=log)
 def question_with_schema_to_sql(schema: str, question: str) -> str:
     prompt_parts = [
         f"-- {PostTransform.in_dialect.capitalize()} SQL schema",
         schema,
         "",
-        # "-- Assuming the current date is January 25th, 2023",
+        "-- How many orders are there per month?",
+        'SELECT\n  COUNT(*) AS orders_per_month,\n  EXTRACT(MONTH FROM created_at) AS month\nFROM "ORDER"\nGROUP BY\n  month\nORDER BY\n  month NULLS LAST',
+        "",
+        "-- Which product sells the best?",
+        """SELECT
+  COUNT(*) AS orders_per_product,
+  PRODUCT.title
+FROM "ORDER"
+JOIN ORDER_LINE
+  ON ORDER_LINE.order_id = "ORDER".id
+JOIN PRODUCT_VARIANT
+  ON PRODUCT_VARIANT.id = ORDER_LINE.variant_id
+JOIN PRODUCT
+  ON PRODUCT.id = PRODUCT_VARIANT.product_id
+GROUP BY
+  PRODUCT.title
+ORDER BY
+orders_per_product DESC NULLS FIRST""",
+        "",
+        # "-- Assuming the current date is December 25th, 2023",
         f"-- {question}",
         "SELECT ",
     ]
@@ -73,6 +97,7 @@ def question_with_schema_to_sql(schema: str, question: str) -> str:
 
     log.debug("sending prompt to openai", prompt=prompt)
 
+    t1 = time.time()
     result = openai.Completion.create(
         engine="code-davinci-002",
         prompt=prompt,
@@ -93,6 +118,9 @@ def question_with_schema_to_sql(schema: str, question: str) -> str:
     if len(result.choices) > 1:
         # noop
         pass
+
+    t2 = time.time()
+    log.debug("openai completion in", time=t2 - t1)
 
     ai_sql = result.choices[0].text
     return f"SELECT {ai_sql};"
