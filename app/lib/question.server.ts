@@ -162,8 +162,11 @@ export async function questionToSql(
   }
 
   const serverHost = process.env.PYTHON_SERVER
+  const postURL = `${serverHost}/question`
 
-  const response = await fetch(`${serverHost}/question`, {
+  log.debug("converting question to sql", { postURL, naturalQuestion })
+
+  const response = await fetch(postURL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
