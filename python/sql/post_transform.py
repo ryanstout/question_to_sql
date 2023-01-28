@@ -4,6 +4,7 @@
 
 
 import code
+import re
 import sys
 
 from prisma.models import (
@@ -14,6 +15,7 @@ from prisma.models import (
     User,
 )
 from sqlglot import diff, exp, parse_one, transpile
+from sqlglot.errors import ParseError
 from sqlglot.optimizer import optimize
 
 from python.utils.connections import Connections
@@ -65,6 +67,7 @@ SNOWFLAKE_KEYWORDS = [
 
 class PostTransform:
     in_dialect = "postgres"
+    # in_dialect = "tsql"
     # in_dialect = "snowflake"
     out_dialect = "snowflake"
 
@@ -76,14 +79,35 @@ class PostTransform:
         self.datasource_id = datasource_id
 
     def run(self, sql: str):
-        ast = parse_one(sql, self.__class__.in_dialect)
+        # Some transforms are easier to write in string land for now
+        sql = self.string_translations(sql)
+
+        try:
+            ast = parse_one(sql, self.__class__.in_dialect)
+        except ParseError as e:
+            log.error("Could not parse SQL, trying tsql", sql=sql, error=e)
+            ast = parse_one(sql, "tsql")
+        except ParseError as e:
+            log.error("Could not parse SQL, trying snowflake", sql=sql, error=e)
+            ast = parse_one(sql, "snowflake")
+
+        sql = transpile(ast.sql(), read=self.__class__.in_dialect, write=self.__class__.out_dialect)[0]
+        ast = parse_one(sql, self.__class__.out_dialect)
 
         ast = ast.transform(self.cast_divides_to_float)
         ast = ast.transform(self.add_fully_qualified_name)
 
-        sql = transpile(ast.sql(), read=self.__class__.in_dialect, write=self.__class__.out_dialect)[0]
-        ast = parse_one(sql, self.__class__.out_dialect)
-        return ast.sql(pretty=True, max_text_width=40)
+        sql = ast.sql(pretty=True, max_text_width=40)
+
+        # Regex transforms
+
+        return sql
+
+    def string_translations(self, sql):
+        # NOW() isn't supported on snowflake, replace with CURRENT_TIMESTAMP()
+        sql = re.sub("(\s)NOW\(\)([\s,;\n])", r"\1CURRENT_TIMESTAMP()\1", sql)
+
+        return sql
 
     def cast_divides_to_float(self, node):
         # print(type(node))
@@ -116,7 +140,7 @@ class PostTransform:
             )
 
             if not db_table:
-                log.error("Could not find table in db", table_name=node.name)
+                log.debug("Could not find table in db", table_name=node.name)
                 return node
 
             # FQN everything
@@ -174,20 +198,39 @@ if __name__ == "__main__":
     # )
     # print(result)
 
+    # result = PostTransform(1).run(
+    #     """
+    #     SELECT
+    #         COUNT(*)
+    #     FROM "ORDER"
+    #     WHERE
+    #         customer_id = (
+    #             SELECT
+    #             id
+    #             FROM CUSTOMER
+    #             WHERE
+    #             first_name = 'Daniel'
+    #             AND last_name = 'Whitehouse' LIMIT 1
+    #         )
+    #     """
+    # )
+    # print(result)
+
     result = PostTransform(1).run(
         """
-        SELECT
-            COUNT(*)
-        FROM "ORDER"
-        WHERE
-            customer_id = (
-                SELECT
-                id
-                FROM CUSTOMER
-                WHERE
-                first_name = 'Daniel'
-                AND last_name = 'Whitehouse' LIMIT 1
-            )
-        """
+    SELECT TOP 10 COUNT(*) AS orders_per_product,
+  PRODUCT.title
+FROM "ORDER"
+JOIN ORDER_LINE
+  ON ORDER_LINE.order_id = "ORDER".id
+JOIN PRODUCT_VARIANT
+  ON PRODUCT_VARIANT.id = ORDER_LINE.variant_id
+JOIN PRODUCT
+  ON PRODUCT.id = PRODUCT_VARIANT.product_id
+GROUP BY
+  PRODUCT.title
+ORDER BY
+orders_per_product DESC NULLS FIRST;
+"""
     )
     print(result)
