@@ -16,6 +16,10 @@ processes = []
   allowed_public_ports = []
   auto_rollback = true
 
+[mounts]
+  source="face_index"
+  destination="/face_index"
+
 # [metrics]
 #   path = "/metrics"
 #   port = 8081
