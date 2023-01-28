@@ -52,6 +52,7 @@ torchvision = [
 # use a separate group for prisma stuff to avoid installing *everything*
 # in order to generate the prisma bindings
 waitress = "^2.1.2"
+pyrate-limiter = "^2.8.5"
 [tool.poetry.group.prisma.dependencies]
 prisma-client = "^0.2.1"
 prisma = "^0.8.0"
