@@ -16,6 +16,7 @@ utilities=(
   htop
   zsh
   tmux
+  unzip
   # for prisma
   ca-certificates openssl
 )
