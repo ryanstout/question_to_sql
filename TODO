@@ -18,18 +18,18 @@ Goal: EOD Monday
 
 Goal: EOD Tuesday
 
-- [ ] [ryan] Live Integration Tests
-  - [ ] Manually run script
-  - [ ] Agnostic to result data
+- [x] [ryan] Live Integration Tests
+  - [x] Manually run script
+  - [x] Agnostic to result data
 - [x] [ryan] Python Indexing Script
   - [x] Question > Ranking data structure
 - [x] [mbianco] Python Query Improvements
   - [x] Input ranked dict, iteratively compute the output schema
   - [x] Maybe SQL transforms from OpenAI
-- [ ] [mbianco] Python server vs shelling
-  - [ ] Buildout API for the answering questions
-  - [ ] Replace shell stuff with an API call
-- [ ] [mbianco] export DB script
+- [x] [mbianco] Python server vs shelling
+  - [x] Buildout API for the answering questions
+  - [x] Replace shell stuff with an API call
+- [x] [mbianco] export DB script
 
 # What do we need so daniel can run a query?
 
@@ -39,9 +39,9 @@ What questions are we trying to answer?
 2. Is the ML model failing?
 3. Look & feel
 
-- [ ] Ranking Improvements
-  - [ ] ENV config for face storage
-  - [ ] Iterate on the ranking
+- [x] Ranking Improvements
+  - [x] ENV config for face storage
+  - [x] Iterate on the ranking
 - [x] UI integration
   - [x] Question record creation
 - [ ] [kai] User login tied to data source
@@ -52,11 +52,19 @@ What questions are we trying to answer?
   - [x] Read-write SQL editor
   - [x] Basic JSON result
   - [ ] Refactor to use `~/lib/` for all business logic
-- [ ] [mbianco] Deploy
-  - [ ] Docker Build
-  - [ ] File system access
-  - [ ] Postgres
-  - [ ] TBD embedding, if openai embeddings aren't good enough
+- [x] [mbianco] Deploy
+  - [x] Docker Build
+  - [x] File system access
+  - [x] Postgres
+  - [x] TBD embedding, if openai embeddings aren't good enough
+
+# What do we need so daniel & spectora can run a query?
+
+- [ ] Data Source
+  - [ ] Dynamic datasource frontend
+  - [ ] Dynamic datasource backend
+- [ ] Snowflake connection for Spectora
+  - [ ] Run import script and fix new bugs
 
 # How to train the system?
 
@@ -66,11 +74,6 @@ What questions are we trying to answer?
   - [ ] Look at history
   - [ ] Fancy URL structure .com/USER/12345-mike-wants-money
   - [ ] Group question
-
-# What do we need so daniel & spectora can run a query?
-
-- [ ] Snowflake connection for Spectora
-  - [ ] Run import script and fix new bugs
 
 # What do we need to improve the query creator?
 
