@@ -7,6 +7,8 @@ import numpy as np
 import openai
 from decouple import config
 
+from python.utils.logging import log
+
 openai.api_key = config("OPENAI_KEY")
 
 from openai.error import OpenAIError
@@ -14,7 +16,7 @@ from openai.error import OpenAIError
 
 class OpenAIEmbeddings:
     # https://github.com/litl/backoff/issues/92
-    @backoff.on_exception(backoff.expo, OpenAIError, factor=60, max_tries=5)
+    @backoff.on_exception(backoff.expo, OpenAIError, factor=60, max_tries=5, logger=log)
     def encode(content: str):
         log.debug("encoding with OpenAI", content=content)
 

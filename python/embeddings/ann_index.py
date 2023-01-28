@@ -24,6 +24,7 @@ class AnnIndex:
         self.embedding_link_index = EmbeddingLinkIndex(path)
 
     def add(self, datasource_id: int, content: str, table_id: Union[int, None], column_id: Union[int, None], value: Union[str, None]):
+        log.debug("Vector for ", content=content)
         embedding = Embedding(self.db, content)
 
         # Needs the mutex to prevent parallel columns from adding to it at the

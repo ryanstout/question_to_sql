@@ -31,7 +31,9 @@ class AnnFaiss:
         if dimensions < 10000:
             # self.index = faiss.index_factory(min(1000, rows), "HNSW", faiss.METRIC_INNER_PRODUCT)
             # self.index = faiss.IndexHNSWFlat(dimensions, faiss.METRIC_INNER_PRODUCT)
-            self.index = faiss.IndexFlatIP(dimensions)
+            # self.index = faiss.IndexFlatIP(dimensions)
+            self.index = faiss.IndexFlatL2(dimensions)
+            self.index.metric_type = faiss.METRIC_INNER_PRODUCT
         elif True:
             self.index = faiss.index_factory(dimensions, "HNSW", faiss.METRIC_INNER_PRODUCT)
         else:
