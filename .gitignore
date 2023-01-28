@@ -2,17 +2,13 @@ node_modules
 
 /build
 /public/build
+/tmp
 .env
 
 /cypress/screenshots
 /cypress/videos
 /postgres-data
 
-/app/styles/tailwind.css
-
-snowflake.sql
-snowflake.json
-python.log
 __pycache__
 python/indexes
 
