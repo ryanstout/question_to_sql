@@ -3,6 +3,8 @@
 set -eux
 `cd "${0%/*}/.."`
 
+npx prisma --version
+
 # this image will only run the node application adn does not need the python client
 sed -i '/generator pyclient/,/}/d' prisma/schema.prisma
 npx prisma generate
