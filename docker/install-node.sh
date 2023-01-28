@@ -10,8 +10,6 @@ apt-get update
 export DEBIAN_FRONTEND=noninteractive
 
 packages=(
-  # for prisma
-  ca-certificates openssl
   # for node-gyp
   python-is-python3 libpq-dev g++ make
 )
