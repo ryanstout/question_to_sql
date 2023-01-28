@@ -8,14 +8,14 @@ WORKDIR $APP_DIR
 ENV NODE_ENV production
 
 # add only the install script so we can iterate on other scripts without reinstalling everything
-ADD docker/install-node.sh docker/shared.sh ./docker/
-RUN ./docker/install-node.sh
+ADD docker/node-install.sh docker/shared.sh ./docker/
+RUN ./docker/node-install.sh
 
 ADD package.json package-lock.json ./
 ADD ./docker/node-package.sh ./docker/
 RUN ./docker/node-package.sh
 
 ADD . .
-RUN docker/build-node.sh
+RUN docker/node-build.sh
 
-CMD ["docker/run-node.sh"]
+CMD ["docker/node-run.sh"]

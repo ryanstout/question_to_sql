@@ -22,6 +22,7 @@ ADD .tool-versions ./
 RUN docker/install-python.sh
 
 ADD poetry.lock pyproject.toml ./
+ADD docker/python-package.sh ./docker/
 RUN docker/python-package.sh
 
 ADD . .

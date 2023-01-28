@@ -23,7 +23,7 @@ function install_only_prisma() {
   cp -r $prisma_tmp_dir/node_modules node_modules
 }
 
-install_only_prisma()
+install_only_prisma
 
 # now, let's install everything from poetry
 # /usr/local/lib/python3.9/site-packages
