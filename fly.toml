@@ -1,12 +1,9 @@
-# fly.toml file generated for knolbe on 2023-01-26T17:08:37-07:00
+# fly.toml file generated for knolbe on 2023-01-26T17:53:47-07:00
 
 app = "knolbe"
 kill_signal = "SIGINT"
 kill_timeout = 5
 processes = []
-
-[deploy]
-  release_command = "npx prisma migrate deploy"
 
 [env]
   METRICS_PORT = "8081"
