@@ -5,6 +5,7 @@ import sys
 import typing as t
 
 import numpy as np
+from decouple import config
 
 from python.embeddings.ann_search import AnnSearch
 from python.embeddings.embedding import Embedding
@@ -29,7 +30,7 @@ class Ranker:
     def __init__(self, db, datasource_id: int):
         self.db = db
 
-        indexes_path = os.environ["FAISS_INDEXES_PATH"]
+        indexes_path = config("FAISS_INDEXES_PATH")
 
         # Load the faiss indexes
         self.idx_table_names = AnnSearch(db, datasource_id, 0, f"{indexes_path}/{datasource_id}/table_names")
@@ -42,6 +43,7 @@ class Ranker:
         self.idx_column_name_and_all_column_values = AnnSearch(
             db, datasource_id, 5, f"{indexes_path}/{datasource_id}/column_name_and_all_column_values"
         )
+        self.idx_table_column_and_value = AnnSearch(db, datasource_id, 6, f"{indexes_path}/{datasource_id}/table_column_and_value")
 
         # Cell values
         self.idx_values = AnnSearch(self.db, datasource_id, 2, f"{indexes_path}/{datasource_id}/values")
@@ -51,9 +53,9 @@ class Ranker:
         query: str,
         embedder=OpenAIEmbeddings,
         cache_results=True,
-        table_weights=[1.0, 1.0, 0.1],
+        table_weights=[1.0, 0.0, 0.3],
         column_weights=[0.1, 0.0, 0.0],
-        value_weights=[0.3],
+        value_weights=[0.5, 0.5],
     ) -> SCHEMA_RANKING_TYPE:
 
         query_embedding = Embedding(self.db, query, embedder=embedder, cache_results=cache_results).embedding_numpy
@@ -69,10 +71,11 @@ class Ranker:
         # log.debug("Column matches", matches=columns_matches)
 
         value_matches = self.idx_values.search(query_embedding, 1000)
+        table_column_value_matches = self.idx_values.search(query_embedding, 1000)
 
         tables = self.merge_ranks([table_matches, tables_with_columns_matches, value_matches], table_weights, 0)
         columns = self.merge_ranks([columns_matches, column_name_and_all_column_values_matches, value_matches], column_weights, 1)
-        values = self.merge_ranks([value_matches], value_weights, 2)
+        values = self.merge_ranks([value_matches, table_column_value_matches], value_weights, 2)
 
         # rankings = list(map(lambda x: ElementRank(table_id=x[1][0], column_id=x[1][1], value_hint=x[1][2], score=x[0]), tables + columns + values))
         rankings = list(map(lambda x: ElementRank(table_id=x[1][0], column_id=x[1][1], value_hint=x[1][2], score=x[0]), tables + columns + values))
