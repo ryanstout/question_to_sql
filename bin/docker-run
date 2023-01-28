@@ -1,0 +1,1 @@
+docker run --env-file ./.env --rm -p 127.0.0.1:5234:5234 -it sha256:a27e80eb35d81d1ce6c1b5f5c6fd1bedf97b881a9447f7b0502dde5183b3b2dd

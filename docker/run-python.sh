@@ -1,3 +1,3 @@
 #!/bin/python
 
-poetry run python python/server.py
+poetry run waitress-serve python.server:app
