@@ -988,19 +988,19 @@ test-extra = ["curio", "matplotlib (!=3.2.0)", "nbformat", "numpy (>=1.20)", "pa
 
 [[package]]
 name = "isort"
-version = "5.11.4"
+version = "5.12.0"
 description = "A Python utility / library to sort Python imports."
 category = "dev"
 optional = false
-python-versions = ">=3.7.0"
+python-versions = ">=3.8.0"
 files = [
-    {file = "isort-5.11.4-py3-none-any.whl", hash = "sha256:c033fd0edb91000a7f09527fe5c75321878f98322a77ddcc81adbd83724afb7b"},
-    {file = "isort-5.11.4.tar.gz", hash = "sha256:6db30c5ded9815d813932c04c2f85a360bcdd35fed496f4d8f35495ef0a261b6"},
+    {file = "isort-5.12.0-py3-none-any.whl", hash = "sha256:f84c2818376e66cf843d497486ea8fed8700b340f308f076c6fb1229dff318b6"},
+    {file = "isort-5.12.0.tar.gz", hash = "sha256:8bef7dde241278824a6d83f44a544709b065191b95b6e50894bdc722fcba0504"},
 ]
 
 [package.extras]
-colors = ["colorama (>=0.4.3,<0.5.0)"]
-pipfile-deprecated-finder = ["pipreqs", "requirementslib"]
+colors = ["colorama (>=0.4.3)"]
+pipfile-deprecated-finder = ["pip-shims (>=0.5.2)", "pipreqs", "requirementslib"]
 plugins = ["setuptools"]
 requirements-deprecated-finder = ["pip-api", "pipreqs"]
 
@@ -1940,30 +1940,6 @@ all = ["nodejs-bin"]
 node = ["nodejs-bin"]
 
 [[package]]
-name = "prisma-client"
-version = "0.2.1"
-description = "Prisma Client Python is an auto-generated and fully type-safe database client"
-category = "dev"
-optional = false
-python-versions = ">=3"
-files = [
-    {file = "prisma-client-0.2.1.tar.gz", hash = "sha256:bee18aa7bb97b892e734cbcaf3e770d79c735b8fda3285ef7772d2b2a305ffb7"},
-    {file = "prisma_client-0.2.1-py3-none-any.whl", hash = "sha256:71a24ae148f083f7946f0b9daec9aa426b1d06dfdb80261b8567865d015a9b8e"},
-]
-
-[package.dependencies]
-click = ">=7.1.2"
-httpx = ">=0.19.0"
-jinja2 = ">=2.11.2"
-pydantic = ">=1.8.0"
-python-dotenv = ">=0.12.0"
-
-[package.extras]
-all = ["mkdocs (==1.2.3)", "mkdocs-material (==7.3.0)", "pre-commit (==2.8.2)", "tox (==3.24.0)", "wheel (==0.37.0)"]
-dev = ["pre-commit (==2.8.2)", "tox (==3.24.0)", "wheel (==0.37.0)"]
-docs = ["mkdocs (==1.2.3)", "mkdocs-material (==7.3.0)"]
-
-[[package]]
 name = "prompt-toolkit"
 version = "3.0.36"
 description = "Library for building powerful interactive command lines in Python"
@@ -2686,14 +2662,14 @@ tornado = ["tornado (>=5)"]
 
 [[package]]
 name = "setuptools"
-version = "66.1.1"
+version = "67.0.0"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "setuptools-66.1.1-py3-none-any.whl", hash = "sha256:6f590d76b713d5de4e49fe4fbca24474469f53c83632d5d0fd056f7ff7e8112b"},
-    {file = "setuptools-66.1.1.tar.gz", hash = "sha256:ac4008d396bc9cd983ea483cb7139c0240a07bbc74ffb6232fceffedc6cf03a8"},
+    {file = "setuptools-67.0.0-py3-none-any.whl", hash = "sha256:9d790961ba6219e9ff7d9557622d2fe136816a264dd01d5997cfc057d804853d"},
+    {file = "setuptools-67.0.0.tar.gz", hash = "sha256:883131c5b6efa70b9101c7ef30b2b7b780a4283d5fc1616383cdf22c83cbefe6"},
 ]
 
 [package.extras]
@@ -3001,7 +2977,6 @@ typing-extensions = "*"
 [package.source]
 type = "url"
 url = "https://github.com/KumaTea/pytorch-aarch64/releases/download/v1.11.0/torch-1.11.0-cp39-cp39-linux_aarch64.whl"
-
 [[package]]
 name = "torch"
 version = "1.13.1"
@@ -3022,7 +2997,6 @@ opt-einsum = ["opt-einsum (>=3.3)"]
 [package.source]
 type = "url"
 url = "https://download.pytorch.org/whl/cpu/torch-1.13.1-cp39-none-macosx_11_0_arm64.whl"
-
 [[package]]
 name = "torch"
 version = "1.13.1+cpu"
@@ -3043,7 +3017,6 @@ opt-einsum = ["opt-einsum (>=3.3)"]
 [package.source]
 type = "url"
 url = "https://download.pytorch.org/whl/cpu/torch-1.13.1%2Bcpu-cp39-cp39-linux_x86_64.whl"
-
 [[package]]
 name = "torchvision"
 version = "0.12.0"
@@ -3068,7 +3041,6 @@ scipy = ["scipy"]
 [package.source]
 type = "url"
 url = "https://github.com/KumaTea/pytorch-aarch64/releases/download/v1.11.0/torchvision-0.12.0-cp39-cp39-linux_aarch64.whl"
-
 [[package]]
 name = "torchvision"
 version = "0.14.1"
@@ -3093,7 +3065,6 @@ scipy = ["scipy"]
 [package.source]
 type = "url"
 url = "https://download.pytorch.org/whl/cpu/torchvision-0.14.1-cp39-cp39-macosx_11_0_arm64.whl"
-
 [[package]]
 name = "torchvision"
 version = "0.14.1+cpu"
@@ -3118,7 +3089,6 @@ scipy = ["scipy"]
 [package.source]
 type = "url"
 url = "https://download.pytorch.org/whl/cpu/torchvision-0.14.1%2Bcpu-cp39-cp39-linux_x86_64.whl"
-
 [[package]]
 name = "tqdm"
 version = "4.64.1"
@@ -3513,4 +3483,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "2145953c0b6e29c4d38eb2aea53bb5297ee563444fb9739bbdcd70e13f9ec1a3"
+content-hash = "5325c2109b2c8b7e0eb840118a14516913349bb36ff7967b9ec3850ff1c819c3"
