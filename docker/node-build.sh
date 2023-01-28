@@ -9,7 +9,7 @@ npx prisma --version
 sed -i '/generator pyclient/,/}/d' prisma/schema.prisma
 npx prisma generate
 
-npm run build --sourcemap
+npm run build
 
 # after building, let's remove all of the dev packages that we do not need
 npm prune --omit dev --omit optional
