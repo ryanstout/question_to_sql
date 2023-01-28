@@ -95,7 +95,9 @@ class SchemaBuilder:
         rendered_choices = ""
 
         # remove Nones, empty string, duplicates, and whitespace string from hints
-        filtered_hints = [hint.lower() for hint in hints if hint and hint.strip()]
+        # NOTE: don't lowercase or dedup based on case, the case needs to match
+        # on where clauses
+        filtered_hints = [hint for hint in hints if hint and hint.strip()]
         filtered_hints = unique(filtered_hints)
 
         if filtered_hints:
@@ -107,7 +109,7 @@ class SchemaBuilder:
             rendered_choices = f" -- possible values include: {rendered_choice_list}"
 
         # `column1 datatype(length) column_contraint,`
-        return f"\t{column.name} {col_type},{rendered_choices}".lower()
+        return f"\t{column.name.lower()} {col_type.lower()},{rendered_choices}"
 
     def generate_sql_table_describe(self, table_rank: TableRank) -> str:
         column_sql = []
@@ -191,6 +193,7 @@ class SchemaBuilder:
                 table_ranks.append(table_rank)
 
             if element_rank["column_id"]:
+
                 column_id = element_rank["column_id"]
 
                 # does the column exist in the table_rank object?
@@ -198,7 +201,9 @@ class SchemaBuilder:
 
                 if column_rank:
                     # add the hint to the column_rank
-                    column_rank["hints"].append(element_rank["value_hint"])
+                    value_hint = element_rank["value_hint"]
+                    if value_hint and value_hint not in column_rank["hints"]:
+                        column_rank["hints"].append(element_rank["value_hint"])
                 else:
                     column_rank = self.create_column_rank(element_rank)
                     table_rank["columns"].append(column_rank)
