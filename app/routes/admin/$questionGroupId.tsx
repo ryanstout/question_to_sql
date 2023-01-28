@@ -120,6 +120,7 @@ async function findOrCreateQuestion(
       feedbackState: true,
     },
     where: { questionGroupId: questionGroupId, userId: userId },
+    orderBy: { createdAt: "asc" },
   })
 
   return questions
@@ -136,8 +137,6 @@ export async function action({ request }: ActionArgs) {
     action_name: z.string().optional(),
     questionGroupId: zx.NumAsString,
   })
-
-  console.log("HERE", q);
 
   const q2 = zx.parseQuery(request, { q: z.string().optional() })
   if (q2) {
@@ -250,6 +249,7 @@ export let loader: LoaderFunction = async ({
   let question: QuestionInBrowser | null
   if (q) {
     // If there isn't a question, create one
+    console.log("Q: ", q)
     questions = await findOrCreateQuestion(userId, q, questionGroup.id)
 
     // grab the latest question
@@ -273,6 +273,11 @@ export let loader: LoaderFunction = async ({
         sql = await questionToSql(dataSource.id, question.question)
       }
       log.debug("sql from python", { sql })
+
+      if (!sql.match(/\sLIMIT\s/)) {
+        // TODO: Temporary limit on number of rows when no limit is provided
+        sql += " LIMIT 100"
+      }
 
       const results = await runQuery(dataSource, sql)
 

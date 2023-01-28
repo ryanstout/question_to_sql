@@ -114,7 +114,7 @@ export default function QueryAll() {
       </td>
       <td>
         <Link
-          to={`/query/${query.questionGroupId}/chart/raw?q=${query.question}`}
+          to={`/admin/${query.questionGroupId}/chart/raw?q=${query.question}`}
         >
           {query.question}
         </Link>
