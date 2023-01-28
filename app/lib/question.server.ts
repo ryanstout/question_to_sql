@@ -1,4 +1,5 @@
 import type { Question } from "@prisma/client"
+import invariant from "tiny-invariant"
 
 import { prisma } from "~/db.server"
 import { log } from "~/lib/logging.server"
@@ -162,6 +163,8 @@ export async function questionToSql(
   }
 
   const serverHost = process.env.PYTHON_SERVER
+  invariant(serverHost, "PYTHON_SERVER env var not set")
+
   const postURL = `${serverHost}/question`
 
   log.debug("converting question to sql", { postURL, naturalQuestion })

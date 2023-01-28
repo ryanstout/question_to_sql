@@ -36,7 +36,7 @@ def configureLogger():
 
 configureLogger()
 
-if t.cast(str, config("PYTHON_ENV", default="development", type=str)).lower() == "production":
+if t.cast(str, config("PYTHON_ENV", default="development", cast=str)).lower() == "production":
     import sentry_sdk
 
     sentry_sdk.init(
