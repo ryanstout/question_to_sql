@@ -104,12 +104,12 @@ class Import:
             else:
                 self.create_table_record(data_source, table)
 
-    def create_table_record(self, datasource: DataSource, table):
+    def create_table_record(self, data_source: DataSource, table):
         # TODO this should be moved to a dedicated method
         fqn = f"{table['database_name']}.{table['schema_name']}.{table['name']}"
         log.debug("creating table record", fqn=fqn)
 
-        table_locator = {"dataSourceId": datasource.id, "fullyQualifiedName": fqn}
+        table_locator = {"dataSourceId": data_source.id, "fullyQualifiedName": fqn}
 
         # Still can't believe you can't unique query on a compound index in prisma.
         table_description = self.db.datasourcetabledescription.find_first(where=table_locator)
@@ -123,12 +123,12 @@ class Import:
         if table_description:
             table_description = self.db.datasourcetabledescription.update(data=description_payload, where={"id": table_description.id})
         else:
-            table_description = self.db.datasourcetabledescription.create(data=description_payload)
+            table_description = self.db.datasourcetabledescription.create(dataSourceId=data_source.id, data=description_payload)
 
-        self.create_column_records(table_description, limit=self.limits["column"])
+        self.create_column_records(data_source, table_description, limit=self.limits["column"])
         self.embedding_builder.add_table(fqn, column_limit=self.limits["column"], column_value_limit=self.limits["column_value"])
 
-    def create_column_records(self, table_description: DataSourceTableDescription, limit: int):
+    def create_column_records(self, data_source: DataSource, table_description: DataSourceTableDescription, limit: int):
         cursor = self.snowflake_cursor
         row_count = self.get_total_rows(table_description, cursor)
 
@@ -149,13 +149,13 @@ class Import:
 
         futures = []
         for column in column_list:
-            futures.append(self.column_pool.apply_async(self.create_column_record, args=(table_description, column, row_count)))
+            futures.append(self.column_pool.apply_async(self.create_column_record, args=(data_source, table_description, column, row_count)))
             # result is not important, otherwise we would `async_task.get()`
 
         # Wait for futures to finsish
         [future.get() for future in futures]
 
-    def create_column_record(self, table_description: DataSourceTableDescription, column, row_count: int) -> None:
+    def create_column_record(self, data_source: DataSource, table_description: DataSourceTableDescription, column, row_count: int) -> None:
         name = column["name"]
         type = column["type"]
 
@@ -174,6 +174,7 @@ class Import:
         column_external_id_locator = {"dataSourceTableDescriptionId": table_description.id, "name": name}
 
         column_description_payload = column_external_id_locator | {
+            "dataSourceId": data_source.id,
             "type": column["type"],
             "kind": column["kind"],
             "skip": False,

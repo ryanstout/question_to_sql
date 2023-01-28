@@ -39,7 +39,7 @@ class Ranker:
 
         # Table and Columns indexes
         # self.idx_table_and_column_names_and_values = AnnSearch(
-        #     db, datasource_id, 4, f"python/indexes/{datasource_id}/table_and_column_names_and_values")
+        #     db, datasource_id, 4, f"{indexes_path}/{datasource_id}/table_and_column_names_and_values")
         self.idx_column_name_and_all_column_values = AnnSearch(
             db, datasource_id, 5, f"{indexes_path}/{datasource_id}/column_name_and_all_column_values"
         )

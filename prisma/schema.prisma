@@ -115,6 +115,7 @@ model DataSource {
 
   dataSourceTableDescriptions DataSourceTableDescription[]
   Question                    Question[]
+  DataSourceTableColumn       DataSourceTableColumn[]
 }
 
 model DataSourceTableDescription {
@@ -142,6 +143,9 @@ model DataSourceTableDescription {
 
 model DataSourceTableColumn {
   id Int @id @default(autoincrement())
+
+  DataSource   DataSource? @relation(fields: [dataSourceId], references: [id])
+  dataSourceId Int?
 
   skip Boolean
 

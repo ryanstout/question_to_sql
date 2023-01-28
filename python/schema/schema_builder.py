@@ -26,7 +26,14 @@ from python.schema.ranker import SCHEMA_RANKING_TYPE, ElementRank, Ranker
 from python.sql.post_transform import PostTransform
 from python.utils.batteries import unique
 
+# from transformers import GPT2Tokenizer
+
+
 # TODO looks like we cannot set default values on typeddict: https://github.com/python/mypy/issues/6131
+
+# Only load once
+token_encoder = tiktoken.get_encoding("gpt2")
+# hf_tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
 
 
 class ColumnRank(t.TypedDict):
@@ -46,9 +53,12 @@ TABLE_SCHEMA = t.List[TableRank]
 
 # TODO move to a generic utils
 def estimate_token_count(text: str) -> int:
-    enc = tiktoken.get_encoding("gpt2")
-    token_count = len(enc.encode(text))
+    token_count = len(token_encoder.encode(text))
     return token_count
+
+    # token_count = hf_tokenizer(text=text, return_length=True)
+    # # print("Token Count: ", token_count.length)
+    # return token_count.length
 
 
 class SchemaBuilder:
@@ -57,16 +67,34 @@ class SchemaBuilder:
     def __init__(self, db: Prisma):
         self.db: Prisma = db
         self.cached_columns = {}
+        self.cached_table_column_ids = {}
+        self.cached_tables = {}
+        self.tokens_so_far = 0
 
-    def build(self, ranked_schema: SCHEMA_RANKING_TYPE) -> str:
+    def build(self, data_source_id: int, ranked_schema: SCHEMA_RANKING_TYPE) -> str:
+        # Precache all of the tables and columns for faster lookup
+        tables = self.db.datasourcetabledescription.find_many(where={"dataSourceId": data_source_id})
+
+        for table in tables:
+            self.cached_tables[table.id] = table
+
+        columns = self.db.datasourcetablecolumn.find_many(where={"dataSourceId": data_source_id})
+
+        for column in columns:
+            table_id = column.dataSourceTableDescriptionId
+            column_id = column.id
+            if table_id not in self.cached_table_column_ids:
+                self.cached_table_column_ids[table_id] = []
+
+            self.cached_table_column_ids[table_id].append(column_id)
+            self.cached_columns[column_id] = column
+
         return self.generate_sql_from_element_rank(ranked_schema)
 
     # not caching the columns was creating a massive slowdown in schema generation
     def get_data_source_table_column(self, column_id: int) -> DataSourceTableColumn:
         if column := self.cached_columns.get(column_id, None):
             return column
-
-        column = self.cached_columns[column_id] = self.db.datasourcetablecolumn.find_first(where={"id": column_id})
 
         if column is None:
             raise Exception(f"column not found {column_id}")
@@ -128,7 +156,7 @@ class SchemaBuilder:
         return "\n".join([self.generate_sql_table_describe(table_rank) for table_rank in table_ranks])
 
     def create_table_rank(self, tableId: int) -> TableRank:
-        table = self.db.datasourcetabledescription.find_first(where={"id": tableId})
+        table = self.cached_tables[tableId]
 
         # we want to include the primary key and all foreign keys by default as columns
         id_columns = self.db.datasourcetablecolumn.find_many(
@@ -169,28 +197,35 @@ class SchemaBuilder:
             "hints": [column_rank["value_hint"]],
         }
 
+    def add_tokens(self, token_str: str, add_extra: int = 0):
+        # Add to the count based on the number of tokens in the string,
+        # add_extra is used to add in counts for things like line breaks
+        self.tokens_so_far += estimate_token_count(token_str)
+
     def generate_sql_from_element_rank(self, ranked_schema: SCHEMA_RANKING_TYPE) -> str:
         # we need to transform the ranking schema into a list of table
         table_ranks: t.List[TableRank] = []
         sql = ""
 
         for element_rank in ranked_schema:
-            # first, let's check to see if the new schema is above the token limit
-            new_table_sql = self.generate_sql_describe(table_ranks)
-
-            token_count = estimate_token_count(new_table_sql)
-            if token_count > self.TOKEN_COUNT_LIMIT:
-                log.debug("schema token count", token_count=token_count)
-                return sql
-            else:
-                sql = new_table_sql
+            if self.tokens_so_far > self.TOKEN_COUNT_LIMIT:
+                break
 
             # does the table already exist in table ranks?
             table_rank = next((table_rank for table_rank in table_ranks if table_rank["table_id"] == element_rank["table_id"]), None)
 
             if not table_rank:
+                table_id = element_rank["table_id"]
                 table_rank = self.create_table_rank(element_rank["table_id"])
                 table_ranks.append(table_rank)
+                self.add_tokens(f"CREATE TABLE {self.cached_tables[table_id]} (\n \n);\n")
+
+                # Option to add all columns as soon as we see the table
+                # column_ids_for_table = self.cached_table_column_ids[table_id]
+                # for column_id in column_ids_for_table:
+                #     column_rank = self.add_column_to_table(
+                #         ElementRank(table_id=table_id, column_id=column_id, value_hint=None, score=0.0), table_rank
+                #     )
 
             if element_rank["column_id"]:
 
@@ -203,14 +238,28 @@ class SchemaBuilder:
                     # add the hint to the column_rank
                     value_hint = element_rank["value_hint"]
                     if value_hint and value_hint not in column_rank["hints"]:
+                        if len(column_rank["hints"]) == 0:
+                            self.add_tokens(f" -- possible values include: {value_hint}")
+                        else:
+                            self.add_tokens(f", {value_hint}")
+
                         column_rank["hints"].append(element_rank["value_hint"])
                 else:
-                    column_rank = self.create_column_rank(element_rank)
-                    table_rank["columns"].append(column_rank)
+                    self.add_column_to_table(element_rank, table_rank)
 
-        token_count = estimate_token_count(new_table_sql)
+        sql = self.generate_sql_describe(table_ranks)
+        token_count = estimate_token_count(sql)
         log.debug("schema token count", token_count=token_count)
         return sql
+
+    def add_column_to_table(self, element_rank, table_rank):
+        column_rank = self.create_column_rank(element_rank)
+        table_rank["columns"].append(column_rank)
+
+        # Add the tokens for the column strings without the hints
+        column_sql = self.generate_column_describe(column_rank["column_id"], [])
+        if column_sql:
+            self.add_tokens(column_sql, 1)
 
 
 if __name__ == "__main__":
@@ -225,4 +274,4 @@ if __name__ == "__main__":
 
     # generate via: `poetry run python -m python.schema.ranker "What product sells best in Montana?"`
 
-    print(SchemaBuilder(db).build(ranks))
+    print(SchemaBuilder(1, db).build(ranks))

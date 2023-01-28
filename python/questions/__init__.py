@@ -1,3 +1,4 @@
+import cProfile
 import time
 
 import backoff
@@ -16,7 +17,10 @@ openai.api_key = config("OPENAI_KEY")
 
 from python.setup import log
 
+import io
+import pstats
 import typing as t
+from pstats import SortKey
 
 
 def question_with_data_source_to_sql(data_source_id: int, question: str) -> str:
@@ -26,9 +30,21 @@ def question_with_data_source_to_sql(data_source_id: int, question: str) -> str:
     ranked_structure = Ranker(db, data_source_id).rank(question)
     log.debug("Building Schema")
     t1 = time.time()
-    table_schema_limited_by_token_size = SchemaBuilder(db).build(ranked_structure)
+
+    # ob = cProfile.Profile()
+    # ob.enable()
+    table_schema_limited_by_token_size = SchemaBuilder(db).build(data_source_id, ranked_structure)
+    # ob.disable()
+    # sec = io.StringIO()
+    # sortby = SortKey.CUMULATIVE
+    # ps = pstats.Stats(ob, stream=sec).sort_stats(sortby)
+    # ps.print_stats()
+
+    # print(sec.getvalue())
+
     t2 = time.time()
-    log.debug("Convert Question to SQL", time=t2 - t1)
+    log.debug("Built scema in ", time=t2 - t1)
+    log.debug("Convert Question to SQL")
     sql = question_with_schema_to_sql(table_schema_limited_by_token_size, question)
     t3 = time.time()
     log.debug("SQL pre transform: ", sql=sql, time=t3 - t2)
@@ -88,7 +104,8 @@ GROUP BY
 ORDER BY
 orders_per_product DESC NULLS FIRST""",
         "",
-        # "-- Assuming the current date is December 25th, 2023",
+        # "-- Assuming the current date is January 28th, 2023",
+        # "-- using NOW() instead of dates\n\n",
         f"-- {question}",
         "SELECT ",
     ]
