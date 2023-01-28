@@ -1,4 +1,4 @@
-# fly.toml file generated for knolbe on 2023-01-26T17:53:47-07:00
+# fly.toml file generated for knolbe on 2023-01-28T07:52:43-07:00
 
 app = "knolbe"
 kill_signal = "SIGINT"
@@ -12,10 +12,6 @@ processes = []
 [experimental]
   allowed_public_ports = []
   auto_rollback = true
-
-[metrics]
-  path = "/metrics"
-  port = 8081
 
 [[services]]
   internal_port = 8080
