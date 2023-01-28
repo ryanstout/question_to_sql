@@ -2,6 +2,9 @@
 
 set -eux
 `cd "${0%/*}/.."`
+source docker/shared.sh
+
+extract_prisma_version
 
 npx prisma --version
 
