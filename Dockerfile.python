@@ -22,6 +22,6 @@ ADD .tool-versions ./
 RUN docker/install-python.sh
 
 ADD . .
-# RUN docker/build-python.sh
+RUN docker/build-python.sh
 
-# CMD ["docker/run-python.sh"]
+CMD ["docker/run-python.sh"]
