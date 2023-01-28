@@ -12,7 +12,7 @@ ADD docker/install-node.sh docker/shared.sh ./docker/
 RUN ./docker/install-node.sh
 
 ADD package.json package-lock.json ./
-ADD ./docker/node-package.json ./docker/
+ADD ./docker/node-package.sh ./docker/
 RUN ./docker/node-package.sh
 
 ADD . .
