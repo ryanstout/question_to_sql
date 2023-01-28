@@ -23,6 +23,7 @@ from prisma import Prisma
 from python.embeddings.embedding_builder import EmbeddingBuilder
 from python.utils.connections import Connections
 from python.utils.logging import log
+from python.utils.sql import unqualified_table_name
 
 # Imports the schema and metadata from the snowflake database to the
 # local database.
@@ -137,7 +138,12 @@ class Import:
             """
         ).fetchall()
 
-        log.debug("inspecting columns", table_name=table_description.fullyQualifiedName, full_count=len(raw_column_list), limit=limit)
+        log.debug(
+            "inspecting columns",
+            table_name=unqualified_table_name(table_description.fullyQualifiedName),
+            full_count=len(raw_column_list),
+            limit=limit,
+        )
 
         column_list = raw_column_list[0:limit]
 
@@ -154,10 +160,10 @@ class Import:
         type = column["type"]
 
         if any(re.search(regex, name) for regex in SKIP_COLUMNS):
-            log.debug("skipping column", column=name)
+            # log.debug("skipping column", column=name)
             return
 
-        log.info("inspecting column", table_name=table_description.fullyQualifiedName, name=name, type=type, column=name)
+        # log.info("inspecting column", table_name=unqualified_table_name(table_description.fullyQualifiedName), name=name, type=type, column=name)
 
         # since we are in a thread pool, we want to use a unique cursor to avoid any state issues
         cursor = self.connections.snowflake_cursor()
