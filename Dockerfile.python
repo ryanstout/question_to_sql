@@ -17,15 +17,15 @@ WORKDIR $APP_DIR
 ENV NODE_ENV production
 
 # add only the install script so we can iterate on other scripts without reinstalling everything
-ADD docker/install-python.sh docker/shared.sh ./docker/
+ADD docker/python-install.sh docker/shared.sh ./docker/
 ADD .tool-versions ./
-RUN docker/install-python.sh
+RUN docker/python-install.sh
 
 ADD poetry.lock pyproject.toml package.json package-lock.json ./
 ADD docker/python-package.sh ./docker/
 RUN docker/python-package.sh
 
 ADD . .
-RUN docker/build-python.sh
+RUN docker/python-build.sh
 
-CMD ["docker/run-python.sh"]
+CMD ["docker/python-run.sh"]

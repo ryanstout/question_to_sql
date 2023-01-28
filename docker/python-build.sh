@@ -1,7 +1,6 @@
 #!/bin/bash
 
 set -eux
-
 `cd "${0%/*}/.."`
 
 npx prisma --version
