@@ -6,6 +6,11 @@ app = Flask(__name__)
 from python.setup import log
 
 
+@app.route("/healthcheck", methods=["GET"])
+def healthcheck():
+    return jsonify({})
+
+
 @app.route("/import", methods=["POST"])
 def import_data_source():
     json_data = request.get_json()
