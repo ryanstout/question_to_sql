@@ -30,6 +30,7 @@ backoff = "^2.2.1"
 flask = "^2.2.2"
 
 # import platform; platform.machine()
+# https://download.pytorch.org/whl/torch_stable.html
 torch = [
   { version = "1.13.1", "platform" = "linux", markers = "platform_machine == 'aarch64'"},
   {url = "https://download.pytorch.org/whl/cpu/torch-1.13.1%2Bcpu-cp39-cp39-linux_x86_64.whl", "platform" = "linux", markers = "platform_machine == 'x86_64'"},
