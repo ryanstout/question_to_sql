@@ -168,7 +168,11 @@ export async function questionToSql(
 
   const postURL = `${serverHost}/question`
 
-  log.debug("converting question to sql", { postURL, naturalQuestion })
+  log.debug("converting question to sql", {
+    dataSourceId,
+    postURL,
+    naturalQuestion,
+  })
 
   const response = await fetch(postURL, {
     method: "POST",
