@@ -22,3 +22,4 @@ function configureLogging() {
 configureLogging()
 
 export const log = logger
+export default { log: logger }

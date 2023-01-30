@@ -57,11 +57,12 @@ export async function getResultsFromQuestion({
     })
   }
 
-  if (retrievedQuestionRecord === null) {
-    throw new Error("question record not found")
-  }
+  invariant(retrievedQuestionRecord !== null, "question record not found")
 
   const dataSource = fakeDataSource()
+
+  invariant(retrievedQuestionRecord.codexSql !== null, "codexSql is null")
+
   const data = await runQuery(dataSource, retrievedQuestionRecord.codexSql)
 
   return {

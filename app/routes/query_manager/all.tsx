@@ -36,10 +36,7 @@ export async function action({ request }: ActionArgs) {
     action_name: z.string(),
   })
 
-  if (action_name === "train") {
-    // Train the model
-    await train(userId)
-  } else if (action_name === "delete") {
+  if (action_name === "delete") {
     let { id } = await zx.parseForm(request, {
       id: zx.NumAsString,
     })

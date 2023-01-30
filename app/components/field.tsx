@@ -2,7 +2,6 @@ import { useField } from "remix-validated-form"
 
 import { TextInput } from "@mantine/core"
 
-export const FieldDefaultAsType = "text" as const
 export type FieldDefaultAsType = typeof FieldDefaultAsType
 
 export type FieldOwnInputProps<T extends React.ElementType> = {
