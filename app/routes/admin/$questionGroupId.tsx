@@ -52,6 +52,8 @@ type LoaderData = {
   latestResult: string
 } | null
 
+const IS_ADMIN = false
+
 export async function findOrCreateQuestionGroup(
   userId: number,
   questionGroupId: number | null
@@ -388,7 +390,7 @@ function QueryHeader({ data }: { data: LoaderData }) {
     <>
       <Grid p="0" m="0">
         <Grid.Col span={5} p="lg">
-          <Stack justify="space-between" sx={{ height: "100%" }}>
+          <Stack>
             <ConsoleSearch
               currentQuestionState={{
                 question: currentQuestion?.question,
@@ -398,14 +400,16 @@ function QueryHeader({ data }: { data: LoaderData }) {
               }}
             />
             <Flex>
-              <Box w="100%">
-                <Form method="post" action="/admin">
-                  <Button type="submit" w="100%">
-                    New Question
-                  </Button>
-                </Form>
-              </Box>
-              <Box w="100%">
+              {IS_ADMIN && (
+                <Box w="100%">
+                  <Form method="post" action="/admin">
+                    <Button type="submit" w="100%">
+                      New Question
+                    </Button>
+                  </Form>
+                </Box>
+              )}
+              <Box pr="25px">
                 <Form method="post">
                   <input
                     type="hidden"
@@ -417,7 +421,7 @@ function QueryHeader({ data }: { data: LoaderData }) {
                     name="questionGroupId"
                     value={questionGroupId}
                   />
-                  <Button w="100%" type="submit" color="green">
+                  <Button type="submit" color="green">
                     {currentQuestion?.feedbackState === FeedbackState.CORRECT
                       ? "✓"
                       : ""}
@@ -425,7 +429,7 @@ function QueryHeader({ data }: { data: LoaderData }) {
                   </Button>
                 </Form>
               </Box>
-              <Box w="100%">
+              <Box>
                 <Form method="post">
                   <input
                     type="hidden"
@@ -437,7 +441,7 @@ function QueryHeader({ data }: { data: LoaderData }) {
                     name="questionGroupId"
                     value={questionGroupId}
                   />
-                  <Button w="100%" type="submit" color="red">
+                  <Button type="submit" color="red">
                     {currentQuestion?.feedbackState === FeedbackState.INCORRECT
                       ? "✓"
                       : ""}
@@ -522,6 +526,7 @@ export default function QuestionGroup() {
   )
 }
 
+//
 export function CatchBoundary() {
   const caught = useCatch()
   return <h1>Caught error: {caught.statusText}</h1>
