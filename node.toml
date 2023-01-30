@@ -9,6 +9,9 @@ processes = []
   METRICS_PORT = "8081"
   PORT = "8080"
 
+[build]
+  dockerfile = "Dockerfile.node"
+
 [experimental]
   allowed_public_ports = []
   auto_rollback = true
