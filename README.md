@@ -11,6 +11,12 @@ bin/setup.sh
 npm run dev
 ```
 
+# Deployment
+
+```
+fly pg attach knolbe-db --config python.toml --database-name knolbe
+```
+
 # Prisma
 
 Generate the python and ts schemas with:
@@ -37,6 +43,12 @@ Ask a question:
 http POST http://127.0.0.1:5000/ 'question:="my question"' data_source_id:=1
 ```
 
+Get results:
+
+````shell
+http POST http://0.0.0.0:5000/query data_source_id:=1 'sql:="SELECT * FROM CUSTOMER LIMIT 10"'
+```
+
 # CLI Tools
 
 First, we need to import the table data:
@@ -48,7 +60,7 @@ poetry run python python/import.py \
   --table-limit=100 \
   --column-limit=1000 \
   --column-value-limit=1000
-```
+````
 
 Once everything is imported, we can ask questions:
 
