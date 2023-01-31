@@ -72,7 +72,12 @@ class SchemaBuilder:
         self.tokens_so_far = 0
 
     def build(self, data_source_id: int, ranked_schema: SCHEMA_RANKING_TYPE) -> str:
-        # Precache all of the tables and columns for faster lookup
+        self.cache_columns_and_tables(data_source_id)
+
+        return self.generate_sql_from_element_rank(ranked_schema)
+
+    # Precache all of the tables and columns for faster lookup
+    def cache_columns_and_tables(self, data_source_id: int) -> None:
         tables = self.db.datasourcetabledescription.find_many(where={"dataSourceId": data_source_id})
 
         for table in tables:
@@ -82,14 +87,12 @@ class SchemaBuilder:
 
         for column in columns:
             table_id = column.dataSourceTableDescriptionId
-            column_id = column.id
             if table_id not in self.cached_table_column_ids:
                 self.cached_table_column_ids[table_id] = []
 
+            column_id = column.id
             self.cached_table_column_ids[table_id].append(column_id)
             self.cached_columns[column_id] = column
-
-        return self.generate_sql_from_element_rank(ranked_schema)
 
     # not caching the columns was creating a massive slowdown in schema generation
     def get_data_source_table_column(self, column_id: int) -> DataSourceTableColumn:

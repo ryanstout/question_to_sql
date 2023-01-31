@@ -4,6 +4,8 @@ import typing as t
 import structlog
 from decouple import config
 
+from python.utils.system import is_production
+
 if config("PYTHON_RICH_STACKTRACE", default=False, cast=bool):
     from rich.traceback import install
 
@@ -36,7 +38,7 @@ def configureLogger():
 
 configureLogger()
 
-if t.cast(str, config("PYTHON_ENV", default="development", cast=str)).lower() == "production":
+if is_production():
     import sentry_sdk
 
     sentry_sdk.init(

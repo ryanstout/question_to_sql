@@ -3,22 +3,26 @@ import re
 import time
 
 import snowflake.connector as connector
+from snowflake.connector.cursor import SnowflakeCursor
 
 from python.sql.post_transform import PostTransform
 from python.utils.logging import log
 
 
 def setup_query_env(snowflake_cursor):
+    # TODO should pull from datasource
     snowflake_cursor.execute("use warehouse COMPUTE_WH;")
     snowflake_cursor.execute("use FIVETRAN_DATABASE.SHOPIFY;")
 
 
-def run_query(snowflake_cursor, sql):
+# TODO should move this into the query-runner/* folder
+def run_query(snowflake_cursor: SnowflakeCursor, sql: str):
     try:
-        log.debug("running query", sql=sql)
 
         if not re.search("\sLIMIT\s", sql):
             sql += " LIMIT 100"
+
+        log.debug("running query", sql=sql)
 
         t1 = time.time()
         results = snowflake_cursor.execute(sql)
@@ -34,5 +38,6 @@ def run_query(snowflake_cursor, sql):
         # Return the result of the query, not the uses
         return data
     except connector.errors.ProgrammingError as e:
+        # TODO we should use logging.exception here as long as it ties into structlog
         log.error("snowflake connector programming error: ", error=e)
         return {"error": str(e)}
