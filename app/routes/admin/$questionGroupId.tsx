@@ -37,8 +37,7 @@ import AppFooter from "~/components/dashboard/footer"
 import HeaderMenu from "~/components/dashboard/headerMenu"
 import { prisma } from "~/db.server"
 import { log } from "~/lib/logging.server"
-import { runQuery } from "~/lib/query-runner"
-import { fakeDataSource, questionToSql } from "~/lib/question.server"
+import { questionToSql, runQuery } from "~/lib/question.server"
 import { requireUserId } from "~/session.server"
 
 type QuestionInBrowser = Pick<
@@ -94,10 +93,9 @@ async function findOrCreateQuestion(
     // TODO route to new generator
     // create the question if it doesn't exist
 
-    const dataSource = fakeDataSource()
-
     // We need to generate the sql for the query since its new
-    const codexSql = await questionToSql(dataSource.id, q)
+    const dataSourceId = 1
+    const codexSql = await questionToSql(dataSourceId, q)
 
     // create the new query
     question = await prisma.question.create({
@@ -265,23 +263,17 @@ export let loader: LoaderFunction = async ({
 
   if (question) {
     const dataSourceId = 1
-    const dataSource = fakeDataSource()
 
     try {
       let sql
       if (question.userSql) {
         sql = question.userSql
       } else {
-        sql = await questionToSql(dataSource.id, question.question)
+        sql = await questionToSql(dataSourceId, question.question)
       }
       log.debug("sql from python", { sql })
 
-      if (!sql.match(/\sLIMIT\s/)) {
-        // TODO: Temporary limit on number of rows when no limit is provided
-        sql += " LIMIT 100"
-      }
-
-      const results = await runQuery(dataSource, sql)
+      const results = await runQuery(dataSourceId, sql)
 
       // prettify the resulting JSON
       resultJson = beautify(results, null!, 2, 100)

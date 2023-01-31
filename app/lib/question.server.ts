@@ -3,29 +3,11 @@ import invariant from "tiny-invariant"
 
 import { prisma } from "~/db.server"
 import { log } from "~/lib/logging.server"
-import { runQuery } from "~/lib/query-runner"
 
 interface QuestionResult {
   question: Question
   status: "success" | "error"
   data?: any[]
-}
-
-// TODO we should rip this out!
-export function fakeDataSource() {
-  return {
-    // TODO this is a total hack for not having a proper user
-    type: "snowflake",
-    id: 1,
-    credentials: {
-      account: process.env.SNOWFLAKE_ACCOUNT,
-      username: process.env.SNOWFLAKE_USERNAME,
-      password: process.env.SNOWFLAKE_PASSWORD,
-      database: process.env.SNOWFLAKE_DATABASE,
-      schema: process.env.SNOWFLAKE_SCHEMA,
-      warehouse: process.env.SNOWFLAKE_WAREHOUSE,
-    },
-  }
 }
 
 // if you have a question, and just want the results from the warehouse
@@ -36,6 +18,7 @@ export async function getResultsFromQuestion({
   questionRecord?: Question
   questionId?: number
 }): Promise<QuestionResult> {
+  const dataSourceId = 1
   let retrievedQuestionRecord: Question | null = null
 
   if (questionRecord) {
@@ -58,12 +41,9 @@ export async function getResultsFromQuestion({
   }
 
   invariant(retrievedQuestionRecord !== null, "question record not found")
-
-  const dataSource = fakeDataSource()
-
   invariant(retrievedQuestionRecord.codexSql !== null, "codexSql is null")
 
-  const data = await runQuery(dataSource, retrievedQuestionRecord.codexSql)
+  const data = await runQuery(dataSourceId, retrievedQuestionRecord.codexSql)
 
   return {
     question: retrievedQuestionRecord,
@@ -89,9 +69,9 @@ export async function updateQuestion(
     },
   })
 
-  const dataSource = fakeDataSource()
   log.debug("sending updated query to snowflake")
-  const results = await runQuery(dataSource, userSql)
+  const dataSourceId = 1
+  const results = await runQuery(dataSourceId, userSql)
 
   return {
     question: updateUser,
@@ -106,8 +86,6 @@ export async function processQuestion(
   question: string,
   questionGroupId?: number
 ): Promise<QuestionResult> {
-  const dataSource = fakeDataSource()
-
   if (!questionGroupId) {
     const questionGroup = await prisma.questionGroup.create({
       data: {
@@ -142,7 +120,7 @@ export async function processQuestion(
   })
 
   // TODO catch and mark as invalid if this fails
-  const data = await runQuery(dataSource, sql)
+  const data = await runQuery(dataSourceId, sql)
   log.debug("got data from snowflake")
 
   return {
@@ -152,6 +130,21 @@ export async function processQuestion(
   }
 }
 
+export async function runQuery(dataSourceId: number, sql: string) {
+  if (process.env.MOCKED_QUESTION_RESPONSE === "true") {
+    return new Promise((resolve, reject) => {
+      resolve([{ count: 100 }])
+    })
+  }
+
+  const response = await pythonRequest("query", {
+    data_source_id: dataSourceId,
+    sql: sql,
+  })
+
+  return response["results"]
+}
+
 export async function questionToSql(
   dataSourceId: number,
   naturalQuestion: string
@@ -159,19 +152,28 @@ export async function questionToSql(
   // TODO remove me! Use mock server once we have a python API
   if (process.env.MOCKED_QUESTION_RESPONSE === "true") {
     return new Promise((resolve, reject) => {
-      resolve("SELECT * FROM ORDERS LIMIT 10")
+      resolve("SELECT * FROM ORDER LIMIT 10")
     })
   }
 
+  const response = await pythonRequest("question", {
+    data_source_id: dataSourceId,
+    question: naturalQuestion,
+  })
+
+  return response["sql"]
+}
+
+// TODO we need an openapi spec for the python server so we have full stack typing
+async function pythonRequest(endpoint: string, requestParams: any) {
   const serverHost = process.env.PYTHON_SERVER
   invariant(serverHost, "PYTHON_SERVER env var not set")
 
-  const postURL = `${serverHost}/question`
+  const postURL = `${serverHost}/${endpoint}`
 
-  log.debug("converting question to sql", {
-    dataSourceId,
+  log.debug("making python request", {
+    requestParams,
     postURL,
-    naturalQuestion,
   })
 
   const response = await fetch(postURL, {
@@ -179,12 +181,9 @@ export async function questionToSql(
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      data_source_id: dataSourceId,
-      question: naturalQuestion,
-    }),
+    body: JSON.stringify(requestParams),
   })
 
   const json = await response.json()
-  return json["sql"]
+  return json
 }
