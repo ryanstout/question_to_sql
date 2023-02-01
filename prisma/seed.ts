@@ -14,8 +14,13 @@ async function seed() {
 
   const hashedPassword = await bcrypt.hash("seedpassword1", 10)
 
+  const business = await prisma.business.create({
+    data: { name: "Great Business" },
+  })
+
   const user = await prisma.user.create({
     data: {
+      businessId: business.id,
       email,
       name,
       password: {
@@ -24,10 +29,6 @@ async function seed() {
         },
       },
     },
-  })
-
-  const business = await prisma.business.create({
-    data: { name: "Great Business" },
   })
 
   // create a data source for hacking
