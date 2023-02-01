@@ -29,6 +29,8 @@ model User {
   businessId Int?
 }
 
+// TODO we need to add a many-to-many relationship between businesses and users
+
 model Password {
   hash String
 
@@ -60,9 +62,8 @@ model Question {
   id       Int    @id @default(autoincrement())
   question String
 
-  // TODO this should be required in the future
-  dataSourceId Int?
-  dataSource   DataSource? @relation(fields: [dataSourceId], references: [id])
+  dataSourceId Int
+  dataSource   DataSource @relation(fields: [dataSourceId], references: [id])
 
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId Int
@@ -93,8 +94,8 @@ model Business {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users   User[]
-  sources DataSource[]
+  users       User[]
+  dataSources DataSource[]
 }
 
 enum DataSourceType {
