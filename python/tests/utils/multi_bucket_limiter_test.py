@@ -20,20 +20,20 @@ def test_can_bucket_limiter_limit():
 
             # Make two requests to pass the rate limit
             with limiter.request_when_available({"requests": 1, "tokens": 0}):
-                0
+                pass
             with limiter.request_when_available({"requests": 1, "tokens": 0}):
-                0
+                pass
         with mock.patch("time.time", mock.MagicMock(return_value=0)):
             with limiter.request_when_available({"requests": 1, "tokens": 0}):
-                0
+                pass
 
         with mock.patch("time.time", mock.MagicMock(return_value=30)):
             with limiter.request_when_available({"requests": 1, "tokens": 0}):
-                0
+                pass
 
         with mock.patch("time.time", mock.MagicMock(return_value=120)):
             with limiter.request_when_available({"requests": 1, "tokens": 0}):
-                0
+                pass
 
     assert sleeps == [30.0, 60.0]
 
@@ -42,7 +42,7 @@ def test_bucket_limiter_warns_about_single_request_using_more_than_max():
     with pytest.raises(ValueError):
         limiter = MultiBucketLimiter({"requests": 2, "tokens": 10})
         with limiter.request_when_available({"requests": 1, "tokens": 20}):
-            20
+            pass
 
 
 def test_can_bucket_limiter_multi_limit():
@@ -53,8 +53,8 @@ def test_can_bucket_limiter_multi_limit():
 
             # Make two requests to pass the rate limit
             with limiter.request_when_available({"requests": 1, "tokens": 6}):
-                6
+                pass
             with limiter.request_when_available({"requests": 1, "tokens": 6}):
-                6
+                pass
 
     assert sleeps == [12.0]

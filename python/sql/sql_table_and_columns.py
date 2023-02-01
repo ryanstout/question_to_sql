@@ -1,5 +1,7 @@
+from pprint import pprint
 from typing import List
 
+from deepmerge import always_merger as deep
 from sqlglot import exp, parse, parse_one, transpile
 from sqlglot.optimizer import optimize
 from sqlglot.optimizer.qualify_columns import qualify_columns
@@ -13,14 +15,90 @@ class SqlTouchPoints:
     def extract(self, sql: str):
         ast = parse_one(sql, "snowflake")
 
-        return self.walk(ast)
+        metadata = self.walk(ast)
+        pprint(metadata)
 
-    def walk(self, node: exp.Node):
+    def walk(self, node: exp.Expression):
+        metadata = {}
+
+        merge = lambda a: deep.merge(metadata, a)
+
+        # print(f"Walk: {node = }")
         match node:
-            case exp.Select(select):
+            case exp.Select(args=args) as select:
+                print(f"Args: {args = }")
+                for key, value in args.items():
+                    metadata = merge(self.walk(value))
+            # case exp.TableAlias(args={"this": exp.Expression(args=table), "alias"}) as table_alias:
+            case exp.Table(args={"this": exp.Identifier(args={"this": table_identifier})}) as table:
+                table_alias = None
+                match table.args:
+                    case {"alias": exp.TableAlias(args={"this": exp.Identifier(args={"this": table_alias})})}:
+                        pass
+
+                # If no alias is specified, use the full name
+                table_alias = table_alias or table_identifier
+                metadata = merge({"tables": {table_alias: [table_identifier]}})
+
+            case exp.Alias(
+                args={
+                    "this": exp.Expression(args=source_args) as source,
+                    "alias": exp.Identifier(args={"this": identifier}),
+                }
+            ) as alias:
+
+                child_metadata = {"cols": []}
+                for key, value in source_args.items():
+                    child_metadata = deep.merge(child_metadata, self.walk(value))
+
+                print(f"Alias: {identifier = } {source = }, {child_metadata = }\n\n")
+
+                metadata = merge({"aliases": {identifier: child_metadata["cols"]}})
+            case exp.Column(args={"this": exp.Identifier(args={"this": identifier})}) as column:
+                alias = column.args.get("alias")
+                table_alias = column.args.get("table_alias")
+                print(f"COLUMN: {column = } {identifier = } {alias = }")
+
+                # The exp.Column may have a table identifier in front, which
+                # can be the table name or an alias
+                table_alias = None
+                match column.args:
+                    case {"table": exp.Identifier(args={"this": table_alias})}:
+                        pass
+
+                # If the alias isn't set, use the identifier
+                col_alias = alias or identifier
+                metadata = merge({"cols": {col_alias: [(identifier, alias, table_alias)]}})
+            case exp.Expression(args=args) as expression:
+                for key, value in args.items():
+                    metadata = merge(self.walk(value))
+            case [*expressions]:
+                for expr in expressions:
+                    metadata = merge(self.walk(expr))
+            case _:
                 pass
 
+        metadata = self.associate(metadata)
 
+        return metadata
+
+    def associate(self, metadata):
+        merge = lambda a: deep.merge(metadata, a)
+
+        # Takes in metadata on the query and associates aliases with columns
+        # when possible. This works recursively when unwinding so resolution
+        # is done on the nearest alias.
+
+        # Loop through columns, trying to resolve the unresolved columns
+        if "cols" in metadata:
+            for col_alias, col_info in metadata["cols"].items():
+                for col_id, col_alias, table_alias in col_info:
+                    if "tables" in metadata:
+                        tables = metadata["tables"]
+                        if table_alias in tables:
+                            last_table_identifier = table_alias[-1]
+
+        return metadata
 
 
 def table_and_columns_for_sql(sql: str) -> List[List[str]]:
