@@ -97,10 +97,7 @@ class Validator:
 
         for question in correct_question.questionGroup.questions:
             log.info(f"[{idx}] Send to openai")
-            t1 = time.time()
             new_sql = questions.question_with_data_source_to_sql(self.data_source_id, question.question)
-            t2 = time.time()
-            log.info(f"[{idx}] Got from openai in ", time=t2 - t1)
             log.debug("new sql", new_sql=new_sql)
             new_results = run_query(snowflake_cursor, new_sql)
 

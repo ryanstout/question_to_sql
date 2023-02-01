@@ -10,7 +10,6 @@ import re
 import time
 import typing as t
 
-import tiktoken
 from prisma.models import (
     Business,
     DataSource,
@@ -20,20 +19,18 @@ from prisma.models import (
 )
 
 import python.utils as utils
+import python.utils.tokens
 from prisma import Prisma
 from python.schema.full_schema import FullSchema
 from python.schema.ranker import SCHEMA_RANKING_TYPE, ElementRank, Ranker
 from python.sql.post_transform import PostTransform
 from python.utils.batteries import unique
+from python.utils.tokens import count_tokens
 
 # from transformers import GPT2Tokenizer
 
 
 # TODO looks like we cannot set default values on typeddict: https://github.com/python/mypy/issues/6131
-
-# Only load once
-token_encoder = tiktoken.get_encoding("gpt2")
-# hf_tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
 
 
 class ColumnRank(t.TypedDict):
@@ -51,18 +48,8 @@ class TableRank(t.TypedDict):
 TABLE_SCHEMA = t.List[TableRank]
 
 
-# TODO move to a generic utils
-def estimate_token_count(text: str) -> int:
-    token_count = len(token_encoder.encode(text))
-    return token_count
-
-    # token_count = hf_tokenizer(text=text, return_length=True)
-    # # print("Token Count: ", token_count.length)
-    # return token_count.length
-
-
 class SchemaBuilder:
-    TOKEN_COUNT_LIMIT = 7_000 - 1_024
+    TOKEN_COUNT_LIMIT = 7_500 - 1_024
 
     def __init__(self, db: Prisma):
         self.db: Prisma = db
@@ -116,7 +103,9 @@ class SchemaBuilder:
             return None  # skip this column
         elif re.search("^NUMBER", column.type):
             if PostTransform.in_dialect == "postgres":
-                col_type = column.type.replace("NUMBER", "NUMERIC")
+                # NUMBER(38,0) is how int's get encoded in snowflake via fivetran
+                col_type = column.type.replace("NUMBER(38,0)", "INTEGER")
+                col_type = col_type.replace("NUMBER", "NUMERIC")
             else:
                 # Don't replace it if it's snowflake
                 col_type = column.type
@@ -203,7 +192,7 @@ class SchemaBuilder:
     def add_tokens(self, token_str: str, add_extra: int = 0):
         # Add to the count based on the number of tokens in the string,
         # add_extra is used to add in counts for things like line breaks
-        self.tokens_so_far += estimate_token_count(token_str)
+        self.tokens_so_far += count_tokens(token_str)
 
     def generate_sql_from_element_rank(self, ranked_schema: SCHEMA_RANKING_TYPE) -> str:
         # we need to transform the ranking schema into a list of table
@@ -251,7 +240,7 @@ class SchemaBuilder:
                     self.add_column_to_table(element_rank, table_rank)
 
         sql = self.generate_sql_describe(table_ranks)
-        token_count = estimate_token_count(sql)
+        token_count = count_tokens(sql)
         log.debug("schema token count", token_count=token_count)
         return sql
 

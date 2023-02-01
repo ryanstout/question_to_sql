@@ -18,7 +18,7 @@ pg_dump --dbname=$DATABASE_URL -f $postgres_archive
 
 echo "Archiving faiss indexes..."
 # note: use relative paths here so the archive does not contain the abs path
-local indexes_path=python/indexes
+local indexes_path=tmp/indexes
 zip -r $archive/indexes.zip $indexes_path
 
 echo "Creating archive..."

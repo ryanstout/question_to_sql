@@ -1,7 +1,12 @@
-import cProfile
-import time
+from python.setup import log
 
-import backoff
+import cProfile
+import io
+import pstats
+import time
+import typing as t
+from pstats import SortKey
+
 import openai
 from decouple import config
 from openai.error import OpenAIError
@@ -11,16 +16,7 @@ from python.schema.schema_builder import SchemaBuilder
 from python.sql.post_transform import PostTransform
 from python.utils.connections import Connections
 from python.utils.logging import log
-
-openai.api_key = config("OPENAI_KEY")
-
-
-from python.setup import log
-
-import io
-import pstats
-import typing as t
-from pstats import SortKey
+from python.utils.openai_rate_throttled import openai_throttled
 
 
 def question_with_data_source_to_sql(data_source_id: int, question: str) -> str:
@@ -57,29 +53,6 @@ def question_with_data_source_to_sql(data_source_id: int, question: str) -> str:
     return sql
 
 
-class ChoicesItem(t.TypedDict):
-    finish_reason: str
-    index: int
-    logprobs: None
-    text: str
-
-
-class Usage(t.TypedDict):
-    completion_tokens: int
-    prompt_tokens: int
-    total_tokens: int
-
-
-class OpenAIResponse(t.TypedDict):
-    choices: t.List[ChoicesItem]
-    created: int
-    id: str
-    model: str
-    object: str
-    usage: Usage
-
-
-@backoff.on_exception(backoff.expo, OpenAIError, factor=60, max_tries=5, logger=log)
 def question_with_schema_to_sql(schema: str, question: str) -> str:
     prompt_parts = [
         f"-- {PostTransform.in_dialect.capitalize()} SQL schema",
@@ -115,7 +88,7 @@ orders_per_product DESC NULLS FIRST""",
     log.debug("sending prompt to openai", prompt=prompt)
 
     t1 = time.time()
-    result = openai.Completion.create(
+    result = openai_throttled.complete(
         engine="code-davinci-002",
         prompt=prompt,
         max_tokens=1024,  # was 256
@@ -124,13 +97,12 @@ orders_per_product DESC NULLS FIRST""",
         presence_penalty=0,
         frequency_penalty=0,
         best_of=1,
+        # logprobs=4,
         n=1,
         stream=False,
         # tells the model to stop generating a response when it gets to the end of the SQL
         stop=[";", "\n\n"],
     )
-
-    result = t.cast(OpenAIResponse, result)
 
     if len(result.choices) > 1:
         # noop
