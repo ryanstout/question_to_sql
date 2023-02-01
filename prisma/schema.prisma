@@ -71,6 +71,10 @@ model Question {
   questionGroup   QuestionGroup @relation(fields: [questionGroupId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   questionGroupId Int
 
+  // not required for the UI, including for debugging purposes
+  generatedSchema String?
+  generatedPrompt String?
+
   // if codex is empty, openai failed
   codexSql String? // the original query generated from openai
   userSql  String? // the query, starts with the codex model output, then can be updated by the user
