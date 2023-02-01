@@ -17,6 +17,7 @@ from python.utils.query_runner import run_query, setup_query_env
 THREAD_POOL_SIZE = 1
 
 
+# TODO can we document exactly what this does in one-line?
 class Validator:
     def run(self):
         log.info("Running validator")
@@ -31,6 +32,7 @@ class Validator:
 
         db = self.connections.db
 
+        # pull from user: user.business.dataSources[0]
         self.data_source_id = 1  # stub for now
 
         # Run through each marked question

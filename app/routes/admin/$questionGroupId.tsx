@@ -38,7 +38,7 @@ import HeaderMenu from "~/components/dashboard/headerMenu"
 import { prisma } from "~/db.server"
 import { log } from "~/lib/logging.server"
 import { questionToSql, runQuery } from "~/lib/question.server"
-import { requireUserId } from "~/session.server"
+import { requireUser } from "~/session.server"
 
 type QuestionInBrowser = Pick<
   Question,
@@ -55,6 +55,7 @@ const IS_ADMIN = false
 
 export async function findOrCreateQuestionGroup(
   userId: number,
+  dataSourceId: number,
   questionGroupId: number | null
 ) {
   // TODO I think we can use `prisma.user.upsert` here instead
@@ -100,6 +101,7 @@ async function findOrCreateQuestion(
     // create the new query
     question = await prisma.question.create({
       data: {
+        dataSourceId: dataSourceId,
         questionGroupId: questionGroupId,
         question: q,
         userId: userId,
@@ -127,7 +129,8 @@ async function findOrCreateQuestion(
 }
 
 export async function action({ request }: ActionArgs) {
-  const userId = await requireUserId(request)
+  const user = await requireUser(request)
+  const dataSource = user.business!.dataSources[0]
 
   // create the query, attempt to load the generated sql if it doesn't exist,
   // then redirect to the query page
@@ -144,7 +147,11 @@ export async function action({ request }: ActionArgs) {
   }
 
   // make sure questionGroup exists
-  let questionGroup = await findOrCreateQuestionGroup(userId, questionGroupId)
+  let questionGroup = await findOrCreateQuestionGroup(
+    user.id,
+    dataSource.id,
+    questionGroupId
+  )
 
   let questions: QuestionInBrowser[] | null
   let question
@@ -162,7 +169,7 @@ export async function action({ request }: ActionArgs) {
     question = prisma.question.findFirst({
       where: {
         id: id,
-        userId: userId,
+        userId: user.id,
         questionGroupId: questionGroup.id,
       },
     })
@@ -188,7 +195,7 @@ export async function action({ request }: ActionArgs) {
       select: { id: true },
       where: {
         questionGroupId: questionGroup.id,
-        userId: userId,
+        userId: user.id,
         question: q,
       },
     })
@@ -211,7 +218,7 @@ export async function action({ request }: ActionArgs) {
     // actionName === 'create'
     // If there isn't a question, create one
     if (q) {
-      questions = await findOrCreateQuestion(userId, q, questionGroup.id)
+      questions = await findOrCreateQuestion(user.id, q, questionGroup.id)
     } else {
       // Just used to create a new QuestionGroup
       questions = [] as QuestionInBrowser[]
@@ -232,7 +239,8 @@ export let loader: LoaderFunction = async ({
   params,
   request,
 }): Promise<LoaderData> => {
-  const userId = await requireUserId(request)
+  const user = await requireUser(request)
+  const dataSource = user!.business!.dataSources[0]
 
   // extract natural language query from query params
   const { q } = zx.parseQuery(request, { q: z.string().optional() })
@@ -243,14 +251,18 @@ export let loader: LoaderFunction = async ({
   })
 
   // make sure questionGroup exists
-  let questionGroup = await findOrCreateQuestionGroup(userId, questionGroupId)
+  let questionGroup = await findOrCreateQuestionGroup(
+    user.id,
+    dataSource.id,
+    questionGroupId
+  )
 
   let questions: QuestionInBrowser[]
   let question: QuestionInBrowser | null
   if (q) {
     // If there isn't a question, create one
     console.log("Q: ", q)
-    questions = await findOrCreateQuestion(userId, q, questionGroup.id)
+    questions = await findOrCreateQuestion(user.id, q, questionGroup.id)
 
     // grab the latest question
     question = questions[questions.length - 1]
@@ -262,18 +274,16 @@ export let loader: LoaderFunction = async ({
   let resultJson
 
   if (question) {
-    const dataSourceId = 1
-
     try {
       let sql
       if (question.userSql) {
         sql = question.userSql
       } else {
-        sql = await questionToSql(dataSourceId, question.question)
+        sql = await questionToSql(dataSource.id, question.question)
       }
       log.debug("sql from python", { sql })
 
-      const results = await runQuery(dataSourceId, sql)
+      const results = await runQuery(dataSource.id, sql)
 
       // prettify the resulting JSON
       resultJson = beautify(results, null!, 2, 100)

@@ -18,7 +18,6 @@ export async function getResultsFromQuestion({
   questionRecord?: Question
   questionId?: number
 }): Promise<QuestionResult> {
-  const dataSourceId = 1
   let retrievedQuestionRecord: Question | null = null
 
   if (questionRecord) {
@@ -43,7 +42,10 @@ export async function getResultsFromQuestion({
   invariant(retrievedQuestionRecord !== null, "question record not found")
   invariant(retrievedQuestionRecord.codexSql !== null, "codexSql is null")
 
-  const data = await runQuery(dataSourceId, retrievedQuestionRecord.codexSql)
+  const data = await runQuery(
+    retrievedQuestionRecord.dataSourceId,
+    retrievedQuestionRecord.codexSql
+  )
 
   return {
     question: retrievedQuestionRecord,
@@ -70,8 +72,7 @@ export async function updateQuestion(
   })
 
   log.debug("sending updated query to snowflake")
-  const dataSourceId = 1
-  const results = await runQuery(dataSourceId, userSql)
+  const results = await runQuery(question.dataSourceId, userSql)
 
   return {
     question: updateUser,
