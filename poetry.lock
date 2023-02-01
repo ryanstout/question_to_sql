@@ -604,7 +604,7 @@ files = [
 name = "exceptiongroup"
 version = "1.1.0"
 description = "Backport of PEP 654 (exception groups)"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -939,7 +939,7 @@ testing = ["flake8 (<5)", "flufl.flake8", "importlib-resources (>=1.3)", "packag
 name = "iniconfig"
 version = "2.0.0"
 description = "brain-dead simple config-ini parsing"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -1901,7 +1901,7 @@ tenacity = ">=6.2.0"
 name = "pluggy"
 version = "1.0.0"
 description = "plugin and hook calling mechanisms for python"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -2169,26 +2169,10 @@ files = [
 diagrams = ["jinja2", "railroad-diagrams"]
 
 [[package]]
-name = "pyrate-limiter"
-version = "2.8.5"
-description = "Python Rate-Limiter using Leaky-Bucket Algorithm"
-category = "main"
-optional = false
-python-versions = ">=3.7,<4.0"
-files = [
-    {file = "pyrate_limiter-2.8.5-py3-none-any.whl", hash = "sha256:dc53539f571c27b70ebb43908d7ae8595806755d7e87adbf5dc29f76f6025525"},
-    {file = "pyrate_limiter-2.8.5.tar.gz", hash = "sha256:8ef17aa816b8583ddd6a74ceac1a6a930dbc1f80f0a8d0ddcdca0e87e531d08a"},
-]
-
-[package.extras]
-all = ["filelock (>=3.0)", "redis (>=3.3,<4.0)", "redis-py-cluster (>=2.1.3,<3.0.0)"]
-docs = ["furo (>=2022.3.4,<2023.0.0)", "myst-parser (>=0.17)", "sphinx (>=4.3.0,<5.0.0)", "sphinx-autodoc-typehints (>=1.17,<2.0)", "sphinx-copybutton (>=0.5)", "sphinxcontrib-apidoc (>=0.3,<0.4)"]
-
-[[package]]
 name = "pytest"
 version = "7.2.1"
 description = "pytest: simple powerful testing with Python"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -2940,7 +2924,7 @@ testing = ["black (==22.3)", "datasets", "numpy", "pytest", "requests"]
 name = "tomli"
 version = "2.0.1"
 description = "A lil' TOML parser"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -2968,7 +2952,7 @@ category = "main"
 optional = false
 python-versions = ">=3.7.0"
 files = [
-    {file = "torch-1.11.0-cp39-cp39-linux_aarch64.whl", hash = "sha256:0acaf26fa5eece0fa2d7c57bf6ecddac75e3d218ee6f0512c3900a0bd623a889"},
+    {file = "torch-1.11.0-cp310-cp310-linux_aarch64.whl", hash = "sha256:ab66d9c1d63df9137361a60c386b29517fc7f4c6057688c9c9a222631010b178"},
 ]
 
 [package.dependencies]
@@ -2976,7 +2960,8 @@ typing-extensions = "*"
 
 [package.source]
 type = "url"
-url = "https://github.com/KumaTea/pytorch-aarch64/releases/download/v1.11.0/torch-1.11.0-cp39-cp39-linux_aarch64.whl"
+url = "https://github.com/KumaTea/pytorch-aarch64/releases/download/v1.11.0/torch-1.11.0-cp310-cp310-linux_aarch64.whl"
+
 [[package]]
 name = "torch"
 version = "1.13.1"
@@ -2985,7 +2970,7 @@ category = "main"
 optional = false
 python-versions = ">=3.7.0"
 files = [
-    {file = "torch-1.13.1-cp39-none-macosx_11_0_arm64.whl", hash = "sha256:e0df902a7c7dd6c795698532ee5970ce898672625635d885eade9976e5a04949"},
+    {file = "torch-1.13.1-cp310-none-macosx_11_0_arm64.whl", hash = "sha256:0122806b111b949d21fa1a5f9764d1fd2fcc4a47cb7f8ff914204fd4fc752ed5"},
 ]
 
 [package.dependencies]
@@ -2996,7 +2981,8 @@ opt-einsum = ["opt-einsum (>=3.3)"]
 
 [package.source]
 type = "url"
-url = "https://download.pytorch.org/whl/cpu/torch-1.13.1-cp39-none-macosx_11_0_arm64.whl"
+url = "https://download.pytorch.org/whl/cpu/torch-1.13.1-cp310-none-macosx_11_0_arm64.whl"
+
 [[package]]
 name = "torch"
 version = "1.13.1+cpu"
@@ -3005,7 +2991,7 @@ category = "main"
 optional = false
 python-versions = ">=3.7.0"
 files = [
-    {file = "torch-1.13.1%2Bcpu-cp39-cp39-linux_x86_64.whl", hash = "sha256:71636a5c21927236f4974d2355fb3f66a0b707c28219b0135ff65ed0f0e61287"},
+    {file = "torch-1.13.1%2Bcpu-cp310-cp310-linux_x86_64.whl", hash = "sha256:11692523b87c45b79ddfb5148b12a713d85235d399915490d94e079521f7e014"},
 ]
 
 [package.dependencies]
@@ -3016,7 +3002,8 @@ opt-einsum = ["opt-einsum (>=3.3)"]
 
 [package.source]
 type = "url"
-url = "https://download.pytorch.org/whl/cpu/torch-1.13.1%2Bcpu-cp39-cp39-linux_x86_64.whl"
+url = "https://download.pytorch.org/whl/cpu/torch-1.13.1%2Bcpu-cp310-cp310-linux_x86_64.whl"
+
 [[package]]
 name = "torchvision"
 version = "0.12.0"
@@ -3025,7 +3012,7 @@ category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "torchvision-0.12.0-cp39-cp39-linux_aarch64.whl", hash = "sha256:ea3d4caf2fd31190493edc707c54dce2e0a38901d4a671d2482c8f8d37d0b046"},
+    {file = "torchvision-0.12.0-cp310-cp310-linux_aarch64.whl", hash = "sha256:e1b69b4d2c1d9aaa7762cd30132941d5a24fbcb89e8b4ad273864b81f0bf9986"},
 ]
 
 [package.dependencies]
@@ -3040,7 +3027,8 @@ scipy = ["scipy"]
 
 [package.source]
 type = "url"
-url = "https://github.com/KumaTea/pytorch-aarch64/releases/download/v1.11.0/torchvision-0.12.0-cp39-cp39-linux_aarch64.whl"
+url = "https://github.com/KumaTea/pytorch-aarch64/releases/download/v1.11.0/torchvision-0.12.0-cp310-cp310-linux_aarch64.whl"
+
 [[package]]
 name = "torchvision"
 version = "0.14.1"
@@ -3049,7 +3037,7 @@ category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "torchvision-0.14.1-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:758b20d079e810b4740bd60d1eb16e49da830e3360f9be379eb177ee221fa5d4"},
+    {file = "torchvision-0.14.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:8d0766ea92affa7af248e327dd85f7c9cfdf51a57530b43212d4e1858548e9d7"},
 ]
 
 [package.dependencies]
@@ -3064,7 +3052,8 @@ scipy = ["scipy"]
 
 [package.source]
 type = "url"
-url = "https://download.pytorch.org/whl/cpu/torchvision-0.14.1-cp39-cp39-macosx_11_0_arm64.whl"
+url = "https://download.pytorch.org/whl/cpu/torchvision-0.14.1-cp310-cp310-macosx_11_0_arm64.whl"
+
 [[package]]
 name = "torchvision"
 version = "0.14.1+cpu"
@@ -3073,7 +3062,7 @@ category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "torchvision-0.14.1%2Bcpu-cp39-cp39-linux_x86_64.whl", hash = "sha256:5d2b67028e2782e60fd667a8e95f071bf612282411cba7ae88720213c58a651a"},
+    {file = "torchvision-0.14.1%2Bcpu-cp310-cp310-linux_x86_64.whl", hash = "sha256:a49c36369b48720304cda4085bba4a05b42ff295400feae89e0ee8683051f923"},
 ]
 
 [package.dependencies]
@@ -3088,7 +3077,8 @@ scipy = ["scipy"]
 
 [package.source]
 type = "url"
-url = "https://download.pytorch.org/whl/cpu/torchvision-0.14.1%2Bcpu-cp39-cp39-linux_x86_64.whl"
+url = "https://download.pytorch.org/whl/cpu/torchvision-0.14.1%2Bcpu-cp310-cp310-linux_x86_64.whl"
+
 [[package]]
 name = "tqdm"
 version = "4.64.1"
@@ -3483,4 +3473,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "5325c2109b2c8b7e0eb840118a14516913349bb36ff7967b9ec3850ff1c819c3"
+content-hash = "0358e35a4bc5c24c36d915fee7934feca5ac2d7bdc4f6102e3d13ac4bd83cb3e"

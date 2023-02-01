@@ -34,15 +34,15 @@ tqdm = "^4.64.1"
 # https://github.com/KumaTea/pytorch-aarch64
 torch = [
   # { version = "1.13.1", "platform" = "linux", markers = "platform_machine == 'aarch64'"},
-  { url = "https://github.com/KumaTea/pytorch-aarch64/releases/download/v1.11.0/torch-1.11.0-cp39-cp39-linux_aarch64.whl", "platform" = "linux", markers = "platform_machine == 'aarch64'"},
-  {url = "https://download.pytorch.org/whl/cpu/torch-1.13.1%2Bcpu-cp39-cp39-linux_x86_64.whl", "platform" = "linux", markers = "platform_machine == 'x86_64'"},
-  {url = "https://download.pytorch.org/whl/cpu/torch-1.13.1-cp39-none-macosx_11_0_arm64.whl", "platform" = "darwin",  markers = "platform_machine == 'arm64'" }
+  { url = "https://github.com/KumaTea/pytorch-aarch64/releases/download/v1.11.0/torch-1.11.0-cp310-cp310-linux_aarch64.whl", "platform" = "linux", markers = "platform_machine == 'aarch64'"},
+  {url = "https://download.pytorch.org/whl/cpu/torch-1.13.1%2Bcpu-cp310-cp310-linux_x86_64.whl", "platform" = "linux", markers = "platform_machine == 'x86_64'"},
+  {url = "https://download.pytorch.org/whl/cpu/torch-1.13.1-cp310-none-macosx_11_0_arm64.whl", "platform" = "darwin",  markers = "platform_machine == 'arm64'" }
 ]
 torchvision = [
   # { version = "0.14.1", "platform" = "linux", markers = "platform_machine == 'aarch64'"},
-  { url = "https://github.com/KumaTea/pytorch-aarch64/releases/download/v1.11.0/torchvision-0.12.0-cp39-cp39-linux_aarch64.whl", "platform" = "linux", markers = "platform_machine == 'aarch64'"},
-  {url = "https://download.pytorch.org/whl/cpu/torchvision-0.14.1%2Bcpu-cp39-cp39-linux_x86_64.whl", "platform" = "linux", markers = "platform_machine == 'x86_64'"},
-  {url = "https://download.pytorch.org/whl/cpu/torchvision-0.14.1-cp39-cp39-macosx_11_0_arm64.whl", "platform" = "darwin",  markers = "platform_machine == 'arm64'" }
+  { url = "https://github.com/KumaTea/pytorch-aarch64/releases/download/v1.11.0/torchvision-0.12.0-cp310-cp310-linux_aarch64.whl", "platform" = "linux", markers = "platform_machine == 'aarch64'"},
+  {url = "https://download.pytorch.org/whl/cpu/torchvision-0.14.1%2Bcpu-cp310-cp310-linux_x86_64.whl", "platform" = "linux", markers = "platform_machine == 'x86_64'"},
+  {url = "https://download.pytorch.org/whl/cpu/torchvision-0.14.1-cp310-cp310-macosx_11_0_arm64.whl", "platform" = "darwin",  markers = "platform_machine == 'arm64'" }
 ]
 
 # torch = { version = "*", source = "torchcpu", markers = "sys_platform == 'linux'" }
@@ -50,11 +50,11 @@ torchvision = [
 # torch = {version = "1.13.1", extras = ["cpu"]}
 
 waitress = "^2.1.2"
-pyrate-limiter = "^2.8.5"
 sentry-sdk = "^1.14.0"
 
 # use a separate group for prisma stuff to avoid installing *everything*
 # in order to generate the prisma bindings
+pytest = "^7.2.1"
 [tool.poetry.group.prisma.dependencies]
 prisma = "^0.8.0"
 
