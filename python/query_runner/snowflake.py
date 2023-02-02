@@ -1,5 +1,6 @@
+from python.setup import log
+
 import re
-from logging import log
 
 import snowflake.connector
 from decouple import config
