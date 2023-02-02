@@ -8,21 +8,19 @@ import typing as t
 from pstats import SortKey
 
 import openai
+import utils
 from decouple import config
 from openai.error import OpenAIError
 
 from python.schema.ranker import Ranker
 from python.schema.schema_builder import SchemaBuilder
 from python.sql.post_transform import PostTransform
-from python.utils.connections import Connections
 from python.utils.logging import log
 from python.utils.openai_rate_throttled import openai_throttled
 
 
 def question_with_data_source_to_sql(data_source_id: int, question: str) -> str:
-    connections = Connections()
-    db = connections.open()
-
+    db = utils.db.application_database_connection()
     ranked_structure = Ranker(db, data_source_id).rank(question)
     log.debug("Building Schema")
     t1 = time.time()
