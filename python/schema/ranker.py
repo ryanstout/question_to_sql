@@ -2,6 +2,7 @@ from python.setup import log
 
 import os
 import sys
+import time
 import typing as t
 
 import numpy as np
@@ -35,7 +36,9 @@ class Ranker:
         # Load the faiss indexes
         self.idx_table_names = AnnSearch(db, datasource_id, 0, f"{indexes_path}/{datasource_id}/table_names")
         self.idx_column_names = AnnSearch(db, datasource_id, 1, f"{indexes_path}/{datasource_id}/column_names")
-        self.idx_table_and_column_names = AnnSearch(db, datasource_id, 3, f"{indexes_path}/{datasource_id}/table_and_column_names")
+        self.idx_table_and_column_names = AnnSearch(
+            db, datasource_id, 3, f"{indexes_path}/{datasource_id}/table_and_column_names"
+        )
 
         # Table and Columns indexes
         # self.idx_table_and_column_names_and_values = AnnSearch(
@@ -43,7 +46,9 @@ class Ranker:
         self.idx_column_name_and_all_column_values = AnnSearch(
             db, datasource_id, 5, f"{indexes_path}/{datasource_id}/column_name_and_all_column_values"
         )
-        self.idx_table_column_and_value = AnnSearch(db, datasource_id, 6, f"{indexes_path}/{datasource_id}/table_column_and_value")
+        self.idx_table_column_and_value = AnnSearch(
+            db, datasource_id, 6, f"{indexes_path}/{datasource_id}/table_column_and_value"
+        )
 
         # Cell values
         self.idx_values = AnnSearch(self.db, datasource_id, 2, f"{indexes_path}/{datasource_id}/values")
@@ -58,35 +63,46 @@ class Ranker:
         value_weights=[0.5, 0.5],
     ) -> SCHEMA_RANKING_TYPE:
 
+        t1 = time.time()
         query_embedding = Embedding(self.db, query, embedder=embedder, cache_results=cache_results).embedding_numpy
 
-        log.debug("Start faiss lookups")
+        log.debug("Start ranking")
         # Fetch ranked table id
         table_matches = self.idx_table_names.search(query_embedding, 1000)
         tables_with_columns_matches = self.idx_column_names.search(query_embedding, 1000)
         # log.debug("Table matches", matches=table_matches)
 
         columns_matches = self.idx_column_names.search(query_embedding, 10000)
-        column_name_and_all_column_values_matches = self.idx_column_name_and_all_column_values.search(query_embedding, 1000)
+        column_name_and_all_column_values_matches = self.idx_column_name_and_all_column_values.search(
+            query_embedding, 1000
+        )
         # log.debug("Column matches", matches=columns_matches)
 
         value_matches = self.idx_values.search(query_embedding, 1000)
         table_column_value_matches = self.idx_values.search(query_embedding, 1000)
 
         tables = self.merge_ranks([table_matches, tables_with_columns_matches, value_matches], table_weights, 0)
-        columns = self.merge_ranks([columns_matches, column_name_and_all_column_values_matches, value_matches], column_weights, 1)
+        columns = self.merge_ranks(
+            [columns_matches, column_name_and_all_column_values_matches, value_matches], column_weights, 1
+        )
         values = self.merge_ranks([value_matches, table_column_value_matches], value_weights, 2)
 
         # rankings = list(map(lambda x: ElementRank(table_id=x[1][0], column_id=x[1][1], value_hint=x[1][2], score=x[0]), tables + columns + values))
-        rankings = list(map(lambda x: ElementRank(table_id=x[1][0], column_id=x[1][1], value_hint=x[1][2], score=x[0]), tables + columns + values))
+        rankings = list(
+            map(
+                lambda x: ElementRank(table_id=x[1][0], column_id=x[1][1], value_hint=x[1][2], score=x[0]),
+                tables + columns + values,
+            )
+        )
 
         # Sort rankings by score
         rankings.sort(key=lambda x: x["score"], reverse=True)
 
-        for element_rank in rankings:
-            log.debug("rank: ", score=element_rank["score"], assoc=[element_rank["table_id"], element_rank["column_id"], element_rank["value_hint"]])
+        # for element_rank in rankings:
+        #     log.debug("rank: ", score=element_rank["score"], assoc=[element_rank["table_id"], element_rank["column_id"], element_rank["value_hint"]])
 
-        log.debug("End faiss lookups")
+        t2 = time.time()
+        log.debug("Ranking fetch: ", time=t2 - t1)
 
         return rankings
 
