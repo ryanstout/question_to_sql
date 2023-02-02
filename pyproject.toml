@@ -66,6 +66,7 @@ isort = "^5.11.4"
 pytest = "^7.2.1"
 rich = "^13.2.0"
 ipdb = "^0.13.11"
+pytest-flask = "^1.2.0"
 
 [build-system]
 requires = ["poetry-core"]
