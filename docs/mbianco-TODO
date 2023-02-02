@@ -1,0 +1,49 @@
+\*\*\*\*- [ ] snowflake async stack trace fix https://github.com/hightouchio/snowflake-connector-nodejs/blob/e059b8cb897891a12e30b078faa327bd2282f2f5/lib/http/base.js#L98
+
+# UI
+
+- [ ] remove name from signup form
+
+# Data model
+
+-[ ] https://www.npmjs.com/package/prisma-erd-generator
+
+# Packages
+
+- [ ] logging
+  - [ ] Structured logging when an object is passed as a second argument
+  - [ ] maybe better logging package https://github.com/pimterry/loglevel/issues/170
+  - [ ] extract LOG_LEVEL as a plugin https://github.com/vectrlabs/loglevel-debug/blob/master/index.js
+  - [ ] colorized log output? https://github.com/kentcdodds/loglevel-colored-level-prefix
+
+# Docker
+
+- [ ] we should not have to add prop-type to the package, but without it nivo is failing
+
+# Devprod
+
+- [ ] shell formatting
+- [ ] Maybe use trunk?
+
+# Open Source
+
+- [ ] add 0 to node docs https://github.com/nodejs/node/issues/28457
+
+# Python Lang
+
+- [ ] typeguard for runtime type checking https://github.com/agronholm/typeguard
+- [ ]
+
+---
+
+questions = all_questions_marked_as_correct
+
+for question in questions:
+result = rerun_request(question.userSql)
+
+# compare values in result
+
+assert_results_match_without_while_being_column_agnostic(
+result,
+question.resultdata
+)
