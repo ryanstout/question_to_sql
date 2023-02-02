@@ -77,10 +77,10 @@ log_cli = true
 log_cli_level = "WARN"
 addopts = "--pdbcls=IPython.terminal.debugger:Pdb"
 filterwarnings = [
-  # the setuptools exclusion isn't working...
   "ignore::DeprecationWarning:setuptools.*:",
-  "ignore::DeprecationWarning:disttools.*:",
-  "ignore::DeprecationWarning:faiss.*:"
+  "ignore::DeprecationWarning:distutils.*:",
+  "ignore::DeprecationWarning:faiss.*:",
+  "ignore::DeprecationWarning:IPython.*:"
   ]
 
 [tool.black]
