@@ -3,7 +3,7 @@ from prisma import Prisma
 DATABASE = None
 
 
-def database_connection():
+def application_database_connection():
     global DATABASE
 
     if DATABASE is None:
