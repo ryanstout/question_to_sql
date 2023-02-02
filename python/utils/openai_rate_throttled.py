@@ -58,7 +58,11 @@ class OpenAIThrottled:
     ):
         self.max_attempts = max_attempts
         self.limiter = MultiBucketLimiter(
-            {"requests": max_requests_per_minute, "codex_tokens": max_codex_tokens_per_minute, "embed_tokens": max_embed_tokens_per_minute}
+            {
+                "requests": max_requests_per_minute,
+                "codex_tokens": max_codex_tokens_per_minute,
+                "embed_tokens": max_embed_tokens_per_minute,
+            }
         )
 
     def complete(self, prompt: str, **kwargs):
@@ -118,5 +122,7 @@ class OpenAIThrottled:
 
 # Export singleton
 openai_throttled = OpenAIThrottled(
-    max_requests_per_minute=int(20 * 0.5), max_codex_tokens_per_minute=int(40000 * 0.3), max_embed_tokens_per_minute=int(250000 * 0.3)
+    max_requests_per_minute=int(20 * 0.5),
+    max_codex_tokens_per_minute=int(40000 * 0.3),
+    max_embed_tokens_per_minute=int(250000 * 0.3),
 )

@@ -43,7 +43,9 @@ class MultiBucketLimiter:
     def request_when_available(self, request_resources: Dict[str, int], consume_resources: bool = True):
         for resource in self.resources:
             if request_resources[resource] >= self.max_resources_per_minute[resource]:
-                raise ValueError(f"Requested {request_resources[resource]} {resource} but max is {self.max_resources_per_minute[resource]}")
+                raise ValueError(
+                    f"Requested {request_resources[resource]} {resource} but max is {self.max_resources_per_minute[resource]}"
+                )
 
         # Takes in the number of resource units (can be more than one if we're
         # limiting LLM tokens or something.
