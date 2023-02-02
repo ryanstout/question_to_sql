@@ -93,8 +93,10 @@ exclude = '''
 )/
 '''
 
+# when changing this config, you need to restart your vscode isort server
 [tool.isort]
 profile = "black"
 multi_line_output = 3
-sections = "SETUP,FUTURE,STDLIB,THIRDPARTY,FIRSTPARTY,LOCALFOLDER"
+sections = "SETUP,FUTURE,STDLIB,THIRDPARTY,FIRSTPARTY,PRISMA,LOCALFOLDER"
 known_setup = "python.setup"
+known_prisma = "prisma"
