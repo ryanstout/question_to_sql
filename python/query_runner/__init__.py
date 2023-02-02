@@ -12,15 +12,9 @@ from python.utils.query_runner import setup_query_env
 
 # TODO this is a mess, will refactor once it's working
 
-# TODO is there any reason why we wouldn't just have a single global db connection?
-def dbConnection():
-    db = Prisma()
-    db.connect()
-    return db
-
 
 def run_query(data_source_id: int, sql: str) -> t.List[dict]:
-    db = dbConnection()
+    db = database_connection()
     data_source = db.datasource.find_first(where={"id": data_source_id})
 
     assert data_source is not None
