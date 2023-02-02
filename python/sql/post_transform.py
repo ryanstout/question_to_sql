@@ -3,23 +3,14 @@
 #
 
 
-import code
-import re
-import sys
+from python.setup import log
 
-from prisma.models import (
-    Business,
-    DataSource,
-    DataSourceTableColumn,
-    DataSourceTableDescription,
-    User,
-)
+import re
+
+import utils
 from sqlglot import diff, exp, parse_one, transpile
 from sqlglot.errors import ParseError
 from sqlglot.optimizer import optimize
-
-from python.utils.connections import Connections
-from python.utils.logging import log
 
 SNOWFLAKE_KEYWORDS = [
     "ACCOUNT",
@@ -72,16 +63,14 @@ class PostTransform:
     out_dialect = "snowflake"
 
     def __init__(self, datasource_id: int):
-        self.connections = Connections()
-        self.connections.open()
-
-        self.db = self.connections.db
+        self.db = utils.db.application_database_connection()
         self.datasource_id = datasource_id
 
     def run(self, sql: str):
         # Some transforms are easier to write in string land for now
         sql = self.string_translations(sql)
 
+        # TODO double except here isn't going to do anything...
         try:
             ast = parse_one(sql, self.__class__.in_dialect)
         except ParseError as e:

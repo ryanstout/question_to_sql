@@ -6,8 +6,15 @@ import re
 from multiprocessing.pool import ThreadPool
 
 import click
-import snowflake.connector
+import utils
 from decouple import config
+
+import python.utils.sql as sql
+from python.embeddings.embedding_builder import EmbeddingBuilder
+from python.utils.logging import log
+from python.utils.sql import unqualified_table_name
+
+from prisma import Prisma
 from prisma.enums import DataSourceType
 from prisma.models import (
     Business,
@@ -16,14 +23,6 @@ from prisma.models import (
     DataSourceTableDescription,
     User,
 )
-from snowflake.connector.cursor import DictCursor
-
-import python.utils.sql as sql
-from prisma import Prisma
-from python.embeddings.embedding_builder import EmbeddingBuilder
-from python.utils.connections import Connections
-from python.utils.logging import log
-from python.utils.sql import unqualified_table_name
 
 # Imports the schema and metadata from the snowflake database to the
 # local database.
@@ -57,15 +56,12 @@ THREAD_POOL_SIZE = 20
 class Import:
     def __init__(self, user_id, database_name, table_limit, column_limit, column_value_limit):
         self.column_pool = ThreadPool(processes=THREAD_POOL_SIZE)
-        self.connections = Connections()
-        self.connections.open()
-
         self.limits = {"table": table_limit, "column": column_limit, "column_value": column_value_limit}
 
         log.debug("starting import", database=database_name, user_id=user_id)
 
         try:
-            self.db = self.connections.db
+            self.db = utils.db.application_database_connection()
 
             user = self.db.user.find_unique(where={"id": int(user_id)}, include={"business": True})
             if user is None:
@@ -74,21 +70,12 @@ class Import:
             business = self.find_or_create_business(user)
             datasource = self.find_or_create_datasource(business)
 
-            # Dump the data from each table into the database
-            self.snowflake_cursor = self.connections.snowflake_cursor()
-
             self.embedding_builder = EmbeddingBuilder(datasource)
-
-            # TODO pull this from the user credentials
-            self.snowflake_cursor.execute("use warehouse COMPUTE_WH;")
 
             self.create_table_records(datasource, database_name, limit=table_limit)
 
             # Save embedding indexes to the file system
             self.embedding_builder.save()
-
-        finally:
-            self.connections.close()
 
     def create_table_records(self, data_source: DataSource, database_name: str, limit: int) -> None:
         # TODO add dict to represent this
@@ -121,12 +108,18 @@ class Import:
         }
 
         if table_description:
-            table_description = self.db.datasourcetabledescription.update(data=description_payload, where={"id": table_description.id})
+            table_description = self.db.datasourcetabledescription.update(
+                data=description_payload, where={"id": table_description.id}
+            )
         else:
-            table_description = self.db.datasourcetabledescription.create(dataSourceId=data_source.id, data=description_payload)
+            table_description = self.db.datasourcetabledescription.create(
+                dataSourceId=data_source.id, data=description_payload
+            )
 
         self.create_column_records(data_source, table_description, limit=self.limits["column"])
-        self.embedding_builder.add_table(fqn, column_limit=self.limits["column"], column_value_limit=self.limits["column_value"])
+        self.embedding_builder.add_table(
+            fqn, column_limit=self.limits["column"], column_value_limit=self.limits["column_value"]
+        )
 
     def create_column_records(self, data_source: DataSource, table_description: DataSourceTableDescription, limit: int):
         cursor = self.snowflake_cursor
@@ -149,13 +142,19 @@ class Import:
 
         futures = []
         for column in column_list:
-            futures.append(self.column_pool.apply_async(self.create_column_record, args=(data_source, table_description, column, row_count)))
+            futures.append(
+                self.column_pool.apply_async(
+                    self.create_column_record, args=(data_source, table_description, column, row_count)
+                )
+            )
             # result is not important, otherwise we would `async_task.get()`
 
         # Wait for futures to finsish
         [future.get() for future in futures]
 
-    def create_column_record(self, data_source: DataSource, table_description: DataSourceTableDescription, column, row_count: int) -> None:
+    def create_column_record(
+        self, data_source: DataSource, table_description: DataSourceTableDescription, column, row_count: int
+    ) -> None:
         name = column["name"]
         type = column["type"]
 

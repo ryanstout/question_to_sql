@@ -5,7 +5,16 @@ import math
 import re
 from multiprocessing.pool import ThreadPool
 
+import query_runner
+import utils
 from decouple import config
+
+import python.utils.sql as sql
+from python.embeddings.ann_index import AnnIndex
+from python.utils.entropy import token_entropy
+from python.utils.logging import log
+from python.utils.sql import unqualified_table_name
+
 from prisma.models import (
     Business,
     DataSource,
@@ -13,13 +22,6 @@ from prisma.models import (
     DataSourceTableDescription,
     User,
 )
-
-import python.utils.sql as sql
-from python.embeddings.ann_index import AnnIndex
-from python.utils.connections import Connections
-from python.utils.entropy import token_entropy
-from python.utils.logging import log
-from python.utils.sql import unqualified_table_name
 
 # How long of a value do we create an embedding for?
 # embeddings have a window, so we truncate the values to fit into the window
@@ -40,30 +42,35 @@ def in_groups_of(l, n):
 
 
 class EmbeddingBuilder:
-    def __init__(self, datasource: DataSource):
-        # TODO these two should be pulled from the input datasource
-        self.connection = Connections()
+    def __init__(self, data_source: DataSource):
+        self.db = utils.db.application_database_connection()
 
-        self.db = self.connection.open()
-
-        self.datasource = datasource
+        self.data_source = data_source
 
         # See docs/prompt_embeddings.md for info on index types
 
         indexes_path = config("FAISS_INDEXES_PATH")
 
         # Table indexes
-        self.idx_table_names = AnnIndex(self.db, 0, f"{indexes_path}/{datasource.id}/table_names")
-        self.idx_column_names = AnnIndex(self.db, 1, f"{indexes_path}/{datasource.id}/column_names")
-        self.idx_table_and_column_names = AnnIndex(self.db, 3, f"{indexes_path}/{datasource.id}/table_and_column_names")
+        self.idx_table_names = AnnIndex(self.db, 0, f"{indexes_path}/{self.data_source.id}/table_names")
+        self.idx_column_names = AnnIndex(self.db, 1, f"{indexes_path}/{self.data_source.id}/column_names")
+        self.idx_table_and_column_names = AnnIndex(
+            self.db, 3, f"{indexes_path}/{self.data_source.id}/table_and_column_names"
+        )
 
         # Table and Columns indexes
-        self.idx_table_and_column_names_and_values = AnnIndex(self.db, 4, f"{indexes_path}/{datasource.id}/table_and_column_names_and_values")
-        self.idx_column_name_and_all_column_values = AnnIndex(self.db, 5, f"{indexes_path}/{datasource.id}/column_name_and_all_column_values")
+        self.idx_table_and_column_names_and_values = AnnIndex(
+            self.db, 4, f"{indexes_path}/{self.data_source.id}/table_and_column_names_and_values"
+        )
+        self.idx_column_name_and_all_column_values = AnnIndex(
+            self.db, 5, f"{indexes_path}/{self.data_source.id}/column_name_and_all_column_values"
+        )
 
         # Cell Values
-        self.idx_values = AnnIndex(self.db, 2, f"{indexes_path}/{datasource.id}/values")
-        self.idx_table_column_and_value = AnnIndex(self.db, 6, f"{indexes_path}/{datasource.id}/table_column_and_value")
+        self.idx_values = AnnIndex(self.db, 2, f"{indexes_path}/{self.data_source.id}/values")
+        self.idx_table_column_and_value = AnnIndex(
+            self.db, 6, f"{indexes_path}/{self.data_source.id}/table_column_and_value"
+        )
 
         # Temp store for all short string values in a table
         # TODO: this will blow up on huge tables
@@ -72,18 +79,25 @@ class EmbeddingBuilder:
     def add_table(self, name: str, column_limit: int, column_value_limit: int) -> None:
         self.table_values = []
         unqualified_name = unqualified_table_name(name)
-        table = self.db.datasourcetabledescription.find_first(where={"fullyQualifiedName": name, "dataSourceId": self.datasource.id})
+        table = self.db.datasourcetabledescription.find_first(
+            where={"fullyQualifiedName": name, "dataSourceId": self.data_source.id}
+        )
 
         if table is None:
             raise Exception(f"Table {name} not found")
 
         # TODO we should be doing upsert instead
 
-        self.idx_table_names.add(self.datasource.id, unqualified_name, table.id, None, None)
+        self.idx_table_names.add(self.data_source.id, unqualified_name, table.id, None, None)
 
         all_columns = self.db.datasourcetablecolumn.find_many(where={"dataSourceTableDescriptionId": table.id})
 
-        log.debug("generating embedding for table", table_name=unqualified_name, total_columns=len(all_columns), limit=column_value_limit)
+        log.debug(
+            "generating embedding for table",
+            table_name=unqualified_name,
+            total_columns=len(all_columns),
+            limit=column_value_limit,
+        )
 
         columns = all_columns[0:column_limit]
 
@@ -100,7 +114,9 @@ class EmbeddingBuilder:
 
             column_names.append(column.name)
             # Add individual column names
-            self.idx_column_names.add(self.datasource.id, f"{unqualified_name} {column.name}", table.id, column.id, None)
+            self.idx_column_names.add(
+                self.data_source.id, f"{unqualified_name} {column.name}", table.id, column.id, None
+            )
 
             # TODO here we are deciding which columns should be put into the vector index,
             #      right now, we are just using the distict count of the column to decide
@@ -108,11 +124,15 @@ class EmbeddingBuilder:
             # Add cell values (requires a full scan of each table)
             if column.distinctRows < column_value_limit:
                 column_add_results.append(
-                    column_add_pool.apply_async(self.add_table_column_values, (unqualified_name, table, column, column_value_limit))
+                    column_add_pool.apply_async(
+                        self.add_table_column_values, (unqualified_name, table, column, column_value_limit)
+                    )
                 )
                 # self.add_table_column_values(table, column, column_value_limit=column_value_limit)
             else:
-                log.debug("not indexing column, too many values", column_name=column.name, distinct_rows=column.distinctRows)
+                log.debug(
+                    "not indexing column, too many values", column_name=column.name, distinct_rows=column.distinctRows
+                )
 
         log.debug("waiting for async results")
 
@@ -124,28 +144,37 @@ class EmbeddingBuilder:
             #     # TODO: should probably fail fully and we can figure it out
             #     log.error("async result timed out")
 
-        log.debug("async results complete", total=len(column_add_results), successful=len([r for r in column_add_results if r.successful()]))
+        log.debug(
+            "async results complete",
+            total=len(column_add_results),
+            successful=len([r for r in column_add_results if r.successful()]),
+        )
 
         # Add table and column names as a single string (for table lookup)
-        self.idx_table_and_column_names.add(self.datasource.id, unqualified_name + " " + " ".join(column_names), table.id, None, None)
+        self.idx_table_and_column_names.add(
+            self.data_source.id, unqualified_name + " " + " ".join(column_names), table.id, None, None
+        )
 
         # Add for table + column names + all values
         for table_value_group in in_groups_of("\n".join(self.table_values), MAX_EMBEDDING_TOKENS):
             full_table_str = unqualified_name + "\n" + "\n".join(column_names) + "\n" + table_value_group
-            self.idx_column_name_and_all_column_values.add(self.datasource.id, full_table_str, table.id, None, None)
+            self.idx_column_name_and_all_column_values.add(self.data_source.id, full_table_str, table.id, None, None)
 
     def add_table_column_values(
-        self, unqualified_table_name: str, table: DataSourceTableDescription, column: DataSourceTableColumn, column_value_limit: int
+        self,
+        unqualified_table_name: str,
+        table: DataSourceTableDescription,
+        column: DataSourceTableColumn,
+        column_value_limit: int,
     ):
         # only index string columns
         if not re.search("^VARCHAR", column.type):
             # log.debug("skipping embeddings for column, not varchar", column_name=column.name)
             return
 
-        snowflake_cursor = self.connection.snowflake_cursor()
-
         # Get all the values for this column
-        values = snowflake_cursor.execute(
+        values = query_runner.run_query(
+            self.data_source.id,
             f"""
             SELECT {column.name} as VALUE, COUNT(*) AS COUNT
             FROM {sql.normalize_fqn_quoting(table.fullyQualifiedName)}
@@ -153,7 +182,7 @@ class EmbeddingBuilder:
             GROUP BY {column.name}
             ORDER BY COUNT DESC
             LIMIT {column_value_limit}
-            """
+            """,
         )
 
         column_values = []
@@ -184,14 +213,20 @@ class EmbeddingBuilder:
 
             # Add both a string with `TABLE_NAME COLUMN_NAME value` and just one with the value
             self.idx_table_column_and_value.add(
-                self.datasource.id, f"{unqualified_table_name} {column.name} {value_str}", table.id, column.id, value_str
+                self.data_source.id,
+                f"{unqualified_table_name} {column.name} {value_str}",
+                table.id,
+                column.id,
+                value_str,
             )
-            self.idx_values.add(self.datasource.id, f"{value_str}", table.id, column.id, value_str)
+            self.idx_values.add(self.data_source.id, f"{value_str}", table.id, column.id, value_str)
 
         # Add for column name + all column values (keeping below max embedding)
         for col_value_group in in_groups_of("\n".join(column_values), MAX_EMBEDDING_TOKENS):
             full_column_str = column.name + "\n" + col_value_group
-            self.idx_column_name_and_all_column_values.add(self.datasource.id, full_column_str, table.id, column.id, None)
+            self.idx_column_name_and_all_column_values.add(
+                self.data_source.id, full_column_str, table.id, column.id, None
+            )
 
     # this is an expensive operation, do this as minimially as we can!
     def save(self):

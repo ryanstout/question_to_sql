@@ -1,11 +1,11 @@
 from python.setup import log
 
-import os
 import sys
 import time
 import typing as t
 
 import numpy as np
+import utils
 from decouple import config
 
 from python.embeddings.ann_search import AnnSearch
@@ -137,14 +137,11 @@ class Ranker:
 
 
 if __name__ == "__main__":
-    from python.utils.connections import Connections
+    db = utils.db.application_database_connection()
 
-    connections = Connections()
-    connections.open()
-
-    datasource_id = connections.db.datasource.find_first().id
+    datasource_id = db.datasource.find_first().id
 
     question = sys.argv[1]
 
-    ranks = Ranker(connections.db, datasource_id).rank(question)
+    ranks = Ranker(db, datasource_id).rank(question)
     print(ranks)

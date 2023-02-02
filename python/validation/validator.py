@@ -6,13 +6,15 @@ import time
 from multiprocessing.pool import ThreadPool
 from threading import Lock
 
-from prisma.enums import FeedbackState
+import utils
 from tqdm import tqdm
 
 import python.questions as questions
-from python.utils.connections import Connections
+from python.query_runner.snowflake import run_snowflake_query
+from python.utils.batteries import not_none
 from python.utils.logging import log
-from python.utils.query_runner import run_query, setup_query_env
+
+from prisma.enums import FeedbackState
 
 THREAD_POOL_SIZE = 1
 
@@ -22,22 +24,24 @@ class Validator:
     def run(self):
         log.info("Running validator")
         self.lock = Lock()
-        self.connections = Connections()
-        self.connections.open()
+
+        # TODO this shares a global db connection, may cause issues with threading
+        self.db = utils.db.application_database_connection()
 
         self.thread_pool = ThreadPool(processes=THREAD_POOL_SIZE)
 
         self.scores = {}
         self.failed_questions = []
 
-        db = self.connections.db
-
-        # pull from user: user.business.dataSources[0]
+        # TODO pull from user: user.business.dataSources[0]
         self.data_source_id = 1  # stub for now
+        self.data_source = not_none(self.db.datasource.find_first(where={"id": self.data_source_id}))
 
         # Run through each marked question
-        db_questions = db.question.find_many(
-            where={"feedbackState": FeedbackState.CORRECT}, include={"questionGroup": {"include": {"questions": True}}}, take=5
+        db_questions = self.db.question.find_many(
+            where={"feedbackState": FeedbackState.CORRECT},
+            include={"questionGroup": {"include": {"questions": True}}},
+            take=5,
         )
 
         # Load each question in the group, and assume the question
@@ -81,13 +85,10 @@ class Validator:
         # time.sleep(random.random() * 60)
         # log.info(f"[{idx}] Run question: {correct_question.question}")
 
-        snowflake_cursor = self.connections.snowflake_cursor()
-        setup_query_env(snowflake_cursor)
-
         old_sql = correct_question.userSql
         log.debug("Old SQL: ", old_sql=old_sql)
 
-        old_results = run_query(snowflake_cursor, old_sql)
+        old_results = run_snowflake_query(self.data_source, old_sql)
         if "error" in old_results:
             # Query returned an error
             log.error("Error running old query: ", sql=old_sql, results=old_results)
@@ -99,7 +100,7 @@ class Validator:
             log.info(f"[{idx}] Send to openai")
             new_sql = questions.question_with_data_source_to_sql(self.data_source_id, question.question)
             log.debug("new sql", new_sql=new_sql)
-            new_results = run_query(snowflake_cursor, new_sql)
+            new_results = run_snowflake_query(self.data_source, new_sql)
 
             if "error" in new_results:
                 # Query returned an error

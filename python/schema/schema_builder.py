@@ -10,6 +10,15 @@ import re
 import time
 import typing as t
 
+import python.utils as utils
+import python.utils.tokens
+from python.schema.full_schema import FullSchema
+from python.schema.ranker import SCHEMA_RANKING_TYPE, ElementRank, Ranker
+from python.sql.post_transform import PostTransform
+from python.utils.batteries import unique
+from python.utils.tokens import count_tokens
+
+from prisma import Prisma
 from prisma.models import (
     Business,
     DataSource,
@@ -17,15 +26,6 @@ from prisma.models import (
     DataSourceTableDescription,
     User,
 )
-
-import python.utils as utils
-import python.utils.tokens
-from prisma import Prisma
-from python.schema.full_schema import FullSchema
-from python.schema.ranker import SCHEMA_RANKING_TYPE, ElementRank, Ranker
-from python.sql.post_transform import PostTransform
-from python.utils.batteries import unique
-from python.utils.tokens import count_tokens
 
 # from transformers import GPT2Tokenizer
 
@@ -171,7 +171,8 @@ class SchemaBuilder:
         )
 
         default_id_columns = [
-            self.create_column_rank(ElementRank(table_id=tableId, column_id=column.id, value_hint=None, score=0.0)) for column in id_columns
+            self.create_column_rank(ElementRank(table_id=tableId, column_id=column.id, value_hint=None, score=0.0))
+            for column in id_columns
         ]
 
         return {
@@ -204,7 +205,9 @@ class SchemaBuilder:
                 break
 
             # does the table already exist in table ranks?
-            table_rank = next((table_rank for table_rank in table_ranks if table_rank["table_id"] == element_rank["table_id"]), None)
+            table_rank = next(
+                (table_rank for table_rank in table_ranks if table_rank["table_id"] == element_rank["table_id"]), None
+            )
 
             if not table_rank:
                 table_id = element_rank["table_id"]
@@ -224,7 +227,10 @@ class SchemaBuilder:
                 column_id = element_rank["column_id"]
 
                 # does the column exist in the table_rank object?
-                column_rank = next((column_rank for column_rank in table_rank["columns"] if column_rank["column_id"] == column_id), None)
+                column_rank = next(
+                    (column_rank for column_rank in table_rank["columns"] if column_rank["column_id"] == column_id),
+                    None,
+                )
 
                 if column_rank:
                     # add the hint to the column_rank
@@ -255,14 +261,10 @@ class SchemaBuilder:
 
 
 if __name__ == "__main__":
-    from python.utils.connections import Connections
-
-    connections = Connections()
-    db = connections.open()
-
+    db = utils.db.application_database_connection()
     datasource = db.datasource.find_first(where={"id": 2})
 
-    ranks = Ranker(connections.db, 2).rank("What product sells best in Montana?")
+    ranks = Ranker(db, 2).rank("What product sells best in Montana?")
 
     # generate via: `poetry run python -m python.schema.ranker "What product sells best in Montana?"`
 
