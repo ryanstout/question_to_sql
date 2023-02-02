@@ -5,6 +5,7 @@ from decouple import config
 from prisma.enums import DataSourceType
 from prisma.models import DataSource
 from snowflake.connector.cursor import DictCursor
+from utils.db import database_connection
 
 from prisma import Prisma
 from python.utils.query_runner import run_query as run_query_old

@@ -1,8 +1,3 @@
-import pytest
-
-from python.server import application
-
-
 def test_basic_answer(client):
     response = client.post(
         "/question",
@@ -12,6 +7,7 @@ def test_basic_answer(client):
         },
     )
 
+    # TODO this will be brittle, but I'm also curious when it will break
     assert response.json == {
         "data_source_id": 1,
         "question": "What is the name of the user with id 2?",
