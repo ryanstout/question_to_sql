@@ -1,12 +1,15 @@
 #!/bin/bash
 
 set -eux
+
 `cd "${0%/*}/.."`
+
+source docker/shared.sh
 
 npx prisma --version
 
 # this image will only run the node application adn does not need the python client
-sed -i '/generator pyclient/,/}/d' prisma/schema.prisma
+remove_python_prisma_generator
 npx prisma generate
 
 npm run build

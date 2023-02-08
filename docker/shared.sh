@@ -25,3 +25,7 @@ extract_prisma_version() {
   prisma_version=$(node -p -e "require('./package.json').dependencies.prisma" | sed 's/[^0-9.]//g')
   export PRISMA_VERSION=$prisma_version
 }
+
+remove_python_prisma_generator() {
+  sed -i '/generator pyclient/,/}/d' prisma/schema.prisma
+}
