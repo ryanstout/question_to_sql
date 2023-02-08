@@ -1617,13 +1617,13 @@ files = [
 
 [[package]]
 name = "openai"
-version = "0.26.4"
+version = "0.26.5"
 description = "Python client library for the OpenAI API"
 category = "main"
 optional = false
 python-versions = ">=3.7.1"
 files = [
-    {file = "openai-0.26.4.tar.gz", hash = "sha256:168813319a1422cb71a5005f9e404065483556cea52c9ccbfb838cda134087a7"},
+    {file = "openai-0.26.5.tar.gz", hash = "sha256:2882a59c67ae33c2716a04389a6e6680d061f073424953732f917fde219addfd"},
 ]
 
 [package.dependencies]
@@ -3523,4 +3523,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "349472843397ee944dcaafc92f4ce65eae17a780966ab84b41d40f879f545334"
+content-hash = "907e6e63647e116fdc0f587e91f5574a7cc819d066def4d918f163ce9ed7bbd8"
