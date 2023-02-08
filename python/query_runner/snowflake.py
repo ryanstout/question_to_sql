@@ -1,6 +1,7 @@
 from python.setup import log
 
 import re
+import typing as t
 
 import snowflake.connector
 from decouple import config
@@ -12,26 +13,35 @@ from python.utils.batteries import log_execution_time, not_none
 from prisma.models import DataSource
 
 
+class SnowflakeCredentials(t.TypedDict):
+    username: str
+    password: str
+    account: str
+    warehouse: str
+    database: str
+    schema: str
+
+
 def get_snowflake_cursor(data_source: DataSource):
+    snowflake_credentials = t.cast(SnowflakeCredentials, data_source.credentials)
+
     connection = snowflake.connector.connect(
-        # pull these from the environment
-        user=config("SNOWFLAKE_USERNAME"),
-        password=config("SNOWFLAKE_PASSWORD"),
-        account=config("SNOWFLAKE_ACCOUNT"),
+        user=snowflake_credentials["username"],
+        password=snowflake_credentials["password"],
+        account=snowflake_credentials["account"],
     )
 
     cursor = connection.cursor(cursor_class=DictCursor)
 
-    # TODO should pull from datasource credentials
-    cursor.execute("use warehouse COMPUTE_WH;")
-    cursor.execute("use FIVETRAN_DATABASE.SHOPIFY;")
+    cursor.execute(f"use warehouse {snowflake_credentials['warehouse']};")
+    cursor.execute(f"use {snowflake_credentials['database']}.{snowflake_credentials['schema']};")
 
     return cursor, connection
 
 
 def get_query_results(cursor: SnowflakeCursor, sql: str):
     try:
-        if not re.search("\sLIMIT\s", sql):
+        if not re.search(r"\sLIMIT\s", sql):
             sql += " LIMIT 100"
 
         log.debug("running query", sql=sql)

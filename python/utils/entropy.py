@@ -1,5 +1,6 @@
 import collections
 import math
+
 import tiktoken
 
 
@@ -10,6 +11,7 @@ def token_entropy(text: str):
     return len(text) / float(len(encoded))
 
 
+# TODO what is shannon entropy? This isn't being used anywhere?
 def estimate_shannon_entropy(dna_sequence):
     m = len(dna_sequence)
     bases = collections.Counter([tmp_base for tmp_base in dna_sequence])
