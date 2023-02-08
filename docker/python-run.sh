@@ -2,4 +2,4 @@
 
 set -ex
 
-poetry run waitress-serve python.server:app
+poetry run waitress-serve python.server:application
