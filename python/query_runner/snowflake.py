@@ -39,10 +39,19 @@ def get_snowflake_cursor(data_source: DataSource):
     return cursor, connection
 
 
-def get_query_results(cursor: SnowflakeCursor, sql: str):
+def apply_query_protections(sql):
+    original_sql = sql
+
+    if not re.search(r"\sLIMIT\s", sql):
+        sql += " LIMIT 100"
+
+    return sql
+
+
+def get_query_results(cursor: SnowflakeCursor, sql: str, disable_query_protections: bool):
     try:
-        if not re.search(r"\sLIMIT\s", sql):
-            sql += " LIMIT 100"
+        if not disable_query_protections:
+            apply_query_protections(sql)
 
         log.debug("running query", sql=sql)
 
@@ -58,10 +67,10 @@ def get_query_results(cursor: SnowflakeCursor, sql: str):
         return {"error": str(e)}
 
 
-def run_snowflake_query(data_source: DataSource, sql: str):
+def run_snowflake_query(data_source: DataSource, sql: str, disable_query_protections=False):
     cursor, connection = get_snowflake_cursor(data_source)
 
-    results = get_query_results(cursor, sql)
+    results = get_query_results(cursor, sql, disable_query_protections=disable_query_protections)
 
     connection.close()
     return results
