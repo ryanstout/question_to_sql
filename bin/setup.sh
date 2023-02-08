@@ -26,11 +26,12 @@ echo "`npm run dev` to start the server"
 
 # for better asdf compatibility
 # config writes to: ~/Library/Preferences/pypoetry/config.toml
+poetry config virtualenvs.in-project true
 poetry config virtualenvs.prefer-active-python true
 poetry install
 
 # helpful packages for ipython
-pip install ipython ipdb pdbr ipython-autoimport rich docrepr colorama
+poetry run pip install ipython ipdb pdbr ipython-autoimport rich docrepr colorama
 
 # you need python installed properly to generate the prisma bindings
 # for now, we are nuking the entire DB, will need to change this in the future
