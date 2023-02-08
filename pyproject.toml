@@ -50,7 +50,7 @@ torchvision = [
 # torch = {version = "1.13.1", extras = ["cpu"]}
 
 waitress = "^2.1.2"
-sentry-sdk = "^1.14.0"
+sentry-sdk = "^1.15.0"
 
 # use a separate group for prisma stuff to avoid installing *everything*
 # in order to generate the prisma bindings
