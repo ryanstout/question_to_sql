@@ -1,0 +1,41 @@
+name: Node Setup
+description: Setup node environment
+inputs:
+  setup-db:
+    description: Should the prisma migrations be run
+    required: false
+    default: "false"
+runs:
+  using: "composite"
+  steps:
+    - name: 🛑 Cancel Previous Runs
+      uses: styfle/cancel-workflow-action@0.11.0
+
+    - name: ⎔ Setup node
+      uses: actions/setup-node@v3
+      with:
+        node-version-file: ".tool-versions"
+
+    - name: Setup NPM Version
+      shell: bash
+      run: |
+        source docker/shared.sh
+        extract_npm_version
+        npm install -g npm@$NPM_VERSION
+
+    # docs recommend *not* using the lockfile, but I'd prefer to keep deps consistent
+    - name: 📥 Download deps
+      uses: bahmutov/npm-install@v1
+
+    - name: Prisma Setup
+      shell: bash
+      run: |
+        source docker/shared.sh
+        remove_python_prisma_generator
+        npx prisma generate
+
+    - name: 🛠 Setup Database
+      if: ${{ inputs.setup-db == 'true' }}
+      shell: bash
+      run: |
+        DATABASE_URL=$TEST_DATABASE_URL npx prisma migrate reset --force

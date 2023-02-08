@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - dev
+      - github-ci
   pull_request: {}
 
 permissions:
@@ -17,22 +17,8 @@ jobs:
     name: ⬣ ESLint
     runs-on: ubuntu-latest
     steps:
-      - name: 🛑 Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.11.0
-
-      - name: ⬇️ Checkout repo
-        uses: actions/checkout@v3
-
-      - name: ⎔ Setup node
-        uses: actions/setup-node@v3
-        with:
-          # TODO can we pull from `.tool-versions`?
-          node-version: 19
-
-      - name: 📥 Download deps
-        uses: bahmutov/npm-install@v1
-        with:
-          useLockFile: false
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/node-setup
 
       - name: 🔬 Lint
         run: npm run lint
@@ -41,21 +27,8 @@ jobs:
     name: ʦ TypeScript
     runs-on: ubuntu-latest
     steps:
-      - name: 🛑 Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.11.0
-
-      - name: ⬇️ Checkout repo
-        uses: actions/checkout@v3
-
-      - name: ⎔ Setup node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
-
-      - name: 📥 Download deps
-        uses: bahmutov/npm-install@v1
-        with:
-          useLockFile: false
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/node-setup
 
       - name: 🔎 Type check
         run: npm run typecheck --if-present
@@ -64,21 +37,8 @@ jobs:
     name: ⚡ Vitest
     runs-on: ubuntu-latest
     steps:
-      - name: 🛑 Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.11.0
-
-      - name: ⬇️ Checkout repo
-        uses: actions/checkout@v3
-
-      - name: ⎔ Setup node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
-
-      - name: 📥 Download deps
-        uses: bahmutov/npm-install@v1
-        with:
-          useLockFile: false
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/node-setup
 
       - name: ⚡ Run vitest
         run: npm run test -- --coverage
@@ -88,24 +48,11 @@ jobs:
     runs-on: ubuntu-latest
     if: false
     steps:
-      - name: 🛑 Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.11.0
-
-      - name: ⬇️ Checkout repo
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/node-setup
 
       - name: 🏄 Copy test env vars
         run: cp .env.example .env
-
-      - name: ⎔ Setup node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
-
-      - name: 📥 Download deps
-        uses: bahmutov/npm-install@v1
-        with:
-          useLockFile: false
 
       - name: 🐳 Docker compose
         # the sleep is just there to give time for postgres to get started
