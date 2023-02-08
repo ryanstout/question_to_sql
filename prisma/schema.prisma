@@ -126,22 +126,22 @@ model DataSource {
 model DataSourceTableDescription {
   id Int @id @default(autoincrement())
 
-  DataSource   DataSource? @relation(fields: [dataSourceId], references: [id])
-  dataSourceId Int?
+  dataSource   DataSource @relation(fields: [dataSourceId], references: [id])
+  dataSourceId Int
 
   // manually allow the user to skip this table
-  skip Boolean
+  skip Boolean @default(false)
 
   // store the FQN and use a application-level function to extract the target
   fullyQualifiedName String
 
   columns DataSourceTableColumn[]
 
-  generatedSQLCache String
+  generatedSQLCache String?
 
-  // TODO can we enforce JSON schema inside this JSONB array
+  // TODO can we enforce JSON schema inside this JSONB array?
   // we could generate a bunch of different embedding and include as a JSON array
-  embeddingsCache Json
+  embeddingsCache Json? @default("{}")
 
   @@unique([dataSourceId, fullyQualifiedName])
 }
@@ -149,20 +149,20 @@ model DataSourceTableDescription {
 model DataSourceTableColumn {
   id Int @id @default(autoincrement())
 
-  DataSource   DataSource? @relation(fields: [dataSourceId], references: [id])
-  dataSourceId Int?
+  dataSource   DataSource? @relation(fields: [dataSourceId], references: [id])
+  dataSourceId Int
 
-  skip Boolean
+  skip Boolean @default(false)
 
   // place to store distinct number of entries, etc and other analysis
-  inspectionMetadata Json
+  inspectionMetadata Json @default("{}")
 
   // core column description to be used to generate a SQL describe later on
   name    String
   type    String
   kind    String
   isNull  Boolean
-  default String
+  default String?
 
   // used in cardinality calculations
   distinctRows Int
@@ -179,9 +179,9 @@ model DataSourceTableColumn {
   // comment    any
   // "policy name": any
 
-  embeddingsCache              Json
-  DataSourceTableDescription   DataSourceTableDescription? @relation(fields: [dataSourceTableDescriptionId], references: [id])
-  dataSourceTableDescriptionId Int?
+  embeddingsCache              Json                       @default("{}")
+  dataSourceTableDescription   DataSourceTableDescription @relation(fields: [dataSourceTableDescriptionId], references: [id])
+  dataSourceTableDescriptionId Int
 }
 
 // Simple cache for contentHash -> embedding so we don't have to rehit the openai api
