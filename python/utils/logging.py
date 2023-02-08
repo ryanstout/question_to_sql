@@ -3,8 +3,8 @@ import typing as t
 
 import structlog
 from decouple import config
-from python.utils.sentry import configure_sentry
 
+from python.utils.sentry import configure_sentry
 from python.utils.system import is_production
 
 if config("PYTHON_RICH_STACKTRACE", default=False, cast=bool):
@@ -14,7 +14,7 @@ if config("PYTHON_RICH_STACKTRACE", default=False, cast=bool):
     install(show_locals=True)
 
 
-def configureLogger():
+def configure_logger():
     logger_factory = structlog.PrintLoggerFactory()
 
     # allow user to specify a log in case they want to do something meaningful with the stdout
@@ -37,7 +37,7 @@ def configureLogger():
     )
 
 
-configureLogger()
+configure_logger()
 configure_sentry()
 
 log = structlog.get_logger()
