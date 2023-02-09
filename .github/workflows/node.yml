@@ -1,9 +1,9 @@
 name: Node
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
-      - github-ci
   pull_request: {}
 
 permissions:
@@ -13,6 +13,8 @@ permissions:
 env:
   TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
   NODE_ENV: test
+  # TODO if NODE_ENV is true, then we should mock requests, although we should prob just use VCR or something
+  MOCKED_QUESTION_RESPONSE: true
   FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
 jobs:
@@ -36,6 +38,16 @@ jobs:
       - name: 🔎 Type check
         run: npm run typecheck --if-present
 
+  depcheck:
+    name: Dependency Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/node-setup
+
+      - name: Dependency Check
+        uses: tj-actions/depcheck@v9
+
   vitest:
     name: ⚡ Vitest
     runs-on: ubuntu-latest
@@ -50,8 +62,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/node-setup
-      - run: |
-          DATABASE_URL=$TEST_DATABASE_URL npx prisma migrate dev
+        with:
+          setup-db: true
 
       - name: ⚡ Run vitest
         run: npm run test -- --coverage
@@ -71,18 +83,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/node-setup
+        with:
+          setup-db: true
 
       - name: 🏄 Copy test env vars
         run: cp .env.example .env
-
-      - name: 🐳 Docker compose
-        # the sleep is just there to give time for postgres to get started
-        run: docker-compose up -d && sleep 3
-        env:
-          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/postgres"
-
-      - name: 🛠 Setup Database
-        run: npx prisma migrate reset --force
 
       - name: ⚙️ Build
         run: npm run build

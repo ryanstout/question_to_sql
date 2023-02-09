@@ -1,0 +1,2 @@
+ignores: ["eslint", "pyright", "tsconfig-paths", "ts-node", "typesync"]
+ignorePatterns: [".venv*", "bin/*"]

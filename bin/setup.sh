@@ -10,7 +10,11 @@ fi
 
 asdf install
 poetry install
+# TODO extract npm version from package json
 npm install -g npm@9.4.0
+
+# needs to be installed globally per documentation
+npm install -g depcheck
 
 echo "Install libomp openblas for Mac for Faiss kNN library"
 brew install libomp openblas
