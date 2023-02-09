@@ -25,7 +25,10 @@
     "editor.defaultFormatter": "ms-python.python"
   },
   "python.linting.lintOnSave": true,
+  "python.linting.pylintEnabled": true,
   "python.formatting.provider": "black",
+  "python.analysis.typeCheckingMode": "basic",
+  "editor.rulers": [120],
   "files.exclude": {
     "**/__pycache__": true
   }

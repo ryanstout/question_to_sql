@@ -1,3 +1,10 @@
 {
-  "recommendations": ["Prisma.prisma", "ms-python.python"]
+  "recommendations": [
+    "Prisma.prisma",
+    "ms-python.python",
+    "ms-python.isort",
+    "ms-python.vscode-pylance",
+    "GitHub.vscode-pull-request-github",
+    "Gruntfuggly.todo-tree"
+  ]
 }
