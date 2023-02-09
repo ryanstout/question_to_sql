@@ -7,11 +7,19 @@ declare global {
   var __db__: PrismaClient
 }
 
+function isProduction() {
+  return process.env.NODE_ENV === "production"
+}
+
+function isTest() {
+  return process.env.NODE_ENV === "test"
+}
+
 // this is needed because in development we don't want to restart
 // the server with every change, but we want to make sure we don't
 // create a new connection to the DB with every change either.
 // in production we'll have a single connection to the DB.
-if (process.env.NODE_ENV === "production") {
+if (isProduction()) {
   prisma = getClient()
 } else {
   if (!global.__db__) {
@@ -21,10 +29,22 @@ if (process.env.NODE_ENV === "production") {
 }
 
 function getClient() {
-  const { DATABASE_URL } = process.env
-  invariant(typeof DATABASE_URL === "string", "DATABASE_URL env var not set")
+  let databaseURL: string
 
-  const databaseUrl = new URL(DATABASE_URL)
+  if (isTest()) {
+    const { TEST_DATABASE_URL } = process.env
+    invariant(
+      typeof TEST_DATABASE_URL === "string",
+      "TEST_DATABASE_URL env var not set"
+    )
+    databaseURL = TEST_DATABASE_URL
+  } else {
+    const { DATABASE_URL } = process.env
+    invariant(typeof DATABASE_URL === "string", "DATABASE_URL env var not set")
+    databaseURL = DATABASE_URL
+  }
+
+  const databaseUrl = new URL(databaseURL)
 
   const isLocalHost = databaseUrl.hostname === "localhost"
 
