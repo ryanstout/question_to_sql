@@ -4,7 +4,6 @@ set -eux
 `cd "${0%/*}/.."`
 source docker/shared.sh
 
-# unsure if this is required, but things seem to work a bit better when PRISMA_VERSION is around
 extract_prisma_version
 
 npx prisma --version

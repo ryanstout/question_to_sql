@@ -9,4 +9,7 @@ The idea is #1, #2, #4 should rarely change, and #3 should change on almost ev e
 
 Limiting the files we include in #1 & #2 in the docker `ADD` command allows us to iterate more quickly on the Dockerfile.
 
-`chmod +x docker/*.sh`
+## Helpful commands
+
+- make all sh executable `chmod +x docker/*.sh`
+- build an image `docker build . -f Dockerfile.python --progress=plain`
