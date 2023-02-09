@@ -1,7 +1,7 @@
 import { getUser } from "./session.server"
 import { theme } from "./theme"
 
-import type { MetaFunction } from "@remix-run/node"
+import type { LoaderArgs, MetaFunction } from "@remix-run/node"
 import { json } from "@remix-run/node"
 import {
   Links,

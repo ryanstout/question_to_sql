@@ -3,13 +3,7 @@ import { z } from "zod"
 import { zx } from "zodix"
 
 import type { ActionArgs } from "@remix-run/node"
-import {
-  Form,
-  Link,
-  useLoaderData,
-  useNavigate,
-  useParams,
-} from "@remix-run/react"
+import { Form, Link, useLoaderData, useNavigate } from "@remix-run/react"
 import type { LoaderFunction } from "@remix-run/server-runtime"
 // TODO: pagination logic should be abstracted
 import { redirect } from "@remix-run/server-runtime"
@@ -30,7 +24,7 @@ type LoaderData = {
 const defaultLimit = 100
 
 export async function action({ request }: ActionArgs) {
-  let userId = await requireUserId(request)
+  await requireUserId(request)
 
   let { action_name } = await zx.parseForm(request, {
     action_name: z.string(),
@@ -85,7 +79,6 @@ export let loader: LoaderFunction = async ({
 }
 
 export default function QueryAll() {
-  const params = useParams()
   let data = useLoaderData<LoaderData>()
   const queries = data.result
   const total = data.total

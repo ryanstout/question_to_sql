@@ -1,8 +1,7 @@
+// TODO I don't understand what this is doing and why it is necessary
 import { useField } from "remix-validated-form"
 
 import { TextInput } from "@mantine/core"
-
-export type FieldDefaultAsType = typeof FieldDefaultAsType
 
 export type FieldOwnInputProps<T extends React.ElementType> = {
   component?: T
@@ -14,7 +13,7 @@ export type FieldOwnInputProps<T extends React.ElementType> = {
 type FieldInputProps<T extends React.ElementType> = FieldOwnInputProps<T> &
   Omit<React.ComponentProps<T>, keyof FieldOwnInputProps<T>>
 
-export const Field = <T extends React.ElementType = FieldDefaultAsType>({
+export const Field = <T extends React.ElementType>({
   component,
   name,
   label,
@@ -30,6 +29,8 @@ export const Field = <T extends React.ElementType = FieldDefaultAsType>({
       label={label}
       placeholder={placeholder || label}
       error={error}
+      // TODO this is broken without passing the generic https://github.com/airjp73/remix-validated-form/issues/81
+      // @ts-ignore
       {...getInputProps({ id: name })}
       {...otherProps}
     />

@@ -1,11 +1,11 @@
 import { IconCheck, IconX } from "@tabler/icons"
 
+import type { PasswordInputProps } from "@mantine/core"
 import {
   Box,
   Center,
   Group,
   PasswordInput,
-  PasswordInputProps,
   Progress,
   Text,
   createStyles,

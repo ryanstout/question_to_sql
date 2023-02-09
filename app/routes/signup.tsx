@@ -3,7 +3,7 @@ import { z } from "zod"
 
 import { json } from "@remix-run/node"
 import { Link } from "@remix-run/react"
-import { ActionArgs } from "@remix-run/server-runtime"
+import type { ActionArgs } from "@remix-run/server-runtime"
 import { withZod } from "@remix-validated-form/with-zod"
 
 import {
@@ -94,7 +94,7 @@ export default function Join2() {
       </Title>
       <Text color="dimmed" size="sm" align="center" mt={5}>
         Already have an account?{" "}
-        <Anchor<"a"> component={Link} to="/login" size="sm">
+        <Anchor component={Link} to="/login" size="sm">
           Login here
         </Anchor>
       </Text>
