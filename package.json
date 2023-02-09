@@ -135,7 +135,8 @@
     "vitest": "^0.24.5"
   },
   "engines": {
-    "node": ">=19"
+    "node": "19.2.0",
+    "npm": "9.4.2"
   },
   "prisma": {
     "seed": "ts-node --require tsconfig-paths/register prisma/seed.ts"
