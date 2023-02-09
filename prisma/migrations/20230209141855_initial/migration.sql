@@ -35,9 +35,11 @@ CREATE TABLE "QuestionGroup" (
 CREATE TABLE "Question" (
     "id" SERIAL NOT NULL,
     "question" TEXT NOT NULL,
-    "dataSourceId" INTEGER,
+    "dataSourceId" INTEGER NOT NULL,
     "userId" INTEGER NOT NULL,
     "questionGroupId" INTEGER NOT NULL,
+    "generatedSchema" TEXT,
+    "generatedPrompt" TEXT,
     "codexSql" TEXT,
     "userSql" TEXT,
     "resultData" JSONB,
@@ -72,11 +74,11 @@ CREATE TABLE "DataSource" (
 -- CreateTable
 CREATE TABLE "DataSourceTableDescription" (
     "id" SERIAL NOT NULL,
-    "dataSourceId" INTEGER,
-    "skip" BOOLEAN NOT NULL,
+    "dataSourceId" INTEGER NOT NULL,
+    "skip" BOOLEAN NOT NULL DEFAULT false,
     "fullyQualifiedName" TEXT NOT NULL,
-    "generatedSQLCache" TEXT NOT NULL,
-    "embeddingsCache" JSONB NOT NULL,
+    "generatedSQLCache" TEXT,
+    "embeddingsCache" JSONB DEFAULT '{}',
 
     CONSTRAINT "DataSourceTableDescription_pkey" PRIMARY KEY ("id")
 );
@@ -84,18 +86,19 @@ CREATE TABLE "DataSourceTableDescription" (
 -- CreateTable
 CREATE TABLE "DataSourceTableColumn" (
     "id" SERIAL NOT NULL,
-    "skip" BOOLEAN NOT NULL,
-    "inspectionMetadata" JSONB NOT NULL,
+    "dataSourceId" INTEGER NOT NULL,
+    "skip" BOOLEAN NOT NULL DEFAULT false,
+    "inspectionMetadata" JSONB NOT NULL DEFAULT '{}',
     "name" TEXT NOT NULL,
     "type" TEXT NOT NULL,
     "kind" TEXT NOT NULL,
     "isNull" BOOLEAN NOT NULL,
-    "default" TEXT NOT NULL,
+    "default" TEXT,
     "distinctRows" INTEGER NOT NULL,
     "rows" INTEGER NOT NULL,
     "extendedProperties" JSONB NOT NULL,
-    "embeddingsCache" JSONB NOT NULL,
-    "dataSourceTableDescriptionId" INTEGER,
+    "embeddingsCache" JSONB NOT NULL DEFAULT '{}',
+    "dataSourceTableDescriptionId" INTEGER NOT NULL,
 
     CONSTRAINT "DataSourceTableColumn_pkey" PRIMARY KEY ("id")
 );
@@ -131,7 +134,7 @@ ALTER TABLE "Password" ADD CONSTRAINT "Password_userId_fkey" FOREIGN KEY ("userI
 ALTER TABLE "QuestionGroup" ADD CONSTRAINT "QuestionGroup_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Question" ADD CONSTRAINT "Question_dataSourceId_fkey" FOREIGN KEY ("dataSourceId") REFERENCES "DataSource"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Question" ADD CONSTRAINT "Question_dataSourceId_fkey" FOREIGN KEY ("dataSourceId") REFERENCES "DataSource"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Question" ADD CONSTRAINT "Question_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -143,7 +146,10 @@ ALTER TABLE "Question" ADD CONSTRAINT "Question_questionGroupId_fkey" FOREIGN KE
 ALTER TABLE "DataSource" ADD CONSTRAINT "DataSource_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "DataSourceTableDescription" ADD CONSTRAINT "DataSourceTableDescription_dataSourceId_fkey" FOREIGN KEY ("dataSourceId") REFERENCES "DataSource"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "DataSourceTableDescription" ADD CONSTRAINT "DataSourceTableDescription_dataSourceId_fkey" FOREIGN KEY ("dataSourceId") REFERENCES "DataSource"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "DataSourceTableColumn" ADD CONSTRAINT "DataSourceTableColumn_dataSourceTableDescriptionId_fkey" FOREIGN KEY ("dataSourceTableDescriptionId") REFERENCES "DataSourceTableDescription"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "DataSourceTableColumn" ADD CONSTRAINT "DataSourceTableColumn_dataSourceId_fkey" FOREIGN KEY ("dataSourceId") REFERENCES "DataSource"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "DataSourceTableColumn" ADD CONSTRAINT "DataSourceTableColumn_dataSourceTableDescriptionId_fkey" FOREIGN KEY ("dataSourceTableDescriptionId") REFERENCES "DataSourceTableDescription"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
