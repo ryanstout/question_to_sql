@@ -35,6 +35,8 @@
     ]
   },
   "eslintIgnore": [
+    "/bin",
+    "/prisma/seed.ts",
     "/node_modules",
     "/build",
     "/public/build",
