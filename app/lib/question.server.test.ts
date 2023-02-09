@@ -22,7 +22,7 @@ test("processes a new question", async () => {
   expect(questionResult.data).toEqual(MOCKED_RESULTS)
   expect(questionResult.question.userSql).toBeNull()
   // TODO should create fixture for this
-  expect(questionResult.question.codexSql).toBe("SELECT * FROM ORDERS LIMIT 10")
+  expect(questionResult.question.codexSql).toBe("SELECT * FROM ORDER LIMIT 10")
 })
 
 test("updates a question", async () => {
