@@ -15,8 +15,8 @@ packages=("${packages[@]}" "${utilities[@]}")
 
 apt-get -y install --no-install-recommends ${packages[@]}
 
-# TODO NPM version should be extracted from project config
-npm install -g npm@9.4.0
+extract_npm_version
+npm install -g npm@$NPM_VERSION
 
 apt-get clean
 
