@@ -19,15 +19,16 @@ from python.utils.logging import log
 from python.utils.openai_rate_throttled import openai_throttled
 
 
-def question_with_data_source_to_sql(data_source_id: int, question: str) -> str:
+def question_with_data_source_to_sql(data_source_id: int, question: str, engine: str = "code-davinci-002") -> str:
     db = utils.db.application_database_connection()
+
     ranked_structure = Ranker(db, data_source_id).rank(question)
     log.debug("Building Schema")
     t1 = time.time()
 
     # ob = cProfile.Profile()
     # ob.enable()
-    table_schema_limited_by_token_size = SchemaBuilder(db).build(data_source_id, ranked_structure)
+    table_schema_limited_by_token_size = SchemaBuilder(db, engine).build(data_source_id, ranked_structure)
     # ob.disable()
     # sec = io.StringIO()
     # sortby = SortKey.CUMULATIVE
@@ -51,7 +52,7 @@ def question_with_data_source_to_sql(data_source_id: int, question: str) -> str:
     return sql
 
 
-def question_with_schema_to_sql(schema: str, question: str) -> str:
+def question_with_schema_to_sql(schema: str, question: str, engine: str = "code-davinci-002") -> str:
     prompt_parts = [
         f"-- {PostTransform.in_dialect.capitalize()} SQL schema",
         schema,
@@ -85,9 +86,15 @@ orders_per_product DESC NULLS FIRST""",
 
     log.debug("sending prompt to openai", prompt=prompt)
 
+    stops = [";", "\n\n"]
+    if engine == "text-chat-davinci-002-20230126":
+        stops.append("<|im_end|>")  # chatgpt message end token
+
     t1 = time.time()
     result = openai_throttled.complete(
-        engine="code-davinci-002",
+        engine=engine,
+        # engine="code-davinci-002",
+        # engine="text-chat-davinci-002-20230126",  # leaked chatgpt model
         prompt=prompt,
         max_tokens=1024,  # was 256
         temperature=0.0,
@@ -99,12 +106,8 @@ orders_per_product DESC NULLS FIRST""",
         n=1,
         stream=False,
         # tells the model to stop generating a response when it gets to the end of the SQL
-        stop=[";", "\n\n"],
+        stop=stops,
     )
-
-    if len(result.choices) > 1:
-        # noop
-        pass
 
     t2 = time.time()
     log.debug("openai completion in", time=t2 - t1)

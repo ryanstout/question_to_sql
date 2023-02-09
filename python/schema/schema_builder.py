@@ -49,14 +49,19 @@ TABLE_SCHEMA = t.List[TableRank]
 
 
 class SchemaBuilder:
-    TOKEN_COUNT_LIMIT = 7_500 - 1_024
-
-    def __init__(self, db: Prisma):
+    def __init__(self, db: Prisma, engine: str = "code-davinci-002"):
         self.db: Prisma = db
         self.cached_columns = {}
         self.cached_table_column_ids = {}
         self.cached_tables = {}
         self.tokens_so_far = 0
+
+        if engine == "text-chat-davinci-002-20230126":
+            # chatgpt
+            self.token_count_limit = 4_000 - 1_024
+        else:
+            # codex
+            self.token_count_limit = 7_500 - 1_024
 
     def build(self, data_source_id: int, ranked_schema: SCHEMA_RANKING_TYPE) -> str:
         self.cache_columns_and_tables(data_source_id)
@@ -201,7 +206,7 @@ class SchemaBuilder:
         sql = ""
 
         for element_rank in ranked_schema:
-            if self.tokens_so_far > self.TOKEN_COUNT_LIMIT:
+            if self.tokens_so_far > self.token_count_limit:
                 break
 
             # does the table already exist in table ranks?

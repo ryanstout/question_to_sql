@@ -1,5 +1,6 @@
 from contextlib import contextmanager
 from time import perf_counter
+from typing import Any, Iterable, List, TypeAlias, TypeVar, Union
 
 # Collection of small helper functions that should be included in any language.. (Cough)
 
@@ -16,7 +17,7 @@ def unique(values):
 # https://stackoverflow.com/questions/66030444/dealing-with-lack-of-non-null-assertion-operator-in-python
 import typing as t
 
-T = t.TypeVar("T")
+T = TypeVar("T")
 
 
 def not_none(obj: t.Optional[T]) -> T:
@@ -26,6 +27,23 @@ def not_none(obj: t.Optional[T]) -> T:
 
 from contextlib import ContextDecorator
 from time import perf_counter
+
+L = TypeVar("L")
+
+
+# NOTE: python appears to not yet support recursive types
+# NestedList: TypeAlias = List["NestedList[L] | L"]
+
+
+# def flatten(lst: NestedList[L]) -> List[L]:
+def flatten(lst: List[Any]) -> List:
+    flattened_list = []
+    for i in lst:
+        if isinstance(i, list):
+            flattened_list.extend(flatten(i))
+        else:
+            flattened_list.append(i)
+    return flattened_list
 
 
 # TODO there's got to be a package to do this for us, we can just hot-swap it out later

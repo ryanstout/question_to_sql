@@ -3,3 +3,18 @@
 - [ ] Add IS NULL
 - [ ] check total values to see if we hit all values (or close < 5 maybe just add all of them?)
 - [ ] Lowercase select makes for a lower case query, which we can use logprobs to construct confidence intervals on sections
+
+# Query to Table+Col+Value Weight Ranking Network
+
+- 1 network to weight values
+  - inputs: value embedding search weights, ranker cross entropy
+- 1 network to weight columns
+  - inputs:
+    - histogram of value weights (for all values, with shrinking buckets towards the high end)
+    - column and table+column match weights
+- 1 network to rank tables
+  - inputs:
+    - histogram of column weights (shrinking towards high end)
+    - table, table+column, table+column+value embedding weights
+
+^ Maybe merge the above to a single ranking network, but run through in values, columns, tables order to feed unknown values

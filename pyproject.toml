@@ -34,7 +34,7 @@ tqdm = "^4.64.1"
 # https://github.com/KumaTea/pytorch-aarch64
 torch = [
   # { version = "1.13.1", "platform" = "linux", markers = "platform_machine == 'aarch64'"},
-  { url = "https://github.com/KumaTea/pytorch-aarch64/releases/download/v1.11.0/torch-1.11.0-cp310-cp310-linux_aarch64.whl", "platform" = "linux", markers = "platform_machine == 'aarch64'"},
+  {url = "https://github.com/KumaTea/pytorch-aarch64/releases/download/v1.11.0/torch-1.11.0-cp310-cp310-linux_aarch64.whl", "platform" = "linux", markers = "platform_machine == 'aarch64'"},
   {url = "https://download.pytorch.org/whl/cpu/torch-1.13.1%2Bcpu-cp310-cp310-linux_x86_64.whl", "platform" = "linux", markers = "platform_machine == 'x86_64'"},
   {url = "https://download.pytorch.org/whl/cpu/torch-1.13.1-cp310-none-macosx_11_0_arm64.whl", "platform" = "darwin",  markers = "platform_machine == 'arm64'" }
 ]
@@ -54,6 +54,7 @@ sentry-sdk = "^1.15.0"
 
 pytest = "^7.2.1"
 deepmerge = "^1.1.0"
+autoflake = "^2.0.1"
 prisma = "^0.8.0"
 
 [tool.poetry.group.dev.dependencies]
