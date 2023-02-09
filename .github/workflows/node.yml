@@ -1,4 +1,4 @@
-name: 🚀 Deploy
+name: Node
 on:
   push:
     branches:
@@ -10,7 +10,10 @@ permissions:
   actions: write
   contents: read
 
-# TODO can't we refactor the common JS setup stuff into a separate action/job?
+env:
+  TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+  NODE_ENV: test
+  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
 jobs:
   lint:
@@ -36,9 +39,19 @@ jobs:
   vitest:
     name: ⚡ Vitest
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_PASSWORD: postgres
+
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/node-setup
+      - run: |
+          DATABASE_URL=$TEST_DATABASE_URL npx prisma migrate dev
 
       - name: ⚡ Run vitest
         run: npm run test -- --coverage
@@ -46,6 +59,14 @@ jobs:
   cypress:
     name: ⚫️ Cypress
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_PASSWORD: postgres
+
     if: false
     steps:
       - uses: actions/checkout@v3

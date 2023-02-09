@@ -1,0 +1,109 @@
+name: Python
+on:
+  push:
+    branches:
+      - main
+      - github-ci
+  pull_request: {}
+
+permissions:
+  actions: write
+  contents: read
+
+env:
+  TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+  NODE_ENV: test
+  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+jobs:
+  lint:
+    name: ⬣ ESLint
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛑 Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.11.0
+
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          # TODO should extract from tool-versions
+          python-version: 3.10.9
+      # https://stackoverflow.com/questions/62977821/how-to-cache-poetry-install-for-github-actions
+      - name: Install poetry
+        uses: snok/install-poetry@v1
+        with:
+          # TODO should extract from tool-versions
+          version: 1.3.2
+          # TODO can we version this as well?
+          virtualenvs-create: false
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+
+      # this is not awesome: there's a builtin for caching node_modules, but in prod
+      # we do not install every npm package, so we want to mimic production builds and just
+      # install prisma when we are in python-land.
+      - name: Load cached node
+        id: cached-node-dependencies
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          # TODO we could just look at the prisma version here?
+          key: node-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: ".tool-versions"
+
+      - name: Setup NPM Version
+        run: |
+          source docker/shared.sh
+          extract_npm_version
+          npm install -g npm@$NPM_VERSION
+
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: |
+          source docker/shared.sh
+          node_install_only_prisma
+          poetry install
+
+      - name: lint
+        run: |
+          # source .venv/bin/activate
+          pylint **/*.py
+
+      - name: code formatting
+        run: |
+          set -eax
+          # source .venv/bin/activate
+          black --version
+          black --check .
+          isort **/*.py -c -v
+
+  # typecheck:
+  #   name: ʦ TypeScript
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - uses: ./.github/actions/node-setup
+
+  #     - name: 🔎 Type check
+  #       run: npm run typecheck --if-present
+
+  # pytest:
+  #   name: ⚡ Vitest
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - uses: ./.github/actions/node-setup
+  #     - run: npx prisma migrate dev
+
+  #     - name: ⚡ Run vitest
+  #       run: npm run test -- --coverage
