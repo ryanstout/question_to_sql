@@ -4,6 +4,7 @@ node_modules
 /public/build
 /tmp
 .env
+.envrc.local
 
 /cypress/screenshots
 /cypress/videos
