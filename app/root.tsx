@@ -1,6 +1,3 @@
-import { getUser } from "./session.server"
-import { theme } from "./theme"
-
 import type { LoaderArgs, MetaFunction } from "@remix-run/node"
 import { json } from "@remix-run/node"
 import {
@@ -13,7 +10,11 @@ import {
 } from "@remix-run/react"
 
 import { MantineProvider, createEmotionCache } from "@mantine/core"
+import { NotificationsProvider } from "@mantine/notifications"
 import { StylesPlaceholder } from "@mantine/remix"
+
+import { getUser } from "./session.server"
+import { theme } from "./theme"
 
 export const meta: MetaFunction = () => ({
   charset: "utf-8",
@@ -34,19 +35,21 @@ createEmotionCache({ key: "mantine" })
 export default function App() {
   return (
     <MantineProvider theme={theme} withGlobalStyles withNormalizeCSS>
-      <html lang="en">
-        <head>
-          <StylesPlaceholder />
-          <Meta />
-          <Links />
-        </head>
-        <body>
-          <Outlet />
-          <ScrollRestoration />
-          <Scripts />
-          <LiveReload />
-        </body>
-      </html>
+      <NotificationsProvider position="top-right">
+        <html lang="en">
+          <head>
+            <StylesPlaceholder />
+            <Meta />
+            <Links />
+          </head>
+          <body>
+            <Outlet />
+            <ScrollRestoration />
+            <Scripts />
+            <LiveReload />
+          </body>
+        </html>
+      </NotificationsProvider>
     </MantineProvider>
   )
 }
