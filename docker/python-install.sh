@@ -24,7 +24,4 @@ poetry config virtualenvs.create false
 curl -fsSL https://deb.nodesource.com/setup_19.x | bash -
 apt-get install -y nodejs
 
-extract_npm_version
-npm install -g npm@$NPM_VERSION
-
 apt-get clean
