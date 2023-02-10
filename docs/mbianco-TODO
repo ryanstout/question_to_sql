@@ -1,4 +1,4 @@
-\*\*\*\*- [ ] snowflake async stack trace fix https://github.com/hightouchio/snowflake-connector-nodejs/blob/e059b8cb897891a12e30b078faa327bd2282f2f5/lib/http/base.js#L98
+- [ ] snowflake async stack trace fix https://github.com/hightouchio/snowflake-connector-nodejs/blob/e059b8cb897891a12e30b078faa327bd2282f2f5/lib/http/base.js#L98
 
 # UI
 
@@ -6,7 +6,7 @@
 
 # Data model
 
--[ ] https://www.npmjs.com/package/prisma-erd-generator
+- [ ] https://www.npmjs.com/package/prisma-erd-generator
 
 # Packages
 
@@ -19,6 +19,7 @@
 # Docker
 
 - [ ] we should not have to add prop-type to the package, but without it nivo is failing
+- [ ] can we only deploy the git version, not the local?
 
 # Devprod
 
@@ -29,10 +30,24 @@
 
 - [ ] add 0 to node docs https://github.com/nodejs/node/issues/28457
 
+# Javascript Lang
+
+- [ ] https://www.npmjs.com/package/sort-package-json
+- [ ] https://github.com/trivago/prettier-plugin-sort-imports/issues/112 is broken and does not support ignores should use https://www.npmjs.com/package/prettier-plugin-organize-imports?activeTab=versions instead.
+- [ ] npm alternative? https://pnpm.io/installation
+
+# Github actions
+
+- [ ] https://github.com/actions/setup-node/issues/531 looks like we could use corepack to setup specific versions
+- [ ] how do the PR annotations work? Can we get pylint working like tsc? https://github.com/marketplace/actions/pylint-pr-annotator
+- [ ] https://github.com/tj-actions/depcheck/blob/main/entrypoint.sh needs to not pass the ignore flag if nothing is set
+
 # Python Lang
 
+- [ ] functional https://github.com/EntilZha/PyFunctional
+- [ ] another runtime type checking option https://docs.pydantic.dev
 - [ ] typeguard for runtime type checking https://github.com/agronholm/typeguard
-- [ ]
+- [ ] automatically remove unused imports https://github.com/PyCQA/isort/issues/1105
 
 ---
 

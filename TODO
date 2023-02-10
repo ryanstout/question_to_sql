@@ -54,18 +54,27 @@ Goal: EOD Tuesday
 
 # What do we need so daniel & spectora can run a query?
 
-- [ ] [mbianco] Data Source
-  - [ ] Dynamic datasource frontend
-  - [ ] Dynamic datasource backend
+- [x] [mbianco] Data Source
+  - [x] Dynamic datasource frontend
+  - [x] Dynamic datasource backend
 - [ ] Snowflake connection for Spectora
   - [ ] Run import script and fix new bugs
 - [ ] [ryan] The ranking system is not pulling in the correct columns, train a new model to improve column selection
 - [ ] Fix SQLGlot issues
-      [kailash] UI improvements
+- [ ] [kailash] UI improvements
   - [ ] Forced mark correct/incorrect
   - [ ] Set feedback state to invalid if SQL compilation fails
   - [ ] Snappier loading, either upgrading remix w/defer or fixing loading state
   - [ ] Lock SQL + editing when the system is loading
+- [ ] error handling
+  - [ ] handle snowflake failures
+  - [ ] handle openai failures
+
+# Local validation system
+
+- Mark question as "training example" in a UI
+- Indicate the expected result data as a JSON blob
+- Ability rerun all of the training examples at-will
 
 ---
 
