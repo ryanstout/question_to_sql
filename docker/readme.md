@@ -1,7 +1,7 @@
 # Docker Steps
 
 1. install. What are the base requirements for the image that we need?
-2. package. What are the language-specific packages that we need?
+2. package. What are the language-specific packages that we need? Should only be rerun when dependencies change.
 3. build. Run any build commands that need to be executed each time we deploy.
 4. run. How do we run the server?
 

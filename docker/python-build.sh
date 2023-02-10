@@ -4,13 +4,9 @@ set -eux
 `cd "${0%/*}/.."`
 source docker/shared.sh
 
-extract_npm_version
-npm install -g npm@$NPM_VERSION
-
 extract_prisma_version
 
 npx prisma --version
-
 npx prisma generate
 
 # the node installation downloads some prisma binaries which are required for the python library to work
