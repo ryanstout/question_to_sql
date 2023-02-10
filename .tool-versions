@@ -1,3 +1,5 @@
+# TODO the installation order in the file matters, but asdf does not seem to care
+
 # these are defined in other legacy version files, but in order
 # for the docker setup to extract the versions easily we define
 # them here.

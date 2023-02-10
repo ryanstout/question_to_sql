@@ -8,10 +8,20 @@ then
     exit
 fi
 
+cat .tool-versions | cut -d' ' -f1 | grep '^[^\#]' | xargs -I{} asdf plugin add {}
 asdf install
+
+# for better asdf compatibility
+# config writes to: ~/Library/Preferences/pypoetry/config.toml
+poetry config virtualenvs.in-project true
+poetry config virtualenvs.prefer-active-python true
 poetry install
+
 # TODO extract npm version from package json
-npm install -g npm@9.4.0
+npm install -g npm@9.4.2
+npm install
+
+npx cypress install
 
 # needs to be installed globally per documentation
 npm install -g depcheck
@@ -28,12 +38,6 @@ npm run build
 
 echo "`npm run dev` to start the server"
 
-# for better asdf compatibility
-# config writes to: ~/Library/Preferences/pypoetry/config.toml
-poetry config virtualenvs.in-project true
-poetry config virtualenvs.prefer-active-python true
-poetry install
-
 # helpful packages for ipython
 poetry run pip install ipython ipdb pdbr ipython-autoimport rich docrepr colorama
 
@@ -44,7 +48,9 @@ psql --command="DROP DATABASE nlpquery" && \
     # remove all of the existing migrations
     rm -rf prisma/migrations && \
     # make sure the prisma versions are correct! `prisma-client-py --version`
-    npx prisma migrate dev
+    poetry run npx prisma migrate dev
+
+# TODO add test database migration creation
 
 # the prisma bindings are generated when you run `migrate dev`. Should look like:
 #   ✔ Generated Prisma Client Python (v0.8.0) to ./../../.asdf/installs/python/3.9.9/lib/python3.9/site-packages/prisma in 132ms

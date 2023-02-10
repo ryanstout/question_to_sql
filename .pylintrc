@@ -1,5 +1,6 @@
 [MAIN]
 
+# https://stackoverflow.com/questions/1899436/pylint-unable-to-import-error-how-to-set-pythonpath#comment98676459_53908601
 init-hook="from pylint.config import find_pylintrc; import os, sys; sys.path.append(os.path.dirname(find_pylintrc()))"
 
 # Analyse import fallback blocks. This can be used to support both Python 2 and
