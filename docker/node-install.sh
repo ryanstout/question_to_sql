@@ -15,8 +15,5 @@ packages=("${packages[@]}" "${utilities[@]}")
 
 apt-get -y install --no-install-recommends ${packages[@]}
 
-extract_npm_version
-npm install -g npm@$NPM_VERSION
-
 apt-get clean
 
