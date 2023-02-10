@@ -3,6 +3,7 @@
 .DS_Store
 /.env
 /.envrc
+/.envrc.local
 /.env.example
 /.cache
 /.pytest_cache
@@ -10,3 +11,4 @@
 /public/build
 /build
 /tmp
+/.venv
