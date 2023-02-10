@@ -8,7 +8,6 @@ import {
   TextInput,
   UnstyledButton,
 } from "@mantine/core"
-import { keys } from "@mantine/utils"
 import {
   IconChevronDown,
   IconChevronUp,
@@ -41,14 +40,10 @@ const useStyles = createStyles((theme) => ({
   },
 }))
 
-interface RowData {
-  name: string
-  email: string
-  company: string
-}
-
 interface TableSortProps {
-  data: RowData[]
+  data: any[]
+  fields: string[]
+  primaryKey: string
 }
 
 interface ThProps {
@@ -81,16 +76,21 @@ function Th({ children, reversed, sorted, onSort }: ThProps) {
   )
 }
 
-function filterData(data: RowData[], search: string) {
+function filterData(data: any[], search: string) {
   const query = search.toLowerCase().trim()
+  const dataKeys = Object.keys(data[0])
+
   return data.filter((item) =>
-    keys(data[0]).some((key) => item[key].toLowerCase().includes(query))
+    dataKeys
+      .map((k) => item[k])
+      .filter((v) => v !== null && v !== undefined)
+      .some((val) => val.toString().toLowerCase().includes(query))
   )
 }
 
 function sortData(
-  data: RowData[],
-  payload: { sortBy: keyof RowData | null; reversed: boolean; search: string }
+  data: any[],
+  payload: { sortBy: string | null; reversed: boolean; search: string }
 ) {
   const { sortBy } = payload
 
@@ -110,13 +110,18 @@ function sortData(
   )
 }
 
-export function TableSort({ data }: TableSortProps) {
+export function TableSort<ModelType>({
+  data,
+  model,
+  fields,
+  primaryKey,
+}: TableSortProps) {
   const [search, setSearch] = useState("")
   const [sortedData, setSortedData] = useState(data)
-  const [sortBy, setSortBy] = useState<keyof RowData | null>(null)
+  const [sortBy, setSortBy] = useState<keyof ModelType | null>(null)
   const [reverseSortDirection, setReverseSortDirection] = useState(false)
 
-  const setSorting = (field: keyof RowData) => {
+  const setSorting = (field: keyof ModelType) => {
     const reversed = field === sortBy ? !reverseSortDirection : false
     setReverseSortDirection(reversed)
     setSortBy(field)
@@ -132,10 +137,10 @@ export function TableSort({ data }: TableSortProps) {
   }
 
   const rows = sortedData.map((row) => (
-    <tr key={row.name}>
-      <td>{row.name}</td>
-      <td>{row.email}</td>
-      <td>{row.company}</td>
+    <tr key={row[primaryKey]}>
+      {fields.map((field) => (
+        <td>{row[field]}</td>
+      ))}
     </tr>
   ))
 
@@ -155,27 +160,16 @@ export function TableSort({ data }: TableSortProps) {
       >
         <thead>
           <tr>
-            <Th
-              sorted={sortBy === "name"}
-              reversed={reverseSortDirection}
-              onSort={() => setSorting("name")}
-            >
-              Name
-            </Th>
-            <Th
-              sorted={sortBy === "email"}
-              reversed={reverseSortDirection}
-              onSort={() => setSorting("email")}
-            >
-              Email
-            </Th>
-            <Th
-              sorted={sortBy === "company"}
-              reversed={reverseSortDirection}
-              onSort={() => setSorting("company")}
-            >
-              Company
-            </Th>
+            {fields.map((fieldName) => (
+              <Th
+                key={fieldName}
+                sorted={sortBy === fieldName}
+                reversed={reverseSortDirection}
+                onSort={() => setSorting(fieldName)}
+              >
+                {fieldName}
+              </Th>
+            ))}
           </tr>
         </thead>
         <tbody>
