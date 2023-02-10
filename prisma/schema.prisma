@@ -68,8 +68,8 @@ model Question {
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId Int
 
-  questionGroup   QuestionGroup @relation(fields: [questionGroupId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  questionGroupId Int
+  questionGroup   QuestionGroup? @relation(fields: [questionGroupId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  questionGroupId Int?
 
   // not required for the UI, including for debugging purposes
   generatedSchema String?
@@ -79,16 +79,50 @@ model Question {
   codexSql String? // the original query generated from openai
   userSql  String? // the query, starts with the codex model output, then can be updated by the user
 
-  // TODO we should not store the results
-  resultData Json?
-
   // should be unset initially, and result is only stored if the
   feedbackState FeedbackState @default(UNANSWERED)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  evaluationQuestion EvaluationQuestion[]
 
   @@unique([id, userId, questionGroupId])
+}
+
+enum EvaluationOperators {
+  EQUALS
+  CONTAINS
+}
+
+model EvaluationQuestionGroup {
+  id Int @id @default(autoincrement())
+
+  // TODO do we need some indicator of what the correct evalutation is
+  EvaluationQuestion EvaluationQuestion[]
+}
+
+// TODO think on automated audit trail when the `sql` changes due to model adjustments, maybe DB trigger to handle this?
+model EvaluationQuestion {
+  id Int @id @default(autoincrement())
+
+  evaluationQuestionGroupId Int
+  evaluationQuestionGroup   EvaluationQuestionGroup @relation(fields: [evaluationQuestionGroupId], references: [id])
+
+  // not all training questions have a source question, we could add questions directly
+  fromQuestionId Int?
+  fromQuestion   Question? @relation(fields: [fromQuestionId], references: [id])
+
+  // TODO question should be unique
+  question       String
+  sql            String?
+  result         Json?
+  // some examples may contain a partial result set we want to assert against
+  resultOperator EvaluationOperators @default(EQUALS)
+
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Business {
