@@ -9,10 +9,12 @@ import {
   ScrollRestoration,
 } from "@remix-run/react"
 
-import { MantineProvider, createEmotionCache } from "@mantine/core"
+import { AppShell, MantineProvider, createEmotionCache } from "@mantine/core"
 import { NotificationsProvider } from "@mantine/notifications"
 import { StylesPlaceholder } from "@mantine/remix"
 
+import KnolbeFooter from "./components/dashboard/footer"
+import HeaderMenu from "./components/dashboard/headerMenu"
 import { getUser } from "./session.server"
 import { theme } from "./theme"
 
@@ -22,6 +24,7 @@ export const meta: MetaFunction = () => ({
   viewport: "width=device-width,initial-scale=1",
 })
 
+// TODO this seems strange... is this used anywhere? Why wouldn't you just use `getUser`?
 // We make the user available in root, then all children can useMatchesData to
 // access it.
 export async function loader({ request }: LoaderArgs) {
@@ -31,6 +34,8 @@ export async function loader({ request }: LoaderArgs) {
 }
 
 createEmotionCache({ key: "mantine" })
+
+// TODO add error & catch boundaries here
 
 export default function App() {
   return (
@@ -43,7 +48,21 @@ export default function App() {
             <Links />
           </head>
           <body>
-            <Outlet />
+            <AppShell
+              padding="md"
+              header={<HeaderMenu />}
+              footer={<KnolbeFooter />}
+              styles={(theme) => ({
+                main: {
+                  backgroundColor:
+                    theme.colorScheme === "dark"
+                      ? theme.colors.dark[8]
+                      : theme.colors.gray[0],
+                },
+              })}
+            >
+              <Outlet />
+            </AppShell>
             <ScrollRestoration />
             <Scripts />
             <LiveReload />
