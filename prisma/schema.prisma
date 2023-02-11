@@ -14,16 +14,15 @@ generator pyclient {
 }
 
 model User {
-  id    Int    @id @default(autoincrement())
-  email String @unique
-  name  String
+  id       Int       @id @default(autoincrement())
+  email    String    @unique
+  name     String
+  password Password?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  password       Password?
-  questionGroups QuestionGroup[]
-  Question       Question[]
+  question Question[]
 
   business   Business? @relation(fields: [businessId], references: [id])
   businessId Int?
@@ -38,17 +37,6 @@ model Password {
   userId Int  @unique
 }
 
-model QuestionGroup {
-  id Int @id @default(autoincrement())
-
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  userId Int
-
-  questions Question[]
-
-  correctSql String?
-}
-
 enum FeedbackState {
   INVALID
   UNANSWERED
@@ -60,6 +48,7 @@ enum FeedbackState {
 // TODO should have openai state, since it can fail on that end
 model Question {
   id       Int    @id @default(autoincrement())
+  // TODO should add not-empty constraint https://stackoverflow.com/questions/7951120/sql-not-empty-instead-of-not-null
   question String
 
   dataSourceId Int
@@ -68,25 +57,18 @@ model Question {
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId Int
 
-  questionGroup   QuestionGroup? @relation(fields: [questionGroupId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  questionGroupId Int?
-
-  // not required for the UI, including for debugging purposes
-  generatedSchema String?
-  generatedPrompt String?
-
-  // if codex is empty, openai failed
-  codexSql String? // the original query generated from openai
-  userSql  String? // the query, starts with the codex model output, then can be updated by the user
+  sql     String?
+  userSql String?
 
   // should be unset initially, and result is only stored if the
   feedbackState FeedbackState @default(UNANSWERED)
 
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
   evaluationQuestion EvaluationQuestion[]
 
-  @@unique([id, userId, questionGroupId])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([id, userId])
 }
 
 enum EvaluationOperators {
@@ -94,11 +76,30 @@ enum EvaluationOperators {
   CONTAINS
 }
 
+enum EvaluationStatus {
+  UNREAD
+  INCOMPLETE
+  CORRECT
+}
+
+// TODO think about adding tags in the future
 model EvaluationQuestionGroup {
   id Int @id @default(autoincrement())
 
-  // TODO do we need some indicator of what the correct evalutation is
-  EvaluationQuestion EvaluationQuestion[]
+  status EvaluationStatus @default(UNREAD)
+
+  evaluationQuestions EvaluationQuestion[]
+
+  dataSourceId Int
+  dataSource   DataSource @relation(fields: [dataSourceId], references: [id])
+
+  correctSql     String?
+  result         Json?
+  // some examples may contain a partial result set we want to assert against
+  resultOperator EvaluationOperators @default(EQUALS)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // TODO think on automated audit trail when the `sql` changes due to model adjustments, maybe DB trigger to handle this?
@@ -112,14 +113,29 @@ model EvaluationQuestion {
   fromQuestionId Int?
   fromQuestion   Question? @relation(fields: [fromQuestionId], references: [id])
 
+  // for debugging purposes only
+  generatedSchema String?
+  generatedPrompt String?
+
   // TODO question should be unique
-  question       String
-  sql            String?
-  result         Json?
-  // some examples may contain a partial result set we want to assert against
-  resultOperator EvaluationOperators @default(EQUALS)
+  question String
+  // cache of the latest generated SQL from openai
+  codexSql String?
 
   notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model EvaluationResult {
+  id Int @id @default(autoincrement())
+
+  // array of evaluation question IDs
+  successfulQuestions Json
+  // array of evaluation question IDs
+  failedQuestions     Json
+  evaluatedAt         DateTime
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -155,6 +171,7 @@ model DataSource {
   dataSourceTableDescriptions DataSourceTableDescription[]
   Question                    Question[]
   DataSourceTableColumn       DataSourceTableColumn[]
+  EvaluationQuestionGroup     EvaluationQuestionGroup[]
 }
 
 model DataSourceTableDescription {
