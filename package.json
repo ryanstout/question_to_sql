@@ -3,6 +3,7 @@
   "private": true,
   "sideEffects": false,
   "scripts": {
+    "clean-build": "rm -rf build public/build && npm run build",
     "build": "run-s build:*",
     "build:remix": "remix build --sourcemap",
     "build:server": "esbuild --platform=node --format=cjs ./server.ts --outdir=build --bundle",
