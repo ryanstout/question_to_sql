@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 from time import perf_counter
-from typing import Any, Iterable, List, TypeAlias, TypeVar, Union
+from typing import Any, Iterable, List, Optional, TypeAlias, TypeVar, Union
 
 # Collection of small helper functions that should be included in any language.. (Cough)
 
@@ -20,7 +20,7 @@ import typing as t
 T = TypeVar("T")
 
 
-def not_none(obj: t.Optional[T]) -> T:
+def not_none(obj: Optional[T]) -> T:
     assert obj is not None
     return obj
 
@@ -32,12 +32,12 @@ L = TypeVar("L")
 
 
 # NOTE: python appears to not yet support recursive types
-# NestedList: TypeAlias = List["NestedList[L] | L"]
+NestedList: TypeAlias = list[Union["NestedList[L]", L]]
 
 
-# def flatten(lst: NestedList[L]) -> List[L]:
-def flatten(lst: List[Any]) -> List:
-    flattened_list = []
+def flatten(lst: NestedList[L]) -> list[L]:
+    # def flatten(lst: List[Any]) -> List:
+    flattened_list: list[L] = []
     for i in lst:
         if isinstance(i, list):
             flattened_list.extend(flatten(i))

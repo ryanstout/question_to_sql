@@ -7,12 +7,17 @@ from python.utils.logging import log
 
 
 class EmbeddingLinkIndex:
+    table_and_columns: np.ndarray
+    values: np.ndarray
+
+    rows: list[tuple[int, int | None, int | None, str | None]]
+
     def __init__(self, path):
         self.path = path
         self.rows = []
 
-    def add(self, index: int, table_id: int, column_id: int, value: str):
-        self.rows.append([index, table_id, column_id, value])
+    def add(self, index: int, table_id: int | None, column_id: int | None, value: str | None):
+        self.rows.append((index, table_id, column_id, value))
 
     def load(self):
         # Load the index from disk memory mapped

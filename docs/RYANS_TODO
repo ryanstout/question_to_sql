@@ -4,6 +4,10 @@
 - [ ] check total values to see if we hit all values (or close < 5 maybe just add all of them?)
 - [ ] Lowercase select makes for a lower case query, which we can use logprobs to construct confidence intervals on sections
 
+SqlInspector:
+
+- [ ] Add ability to pull string values from IN queries
+
 # Query to Table+Col+Value Weight Ranking Network
 
 - 1 network to weight values

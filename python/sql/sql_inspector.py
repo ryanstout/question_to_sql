@@ -40,7 +40,7 @@ Select's need to have children run in the following order:
 8. LIMIT
 """
 
-# TODO: Don't forget: EXISTS, UNION, UNION ALL, EXCEPT
+# TODO: Don't forget: EXISTS, UNION, UNION ALL, EXCEPT, LAG, OVER
 
 import os
 from dataclasses import dataclass
@@ -76,7 +76,6 @@ class SqlInspector:
             "select": None,
             "schema": schema,
             "branch": "select",
-            "node": ast,
             "touches": {},
         }
 

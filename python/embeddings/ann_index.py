@@ -4,11 +4,12 @@ from typing import Union
 
 import numpy as np
 
-from prisma import Prisma
 from python.embeddings.ann_faiss import AnnFaiss
 from python.embeddings.embedding import Embedding
 from python.embeddings.embedding_link_index import EmbeddingLinkIndex
 from python.utils.logging import log
+
+from prisma import Prisma
 
 
 # ann = approximate nearest neighbor

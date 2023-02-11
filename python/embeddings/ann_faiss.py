@@ -8,6 +8,8 @@ from python.utils.logging import log
 
 
 class AnnFaiss:
+    index: faiss.Index
+
     def build_and_save(self, data, output_path, dimensions=1536):
         t1 = time.time()
 
@@ -48,9 +50,12 @@ class AnnFaiss:
         faiss.normalize_L2(data)
 
         log.debug("Training...")
-        self.index.train(data)
+
+        # Some index types don't require training
+        if not self.index.is_trained:
+            self.index.train(data)  # type: ignore - the type signature doesn't match how you actually use this
         log.debug("Building index...")
-        self.index.add(data)
+        self.index.add(data)  # type: ignore - same as above
 
         faiss.write_index(self.index, output_path + ".faiss")
 
@@ -73,7 +78,7 @@ class AnnFaiss:
         query = np.expand_dims(query, axis=0)
         # if query.shape[0] > 1:
         faiss.normalize_L2(query)
-        scores, indexes = self.index.search(query, number_of_matches)
+        scores, indexes = self.index.search(query, number_of_matches)  # type: ignore
         t2 = time.time()
 
         return scores, indexes[0]

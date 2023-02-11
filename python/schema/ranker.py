@@ -10,7 +10,7 @@ from decouple import config
 
 from python.embeddings.ann_search import AnnSearch
 from python.embeddings.embedding import Embedding
-from python.embeddings.openai_embeddings import OpenAIEmbeddings
+from python.embeddings.openai_embedder import OpenAIEmbedder
 
 
 # Taking in the question, generate the following data structure to pass to
@@ -56,7 +56,7 @@ class Ranker:
     def rank(
         self,
         query: str,
-        embedder=OpenAIEmbeddings,
+        embedder=OpenAIEmbedder,
         cache_results=True,
         table_weights=[1.0, 0.0, 0.3],
         column_weights=[0.1, 0.0, 0.0],
@@ -139,7 +139,11 @@ class Ranker:
 if __name__ == "__main__":
     db = utils.db.application_database_connection()
 
-    datasource_id = db.datasource.find_first().id
+    datasource_id = db.datasource.find_first()
+    if datasource_id:
+        datasource_id = datasource_id.id
+    else:
+        raise Exception("No datasource found")
 
     question = sys.argv[1]
 

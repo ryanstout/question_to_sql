@@ -1,27 +1,19 @@
 # Called from import.py, builds and updates the embedding indexes
 
-import collections
-import math
 import re
 from multiprocessing.pool import ThreadPool
 
-import query_runner
-import utils
 from decouple import config
 
-import python.utils.sql as sql
+from python import query_runner, utils
 from python.embeddings.ann_index import AnnIndex
+from python.utils import sql
 from python.utils.entropy import token_entropy
 from python.utils.logging import log
 from python.utils.sql import unqualified_table_name
 
-from prisma.models import (
-    Business,
-    DataSource,
-    DataSourceTableColumn,
-    DataSourceTableDescription,
-    User,
-)
+from prisma import Prisma
+from prisma.models import DataSource, DataSourceTableColumn, DataSourceTableDescription
 
 # How long of a value do we create an embedding for?
 # embeddings have a window, so we truncate the values to fit into the window
@@ -42,6 +34,8 @@ def in_groups_of(l, n):
 
 
 class EmbeddingBuilder:
+    db: Prisma
+
     def __init__(self, data_source: DataSource):
         self.db = utils.db.application_database_connection()
 
@@ -84,7 +78,7 @@ class EmbeddingBuilder:
         )
 
         if table is None:
-            raise Exception(f"Table {name} not found")
+            raise LookupError(f"Table {name} not found")
 
         # TODO we should be doing upsert instead
 
@@ -162,7 +156,7 @@ class EmbeddingBuilder:
 
     def add_table_column_values(
         self,
-        unqualified_table_name: str,
+        unqualified_table_name_val: str,
         table: DataSourceTableDescription,
         column: DataSourceTableColumn,
         column_value_limit: int,
@@ -214,7 +208,7 @@ class EmbeddingBuilder:
             # Add both a string with `TABLE_NAME COLUMN_NAME value` and just one with the value
             self.idx_table_column_and_value.add(
                 self.data_source.id,
-                f"{unqualified_table_name} {column.name} {value_str}",
+                f"{unqualified_table_name_val} {column.name} {value_str}",
                 table.id,
                 column.id,
                 value_str,
