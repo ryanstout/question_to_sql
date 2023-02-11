@@ -52,6 +52,8 @@ psql --command="DROP DATABASE nlpquery" && \
 
 # TODO add test database migration creation
 
+psql --command="DROP DATABASE nlpquery_test"
+
 # the prisma bindings are generated when you run `migrate dev`. Should look like:
 #   ✔ Generated Prisma Client Python (v0.8.0) to ./../../.asdf/installs/python/3.9.9/lib/python3.9/site-packages/prisma in 132ms
 # make sure the install path is the same as your virtualenv!
