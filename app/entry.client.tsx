@@ -1,32 +1,20 @@
-import * as Sentry from "@sentry/remix"
-import { startTransition, useEffect } from "react"
-import { hydrateRoot } from "react-dom/client"
+import { useEffect } from "react"
+import { hydrate } from "react-dom"
 
 import { RemixBrowser, useLocation, useMatches } from "@remix-run/react"
 
 import { ClientProvider } from "@mantine/remix"
 
-const hydrate = () => {
-  startTransition(() => {
-    hydrateRoot(
-      document,
-      // <StrictMode>
-      <ClientProvider>
-        <RemixBrowser />
-      </ClientProvider>
-      // </StrictMode>
-    )
-  })
-}
+import * as Sentry from "@sentry/remix"
 
-if (window.requestIdleCallback) {
-  window.requestIdleCallback(hydrate)
-} else {
-  // Safari doesn't support requestIdleCallback
-  // https://caniuse.com/requestidlecallback
-  window.setTimeout(hydrate, 1)
-}
+hydrate(
+  <ClientProvider>
+    <RemixBrowser />
+  </ClientProvider>,
+  document
+)
 
+// TODO should use helper for this
 if (process.env.NODE_ENV === "production") {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
@@ -40,6 +28,5 @@ if (process.env.NODE_ENV === "production") {
         ),
       }),
     ],
-    // ...
   })
 }
