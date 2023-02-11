@@ -30,6 +30,7 @@ extract_prisma_version() {
 
 extract_npm_version() {
   npm_version=$(node -p -e "require('./package.json').engines.npm")
+  echo "NPM version: $npm_version"
   export NPM_VERSION=$npm_version
 }
 
