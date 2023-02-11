@@ -11,7 +11,7 @@ ENV NODE_ENV production
 ADD docker/node-install.sh docker/shared.sh ./docker/
 RUN ./docker/node-install.sh
 
-ADD package.json package-lock.json ./
+ADD package.json package-lock.json .npmrc ./
 ADD ./docker/node-package.sh ./docker/
 RUN ./docker/node-package.sh
 

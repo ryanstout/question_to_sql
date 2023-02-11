@@ -4,9 +4,6 @@ set -eux
 `cd "${0%/*}/.."`
 source docker/shared.sh
 
-extract_npm_version
-npm install -g npm@$NPM_VERSION
-
 npx prisma --version
 
 # this image will only run the node application adn does not need the python client
