@@ -39,7 +39,8 @@ function RecordView({
   header,
 }: {
   record: Question
-  fields: string[]
+  // TODO should use a generic here...
+  fields: (keyof Question)[]
   header: string
 }) {
   return (
@@ -48,7 +49,7 @@ function RecordView({
       {fields.map((fieldName) => (
         <div key={fieldName}>
           <Title order={4}>{fieldName}</Title>
-          <Text>{record[fieldName] ?? <i>empty</i>}</Text>
+          <Text>{record[fieldName]?.toString() ?? <i>empty</i>}</Text>
         </div>
       ))}
     </Stack>
@@ -67,14 +68,12 @@ export async function action({ request }: ActionArgs) {
 
 function QuestionView({ question }: { question: Question }) {
   // TODO should be typed to input record type fields
-  const displayFields = [
+  const displayFields: (keyof Question)[] = [
     "id",
     "question",
     "sql",
     "userSql",
     "feedbackState",
-    "generatedSchema",
-    "generatedPrompt",
   ]
 
   return (

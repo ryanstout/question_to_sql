@@ -121,6 +121,7 @@ export async function action({ request }: ActionArgs) {
     const questionResult: QuestionResult = {
       question: questionRecord,
       status: "success",
+      data: null,
     }
 
     return json(questionResult)
@@ -128,7 +129,7 @@ export async function action({ request }: ActionArgs) {
 }
 
 export async function loader({ params, request }: LoaderArgs) {
-  const user = await requireUser(request)
+  const user = await requireUser(request) // eslint-disable-line
 
   // TODO missing fields in params seem to return a terrible ambiguous error to the FE...
   const { questionId } = zx.parseParams(params, {
@@ -142,13 +143,13 @@ export async function loader({ params, request }: LoaderArgs) {
 
   // TODO should validate the user actually has access to this question!
   const questionResults = await getResultsFromQuestion({ questionId })
-  return questionResults
+  return json(questionResults)
 }
 
 function FeedbackComponent({
-  question: questionRecord,
+  questionRecord,
 }: {
-  question: Question
+  questionRecord: Question | null
 }) {
   useEffect(() => {}, [questionRecord])
 
@@ -199,9 +200,12 @@ function FeedbackComponent({
 }
 
 export default function QueryHeader() {
-  const questionResult = useLoaderData<typeof loader>()
-  // TODO something weird with the types on this one...
-  const questionRecord = questionResult?.question
+  // TODO https://github.com/remix-run/remix/issues/3931
+  const questionResult = useLoaderData<
+    typeof loader
+  >() as unknown as QuestionResult | null
+
+  const questionRecord = questionResult?.question ?? null
 
   const transition = useTransition()
   const navigation = useNavigation()
@@ -225,7 +229,7 @@ export default function QueryHeader() {
         </Grid.Col>
       </Grid>
       <Divider my="sm" variant="dotted" />
-      <DataDisplay data={questionResult?.data} />
+      <DataDisplay data={questionResult?.data ?? null} />
     </>
   )
 }

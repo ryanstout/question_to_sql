@@ -5,7 +5,6 @@ import { Prism } from "@mantine/prism"
 import type { BarDatum } from "@nivo/bar"
 import { ResponsiveBar } from "@nivo/bar"
 import type { Serie } from "@nivo/line"
-import { ResponsiveLine } from "@nivo/line"
 
 import { IconChartBar, IconChartLine, IconNotes } from "@tabler/icons"
 
@@ -16,16 +15,16 @@ function LineChart({ type, data }: { type: string; data: Serie[] }) {
   // const keys = Object.keys(data[0])
 
   return <div>WIP</div>
-  return (
-    <div style={{ height: "500px" }}>
-      <Title>Chart</Title>
-      <ResponsiveLine
-        data={data}
-        margin={{ top: 50, right: 130, bottom: 50, left: 80 }}
-        colors={{ scheme: "nivo" }}
-      />
-    </div>
-  )
+  // return (
+  //   <div style={{ height: "500px" }}>
+  //     <Title>Chart</Title>
+  //     <ResponsiveLine
+  //       data={data}
+  //       margin={{ top: 50, right: 130, bottom: 50, left: 80 }}
+  //       colors={{ scheme: "nivo" }}
+  //     />
+  //   </div>
+  // )
 }
 
 function BarChart({ type, data }: { type: string; data: BarDatum[] }) {
@@ -93,7 +92,7 @@ function BarChart({ type, data }: { type: string; data: BarDatum[] }) {
   )
 }
 
-export default function DataDisplay({ data }: { data?: any[] }) {
+export default function DataDisplay({ data }: { data: any[] | null }) {
   if (!data) {
     return <></>
   }

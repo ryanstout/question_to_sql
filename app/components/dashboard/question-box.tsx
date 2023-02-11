@@ -30,7 +30,7 @@ export default function QuestionBox({
   questionRecord,
   isLoading,
 }: {
-  questionRecord?: Question
+  questionRecord: Question | null
   isLoading: boolean
 }) {
   const { classes } = useStyles()
@@ -40,7 +40,7 @@ export default function QuestionBox({
   )
 
   const [statefulQuestionRecord, setStatefulQuestionRecord] =
-    useState<Question>(questionRecord)
+    useState<Question | null>(questionRecord)
 
   const [statefulIsLoading, setStatefulIsLoading] = useState(isLoading)
 

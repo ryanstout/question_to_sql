@@ -40,7 +40,7 @@ export default function SQLDisplay({
   questionRecord,
 }: {
   isLoading: boolean
-  questionRecord?: Question
+  questionRecord: Question | null
 }) {
   const submitSqlQuery = useSubmit()
 
@@ -59,7 +59,8 @@ export default function SQLDisplay({
     }
   }
 
-  const hotKeyConfig = [["shift+Enter", updateSqlQuery]]
+  // TODO the HotKeyItem[] used with `getHotkeyHandler` is not exported and differs from the other HotKeyItem config
+  const hotKeyConfig: any = [["shift+Enter", updateSqlQuery]]
 
   const [userSQL, setSQL] = useState(questionRecord?.sql || "")
 
@@ -82,6 +83,7 @@ export default function SQLDisplay({
         extensions={[sql({}), EditorView.lineWrapping]}
         onChange={(e) => setSQL(e)}
         onKeyDownCapture={getHotkeyHandler(hotKeyConfig)}
+        readOnly={isLoading}
       />
 
       <SQLKeyboardShortcutOverlay />
