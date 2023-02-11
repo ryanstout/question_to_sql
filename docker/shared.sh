@@ -25,6 +25,7 @@ utilities=(
 extract_prisma_version() {
   prisma_version=$(node -p -e "require('./package.json').dependencies.prisma" | sed 's/[^0-9.]//g')
   export PRISMA_VERSION=$prisma_version
+  export PRISMA_EXPECTED_ENGINE_VERSION=aead147aa326ccb985dcfed5b065b4fdabd44b19
 }
 
 extract_npm_version() {
