@@ -7,7 +7,7 @@ import { ClientProvider } from "@mantine/remix"
 
 import * as Sentry from "@sentry/remix"
 
-# TODO may break emotion on the client side https://github.com/emotion-js/emotion/issues/2800
+// TODO may break emotion on the client side https://github.com/emotion-js/emotion/issues/2800
 hydrate(
   <ClientProvider>
     <RemixBrowser />
