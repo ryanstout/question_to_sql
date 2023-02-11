@@ -1,34 +1,13 @@
+import beautify from "json-beautify"
+
 import { Box, Tabs, Title } from "@mantine/core"
 import { Prism } from "@mantine/prism"
 import type { BarDatum } from "@nivo/bar"
 import { ResponsiveBar } from "@nivo/bar"
 import type { Serie } from "@nivo/line"
 import { ResponsiveLine } from "@nivo/line"
-import type { Question } from "@prisma/client"
-import { useMatches, useParams, useSearchParams } from "@remix-run/react"
-import type { LoaderFunction } from "@remix-run/server-runtime"
-import {
-  IconChartBar, IconGrain,
-  IconNotes
-} from "@tabler/icons"
-import { useNavigate } from "react-router-dom"
 
-
-
-type GroupLoaderData = {
-  questions: Question[]
-  questionGroupId: number
-  latestResult: string
-}
-
-type LoaderData = null
-
-export let loader: LoaderFunction = async ({
-  params,
-  request,
-}): Promise<LoaderData> => {
-  return null
-}
+import { IconChartBar, IconChartLine, IconNotes } from "@tabler/icons"
 
 function LineChart({ type, data }: { type: string; data: Serie[] }) {
   if (!data || !data[0]) {
@@ -56,7 +35,7 @@ function BarChart({ type, data }: { type: string; data: BarDatum[] }) {
   const keys = Object.keys(data[0])
 
   return (
-    <div style={{ height: "500px"}}>
+    <div style={{ height: "500px" }}>
       <Title>Chart</Title>
       <ResponsiveBar
         data={data}
@@ -114,78 +93,56 @@ function BarChart({ type, data }: { type: string; data: BarDatum[] }) {
   )
 }
 
-export default function VisualizeMethod() {
-  const params = useParams()
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-
-  let question = searchParams.get("q") || ""
-
-  // pull loader data from another route
-  const match = useMatches().find(
-    (match) => match.id === "routes/admin/$questionGroupId"
-  )
-  const data = match?.data ? (match.data as GroupLoaderData) : null
-
-  const dataObj = data ? JSON.parse(data.latestResult || "{}") : null
-  const latestResult = data ? data.latestResult : null
-  console.log(`result ${latestResult}}`)
+export default function DataDisplay({ data }: { data?: any[] }) {
+  if (!data) {
+    return <></>
+  }
 
   function changeTab(value: string | null) {
     if (value) {
-      navigate(
-        `/admin/${params.questionGroupId}/chart/${value}?q=` +
-          encodeURIComponent(question),
-        { preventScrollReset: true }
-      )
+      // TODO should update the URL with chart state
+      // navigate(
+      //   `/admin/${params.questionGroupId}/chart/${value}?q=` +
+      //     encodeURIComponent(question),
+      //   { preventScrollReset: true }
+      // )
     }
   }
 
+  const formattedJSON = beautify(data, null!, 2, 100)
+  // TODO should format errors here like the old system
+  // resultJson = beautify({ message: e!.toString(), error: e }, null!, 2, 100)
+
   return (
     <Box>
-      <Tabs defaultValue={params.chart} onTabChange={(v) => changeTab(v)}>
+      <Tabs defaultValue="raw" onTabChange={(v) => changeTab(v)}>
         <Tabs.List>
+          <Tabs.Tab value="raw" icon={<IconNotes size={14} />}>
+            Raw
+          </Tabs.Tab>
           <Tabs.Tab value="bar" icon={<IconChartBar size={14} />}>
             Bar
           </Tabs.Tab>
-          {/* <Tabs.Tab value="line" icon={<IconChartLine size={14} />}>
+          <Tabs.Tab value="line" icon={<IconChartLine size={14} />}>
             Line
-          </Tabs.Tab> */}
-          <Tabs.Tab value="scatter" icon={<IconGrain size={14} />}>
-            Scatter
-          </Tabs.Tab>
-          <Tabs.Tab value="raw" icon={<IconNotes size={14} />}>
-            Raw
           </Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="bar">
-          <BarChart type={params.chart || "bar"} data={dataObj} />
+          <BarChart type={"bar"} data={data} />
         </Tabs.Panel>
 
         <Tabs.Panel value="line">
-          <LineChart type={params.chart || "line"} data={dataObj} />
+          <LineChart type={"line"} data={data} />
         </Tabs.Panel>
 
-        <Tabs.Panel value="scatter"></Tabs.Panel>
-
+        {/* TODO there is some weird horizontal scrolling issue here */}
         <Tabs.Panel value="raw">
           <Prism withLineNumbers language="json">
-            {latestResult || ""}
+            {formattedJSON}
           </Prism>
         </Tabs.Panel>
       </Tabs>
     </Box>
-  )
-}
-
-export function ErrorBoundary({ error }) {
-  return (
-    <div>
-      <h1>Error</h1>
-      <p>{error.message}</p>
-      <p>The stack trace is:</p>
-      <pre>{error.stack}</pre>
-    </div>
   )
 }
