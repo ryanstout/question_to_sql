@@ -1,13 +1,14 @@
-import type { Question } from "@prisma/client"
 import invariant from "tiny-invariant"
+
+import type { Question } from "@prisma/client"
 
 import { prisma } from "~/db.server"
 import { log } from "~/lib/logging.server"
 
-interface QuestionResult {
+export interface QuestionResult {
   question: Question
   status: "success" | "error"
-  data?: any[]
+  data: any[] | null
 }
 
 // if you have a question, and just want the results from the warehouse
@@ -29,22 +30,15 @@ export async function getResultsFromQuestion({
       where: {
         id: questionId,
       },
-      include: {
-        questionGroup: {
-          include: {
-            questions: true,
-          },
-        },
-      },
     })
   }
 
   invariant(retrievedQuestionRecord !== null, "question record not found")
-  invariant(retrievedQuestionRecord.codexSql !== null, "codexSql is null")
+  invariant(retrievedQuestionRecord.sql !== null, "sql is null")
 
   const data = await runQuery(
     retrievedQuestionRecord.dataSourceId,
-    retrievedQuestionRecord.codexSql
+    retrievedQuestionRecord.sql
   )
 
   return {
@@ -81,28 +75,17 @@ export async function updateQuestion(
   }
 }
 
-export async function processQuestion(
+// creates a question, but does not get the results
+export async function createQuestion(
   userId: number,
   dataSourceId: number,
-  question: string,
-  questionGroupId?: number
+  question: string
 ): Promise<QuestionResult> {
-  if (!questionGroupId) {
-    const questionGroup = await prisma.questionGroup.create({
-      data: {
-        userId: userId,
-      },
-    })
-
-    questionGroupId = questionGroup.id
-  }
-
   // create the question first, in case open AI fails
   let questionRecord = await prisma.question.create({
     data: {
       userId: userId,
       dataSourceId: dataSourceId,
-      questionGroupId: questionGroupId,
       question: question,
     },
   })
@@ -116,22 +99,19 @@ export async function processQuestion(
       id: questionRecord.id,
     },
     data: {
-      codexSql: sql,
+      sql: sql,
     },
   })
-
-  // TODO catch and mark as invalid if this fails
-  const data = await runQuery(dataSourceId, sql)
-  log.debug("got data from snowflake")
 
   return {
     question: questionRecord,
     status: "success",
-    data: data,
+    data: null,
   }
 }
 
-export async function runQuery(dataSourceId: number, sql: string) {
+// runs SQL and gets a result
+async function runQuery(dataSourceId: number, sql: string) {
   if (process.env.MOCKED_QUESTION_RESPONSE === "true") {
     return new Promise((resolve, reject) => {
       resolve([{ count: 100 }])
@@ -146,7 +126,7 @@ export async function runQuery(dataSourceId: number, sql: string) {
   return response["results"]
 }
 
-export async function questionToSql(
+async function questionToSql(
   dataSourceId: number,
   naturalQuestion: string
 ): Promise<string> {
