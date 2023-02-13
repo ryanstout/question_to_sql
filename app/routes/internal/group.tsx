@@ -38,6 +38,7 @@ export async function loader({ request, params }: LoaderArgs) {
   // TODO would be better to find the first group with questions, but this should be an edge case
   if (
     !evaluationGroupId &&
+    evaluationGroups[0].evaluationQuestions &&
     !R.isEmpty(evaluationGroups[0].evaluationQuestions)
   ) {
     // TODO route helpers?!
