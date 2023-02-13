@@ -3,6 +3,7 @@ import invariant from "tiny-invariant"
 import type { Question } from "@prisma/client"
 
 import { prisma } from "~/db.server"
+import { isMockedPythonServer } from "~/lib/environment.server"
 import { log } from "~/lib/logging.server"
 
 export interface QuestionResult {
@@ -111,8 +112,8 @@ export async function createQuestion(
 }
 
 // runs SQL and gets a result
-async function runQuery(dataSourceId: number, sql: string) {
-  if (process.env.MOCKED_QUESTION_RESPONSE === "true") {
+export async function runQuery(dataSourceId: number, sql: string) {
+  if (isMockedPythonServer()) {
     return new Promise((resolve, reject) => {
       resolve([{ count: 100 }])
     })
@@ -126,12 +127,12 @@ async function runQuery(dataSourceId: number, sql: string) {
   return response["results"]
 }
 
-async function questionToSql(
+export async function questionToSql(
   dataSourceId: number,
   naturalQuestion: string
 ): Promise<string> {
   // TODO remove me! Use mock server once we have a python API
-  if (process.env.MOCKED_QUESTION_RESPONSE === "true") {
+  if (isMockedPythonServer()) {
     return new Promise((resolve, reject) => {
       resolve("SELECT * FROM ORDER LIMIT 10")
     })
