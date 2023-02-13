@@ -1,31 +1,13 @@
-import { PrismaClient } from "@prisma/client"
 import invariant from "tiny-invariant"
+
+import { PrismaClient } from "@prisma/client"
+
+import { isProduction, isTest } from "~/lib/environment.server"
 
 let prisma: PrismaClient
 
 declare global {
   var __db__: PrismaClient
-}
-
-function isProduction() {
-  return process.env.NODE_ENV === "production"
-}
-
-function isTest() {
-  return process.env.NODE_ENV === "test"
-}
-
-// this is needed because in development we don't want to restart
-// the server with every change, but we want to make sure we don't
-// create a new connection to the DB with every change either.
-// in production we'll have a single connection to the DB.
-if (isProduction()) {
-  prisma = getClient()
-} else {
-  if (!global.__db__) {
-    global.__db__ = getClient()
-  }
-  prisma = global.__db__
 }
 
 function getClient() {
@@ -73,10 +55,44 @@ function getClient() {
       },
     },
   })
+
   // connect eagerly
   client.$connect()
 
+  // type arguments = Parameters<typeof client.evaluationQuestionGroup.update>
+  // type dataArgument = arguments[0]["data"]
+  // const updateCommand = async (data: dataArgument) => {
+  //   debugger
+  //   return await client.evaluationQuestionGroup.update({
+  //     where: { id: this.id },
+  //     data: data,
+  //   })
+  // }
+
+  // // now, let's add some methods that just should have existed already
+  // const xclient = client.$extends({
+  //   // name: 'customExtensions',
+  //   model: {
+  //     evaluationQuestionGroup: {
+  //       updateCommand
+  //     }
+  //   },
+  // })
+
   return client
+}
+
+// this is needed because in development we don't want to restart
+// the server with every change, but we want to make sure we don't
+// create a new connection to the DB with every change either.
+// in production we'll have a single connection to the DB.
+if (isProduction()) {
+  prisma = getClient()
+} else {
+  if (!global.__db__) {
+    global.__db__ = getClient()
+  }
+  prisma = global.__db__
 }
 
 export { prisma }
