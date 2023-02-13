@@ -90,3 +90,11 @@ export function isBlank(v: string | null | undefined) {
 
   return R.compose(R.isEmpty, R.trim)(v)
 }
+
+export function arrayWrap(v: any) {
+  if (Array.isArray(v)) {
+    return v
+  }
+
+  return [v]
+}

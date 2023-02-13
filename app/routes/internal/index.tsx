@@ -1,6 +1,7 @@
 import type { DataTableColumn } from "mantine-datatable"
 import { DataTable } from "mantine-datatable"
 import { useEffect, useState } from "react"
+import { z } from "zod"
 import { zx } from "zodix"
 
 import type { ActionArgs } from "@remix-run/node"
@@ -15,6 +16,7 @@ import type { Question } from "@prisma/client"
 
 import { prisma } from "~/db.server"
 import { createEvaluationQuestionGroup } from "~/lib/evaluation-question.server"
+import { arrayWrap } from "~/utils"
 
 export async function loader() {
   const questions = await prisma.question.findMany({
@@ -58,7 +60,12 @@ function RecordView({
 
 export async function action({ request }: ActionArgs) {
   let { questions: questionIdList } = await zx.parseForm(request, {
-    questions: zx.NumAsString.array().nonempty(),
+    questions: z.preprocess(
+      // the list can come in as a string if there is only one item selected
+      // https://stackoverflow.com/questions/74100894/how-to-transform-object-to-array-before-parsing-in-zod
+      (v) => arrayWrap(v),
+      zx.NumAsString.array().nonempty()
+    ),
   })
 
   await createEvaluationQuestionGroup(questionIdList)
