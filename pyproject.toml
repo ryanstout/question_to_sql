@@ -5,6 +5,7 @@ description = ""
 authors = ["Ryan Stout <ryanstout@gmail.com>"]
 readme = "README.md"
 
+# TODO extract to internal notes before removing
 # https://stackoverflow.com/questions/51730880/where-do-i-get-a-cpu-only-version-of-pytorch
 # [[tool.poetry.source]]
 # name = "torch"
@@ -12,7 +13,8 @@ readme = "README.md"
 # secondary = true
 
 [tool.poetry.dependencies]
-python = "^3.9"
+# TODO torch does not support 3.10 yet!
+python = "~3.10"
 sqlglot = "^10.4.3"
 snowflake-connector-python = "^2.9.0"
 python-decouple = "^3.7"
