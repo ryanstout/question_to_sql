@@ -6,6 +6,8 @@
     "ms-python.vscode-pylance",
     "GitHub.vscode-pull-request-github",
     "Gruntfuggly.todo-tree",
-    "tamasfe.even-better-toml"
+    "tamasfe.even-better-toml",
+    "meganrogge.template-string-converter",
+    "formulahendry.auto-rename-tag"
   ]
 }
