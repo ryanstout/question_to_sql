@@ -4,6 +4,7 @@
   "sideEffects": false,
   "scripts": {
     "upgrade-packages": "ncu --interactive --format group",
+    "tree": "npm list --omit dev --omit optional --depth 2",
     "clean-build": "rm -rf build public/build && npm run build",
     "build": "run-s build:*",
     "build:remix": "remix build --sourcemap",
