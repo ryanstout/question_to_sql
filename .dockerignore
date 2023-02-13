@@ -13,3 +13,6 @@
 /tmp
 /.venv
 __pycache__
+/.devcontainer
+/.github
+/.vscode
