@@ -6,7 +6,7 @@ import type { BarDatum } from "@nivo/bar"
 import { ResponsiveBar } from "@nivo/bar"
 import type { Serie } from "@nivo/line"
 
-import { IconChartBar, IconChartLine, IconNotes } from "@tabler/icons"
+import { IconChartBar, IconChartLine, IconNotes } from "@tabler/icons-react"
 
 function LineChart({ type, data }: { type: string; data: Serie[] }) {
   if (!data || !data[0]) {

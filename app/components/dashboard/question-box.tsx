@@ -16,7 +16,7 @@ import type { EvaluationQuestion, Question } from "@prisma/client"
 import { QuestionActions } from "~/routes/question/($questionId)"
 import { isBlank } from "~/utils"
 
-import { IconSearch } from "@tabler/icons"
+import { IconSearch } from "@tabler/icons-react"
 
 const useStyles = createStyles((theme) => ({
   lastQuestionDisplay: {

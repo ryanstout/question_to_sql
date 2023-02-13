@@ -1,5 +1,3 @@
-import { IconCheck, IconX } from "@tabler/icons"
-
 import type { PasswordInputProps } from "@mantine/core"
 import {
   Box,
@@ -11,6 +9,8 @@ import {
   createStyles,
 } from "@mantine/core"
 import { useInputState } from "@mantine/hooks"
+
+import { IconCheck, IconX } from "@tabler/icons-react"
 
 function PasswordRequirement({
   meets,

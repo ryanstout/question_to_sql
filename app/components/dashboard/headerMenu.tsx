@@ -5,7 +5,7 @@ import { Box, Button, Grid, Header, Image } from "@mantine/core"
 import Logo from "~/assets/images/LogoHorizontal.svg"
 import { useOptionalUser } from "~/utils"
 
-import { IconLogout } from "@tabler/icons"
+import { IconLogout } from "@tabler/icons-react"
 
 export default function HeaderMenu() {
   const user = useOptionalUser()
