@@ -25,16 +25,26 @@
 
 - [ ] shell formatting
 - [ ] Maybe use trunk?
+- [ ] sync line size across everything https://github.com/ryanstout/nlpquery/commit/56872f3eaca35722b4398a47c7e3dd2367d7ee11#r100412156
 
 # Open Source
 
 - [ ] add 0 to node docs https://github.com/nodejs/node/issues/28457
 
+# Remix
+
+- [ ] https://github.com/kiliman/rmx-cli
+
 # Javascript Lang
 
+- [ ] force const use https://eslint.org/docs/latest/rules/prefer-const#resources
 - [ ] https://www.npmjs.com/package/sort-package-json
 - [ ] https://github.com/trivago/prettier-plugin-sort-imports/issues/112 is broken and does not support ignores should use https://www.npmjs.com/package/prettier-plugin-organize-imports?activeTab=versions instead.
 - [ ] npm alternative? https://pnpm.io/installation
+
+# Javascript Packages
+
+- `export default this` in index on ramda
 
 # Github actions
 
