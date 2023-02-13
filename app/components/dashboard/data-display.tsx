@@ -6,6 +6,8 @@ import type { BarDatum } from "@nivo/bar"
 import { ResponsiveBar } from "@nivo/bar"
 import type { Serie } from "@nivo/line"
 
+import type { Prisma } from "@prisma/client"
+
 import { IconChartBar, IconChartLine, IconNotes } from "@tabler/icons"
 
 function LineChart({ type, data }: { type: string; data: Serie[] }) {
@@ -92,7 +94,11 @@ function BarChart({ type, data }: { type: string; data: BarDatum[] }) {
   )
 }
 
-export default function DataDisplay({ data }: { data: any[] | null }) {
+export default function DataDisplay({
+  data,
+}: {
+  data: any[] | Prisma.JsonValue | null
+}) {
   if (!data) {
     return <></>
   }

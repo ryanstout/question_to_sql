@@ -11,9 +11,10 @@ import {
   createStyles,
 } from "@mantine/core"
 
-import type { Question } from "@prisma/client"
+import type { EvaluationQuestion, Question } from "@prisma/client"
 
 import { QuestionActions } from "~/routes/question/($questionId)"
+import { isBlank } from "~/utils"
 
 import { IconSearch } from "@tabler/icons"
 
@@ -26,35 +27,41 @@ const useStyles = createStyles((theme) => ({
   },
 }))
 
+export const QUESTION_INPUT_NAME = "questionText"
+
 export default function QuestionBox({
   questionRecord,
   isLoading,
+  showPreviousQuestionDisplay = true,
 }: {
-  questionRecord: Question | null
+  // TODO should really just create a supertype with just the question field
+  questionRecord: Question | EvaluationQuestion | null
   isLoading: boolean
+  showPreviousQuestionDisplay?: boolean
 }) {
-  const { classes } = useStyles()
-
   const [newQuestionText, setNewQuestionText] = useState(
     questionRecord?.question ?? ""
   )
-
   const [statefulQuestionRecord, setStatefulQuestionRecord] =
-    useState<Question | null>(questionRecord)
-
+    useState<typeof questionRecord>(questionRecord)
   const [statefulIsLoading, setStatefulIsLoading] = useState(isLoading)
 
   useEffect(() => {
+    const newQuestionRecord =
+      questionRecord && questionRecord.id != statefulQuestionRecord?.id
+
     if (questionRecord) {
       setStatefulQuestionRecord(questionRecord)
     }
 
-    if (questionRecord && newQuestionText === "") {
+    if (newQuestionRecord || (questionRecord && isBlank(newQuestionText))) {
       setNewQuestionText(questionRecord.question)
     }
 
     setStatefulIsLoading(isLoading)
   }, [questionRecord, isLoading, newQuestionText])
+
+  const { classes } = useStyles()
 
   return (
     <>
@@ -64,8 +71,9 @@ export default function QuestionBox({
           autoFocus
           autoComplete="off"
           size="lg"
-          // w="100%"
-          name="questionText"
+          disabled={statefulIsLoading}
+          // TODO should use a constant for this
+          name={QUESTION_INPUT_NAME}
           placeholder="Enter a question about your business"
           icon={<IconSearch size={18} />}
           value={newQuestionText}
@@ -80,7 +88,7 @@ export default function QuestionBox({
           }
         />
       </Form>
-      {statefulQuestionRecord && (
+      {showPreviousQuestionDisplay && statefulQuestionRecord && (
         <Paper
           shadow="xs"
           p="md"

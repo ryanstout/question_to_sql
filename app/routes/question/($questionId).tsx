@@ -49,7 +49,6 @@ export async function action({ request }: ActionArgs) {
   // then redirect to the query page
   // NOTE: q may get put in the url also, but needs to come from the form first
   const { actionName } = await zx.parseForm(request, {
-    // actionName: z.string(),
     actionName: z.nativeEnum(QuestionActions),
   })
 
@@ -225,7 +224,17 @@ export default function QueryHeader() {
           </Stack>
         </Grid.Col>
         <Grid.Col span={6}>
-          <SQLDisplay questionRecord={questionRecord} isLoading={isLoading} />
+          <SQLDisplay
+            sqlText={questionRecord?.userSql ?? questionRecord?.sql ?? null}
+            additionalFields={
+              <input
+                type="hidden"
+                name="questionId"
+                value={questionRecord?.id}
+              />
+            }
+            isLoading={isLoading}
+          />
         </Grid.Col>
       </Grid>
       <Divider my="sm" variant="dotted" />

@@ -1,12 +1,11 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
-import { useSubmit } from "@remix-run/react"
+import { Form, useSubmit } from "@remix-run/react"
 
 import { Box, Text } from "@mantine/core"
 import { getHotkeyHandler } from "@mantine/hooks"
 
-import type { Question } from "@prisma/client"
-
+import { FormActionName } from "~/routes/internal/group/$evaluationGroupId"
 import { QuestionActions } from "~/routes/question/($questionId)"
 
 import { sql } from "@codemirror/lang-sql"
@@ -37,46 +36,46 @@ function SQLKeyboardShortcutOverlay() {
 
 export default function SQLDisplay({
   isLoading,
-  questionRecord,
+  sqlText,
+  additionalFields,
 }: {
   isLoading: boolean
-  questionRecord: Question | null
+  sqlText: string | null
+  additionalFields?: React.ReactNode
 }) {
-  const submitSqlQuery = useSubmit()
+  const submit = useSubmit()
 
   // called when the user does SHIFT+Enter, updates the sql in the db
   // which will run the new query
   const updateSqlQuery = () => {
-    if (questionRecord) {
-      submitSqlQuery(
-        {
-          actionName: QuestionActions.UPDATE,
-          questionId: questionRecord.id.toString(),
-          userSql: userSQL,
-        },
-        { method: "post" }
-      )
-    }
+    submit(formRef.current)
+    // if (questionRecord) {
+    //   submitSqlQuery(
+    //     {
+    //       actionName: QuestionActions.UPDATE,
+    //       questionId: questionRecord.id.toString(),
+    //       userSql: userSQL,
+    //     },
+    //     { method: "post" }
+    //   )
+    // }
   }
 
   // TODO the HotKeyItem[] used with `getHotkeyHandler` is not exported and differs from the other HotKeyItem config
   const hotKeyConfig: any = [["shift+Enter", updateSqlQuery]]
 
-  const [userSQL, setSQL] = useState(questionRecord?.sql || "")
+  const [userSQL, setSQL] = useState<string>(sqlText ?? "")
+  const formRef = useRef(null)
 
   useEffect(() => {
-    if (questionRecord) {
-      const latestSQL = questionRecord.userSql ?? questionRecord.sql
-
-      // TODO when could this case occur? Let's track via sentry
-      if (latestSQL) {
-        setSQL(latestSQL)
-      }
-    }
-  }, [questionRecord])
+    setSQL(sqlText || "")
+  }, [sqlText])
 
   return (
-    <>
+    <Form ref={formRef} method="post">
+      <FormActionName actionName={QuestionActions.UPDATE} />
+      <input type="hidden" name="userSql" value={userSQL} />
+      {additionalFields}
       <CodeMirror
         height="275px"
         value={userSQL}
@@ -87,6 +86,6 @@ export default function SQLDisplay({
       />
 
       <SQLKeyboardShortcutOverlay />
-    </>
+    </Form>
   )
 }
