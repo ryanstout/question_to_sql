@@ -1,3 +1,4 @@
+import * as R from "ramda"
 import { useMemo } from "react"
 
 import { useMatches } from "@remix-run/react"
@@ -71,10 +72,21 @@ export function validateEmail(email: unknown): email is string {
   return typeof email === "string" && email.length > 3 && email.includes("@")
 }
 
+// TODO is there a ramda thing for this
 export function toNum(num: string | number) {
   if (typeof num === "string") {
     return parseInt(num, 10)
   } else {
     return num
   }
+}
+
+// TODO should add to ramda library
+// would be better if we could construct this using lambda> R.and(R.isNil, R.compose(R.isEmpty, R.trim))(null)
+export function isBlank(v: string | null | undefined) {
+  if (R.isNil(v)) {
+    return true
+  }
+
+  return R.compose(R.isEmpty, R.trim)(v)
 }
