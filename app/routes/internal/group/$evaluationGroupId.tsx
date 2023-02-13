@@ -39,8 +39,6 @@ export async function loader({ params }: LoaderArgs) {
     evaluationGroupId: zx.NumAsString,
   })
 
-  console.log("load")
-
   let evaluationGroup = await prisma.evaluationQuestionGroup.findUniqueOrThrow({
     where: { id: evaluationGroupId },
     include: { evaluationQuestions: true },
@@ -157,7 +155,7 @@ export default function EvaluationGroupView() {
     typeof loader
   >() as unknown as EvaluationQuestionGroupWithQuestions
 
-  const dataColumns: DataTableColumn<typeof evaluationQuestionGroup>[] = [
+  const dataColumns: DataTableColumn<(typeof evaluationQuestionGroup.evaluationQuestions)[0]>[] = [
     {
       accessor: "question",
       title: "Questions in Group",

@@ -59,7 +59,7 @@ export default function QuestionBox({
     }
 
     setStatefulIsLoading(isLoading)
-  }, [questionRecord, isLoading, newQuestionText])
+  }, [questionRecord, isLoading, newQuestionText, statefulQuestionRecord?.id])
 
   const { classes } = useStyles()
 

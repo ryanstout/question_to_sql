@@ -49,16 +49,6 @@ export default function SQLDisplay({
   // which will run the new query
   const updateSqlQuery = () => {
     submit(formRef.current)
-    // if (questionRecord) {
-    //   submitSqlQuery(
-    //     {
-    //       actionName: QuestionActions.UPDATE,
-    //       questionId: questionRecord.id.toString(),
-    //       userSql: userSQL,
-    //     },
-    //     { method: "post" }
-    //   )
-    // }
   }
 
   // TODO the HotKeyItem[] used with `getHotkeyHandler` is not exported and differs from the other HotKeyItem config
