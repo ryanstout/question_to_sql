@@ -5,6 +5,7 @@ datasource db {
 
 generator client {
   provider = "prisma-client-js"
+  // previewFeatures = ["clientExtensions"]
 }
 
 generator pyclient {
@@ -93,10 +94,12 @@ model EvaluationQuestionGroup {
   dataSourceId Int
   dataSource   DataSource @relation(fields: [dataSourceId], references: [id])
 
-  correctSql     String?
-  result         Json?
+  correctSql String?
+  results    Json?
+
   // some examples may contain a partial result set we want to assert against
   resultOperator EvaluationOperators @default(EQUALS)
+  notes          String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -121,8 +124,6 @@ model EvaluationQuestion {
   question String
   // cache of the latest generated SQL from openai
   codexSql String?
-
-  notes String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
