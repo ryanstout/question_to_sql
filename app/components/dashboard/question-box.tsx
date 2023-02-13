@@ -14,7 +14,6 @@ import {
 import type { EvaluationQuestion, Question } from "@prisma/client"
 
 import { QuestionActions } from "~/routes/question/($questionId)"
-import { isBlank } from "~/utils"
 
 import { IconSearch } from "@tabler/icons-react"
 
@@ -54,7 +53,8 @@ export default function QuestionBox({
       setStatefulQuestionRecord(questionRecord)
     }
 
-    if (newQuestionRecord || (questionRecord && isBlank(newQuestionText))) {
+    // if the question record changes *without* rerendering the DOM then the old question would be displayed
+    if (newQuestionRecord) {
       setNewQuestionText(questionRecord.question)
     }
 
