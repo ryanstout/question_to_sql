@@ -1,5 +1,5 @@
 # TODO extract node version from tool-versions
-FROM node:19.2.0-bullseye-slim
+FROM node:19.6.0-bullseye-slim
 
 ENV APP_DIR=/app
 WORKDIR $APP_DIR

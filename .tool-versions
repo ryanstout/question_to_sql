@@ -4,6 +4,6 @@
 # for the docker setup to extract the versions easily we define
 # them here.
 python 3.10.9
-nodejs 19.2.0
+nodejs 19.6.0
 
 poetry 1.3.2
