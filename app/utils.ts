@@ -91,6 +91,9 @@ export function isBlank(v: string | null | undefined) {
   return R.compose(R.isEmpty, R.trim)(v)
 }
 
+// TODO the default isEmpty returns false on nil/undefined!
+export const isEmpty = R.either(R.isNil, R.isEmpty)
+
 export function arrayWrap(v: any) {
   if (Array.isArray(v)) {
     return v

@@ -15,6 +15,7 @@ import { EvaluationStatus } from "@prisma/client"
 
 import { prisma } from "~/db.server"
 import { requireUser } from "~/session.server"
+import { isEmpty } from "~/utils"
 
 export async function loader({ request, params }: LoaderArgs) {
   const user = await requireUser(request) // eslint-disable-line
@@ -39,7 +40,7 @@ export async function loader({ request, params }: LoaderArgs) {
   if (
     !evaluationGroupId &&
     evaluationGroups[0] &&
-    !R.isEmpty(evaluationGroups[0].evaluationQuestions)
+    !isEmpty(evaluationGroups[0].evaluationQuestions)
   ) {
     // TODO route helpers?!
     return redirect("/internal/group/" + evaluationGroups[0].id)

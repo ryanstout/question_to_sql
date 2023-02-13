@@ -1,4 +1,3 @@
-import * as R from "ramda"
 import type { DataTableColumn } from "mantine-datatable"
 import { DataTable } from "mantine-datatable"
 import { z } from "zod"
@@ -28,7 +27,7 @@ import evaluationQuestion from "~/lib/evaluation-question.server"
 import { log } from "~/lib/logging.server"
 import { questionToSql, runQuery } from "~/lib/question.server"
 import { QuestionActions } from "~/routes/question/($questionId)"
-import { isBlank } from "~/utils"
+import { isBlank, isEmpty } from "~/utils"
 
 type EvaluationQuestionGroupWithQuestions = EvaluationQuestionGroup & {
   evaluationQuestions: EvaluationQuestion[]
@@ -63,7 +62,7 @@ export async function loader({ params }: LoaderArgs) {
     })
   }
 
-  if (evaluationGroup.correctSql && R.isEmpty(evaluationGroup.results)) {
+  if (evaluationGroup.correctSql && isEmpty(evaluationGroup.results)) {
     log.info("result cache empty, generating")
 
     const results = await runQuery(
@@ -155,7 +154,9 @@ export default function EvaluationGroupView() {
     typeof loader
   >() as unknown as EvaluationQuestionGroupWithQuestions
 
-  const dataColumns: DataTableColumn<(typeof evaluationQuestionGroup.evaluationQuestions)[0]>[] = [
+  const dataColumns: DataTableColumn<
+    (typeof evaluationQuestionGroup.evaluationQuestions)[0]
+  >[] = [
     {
       accessor: "question",
       title: "Questions in Group",
@@ -198,9 +199,7 @@ export default function EvaluationGroupView() {
               <Textarea name="notes" />
             </Stack>
           </Form>
-          <DataDisplay
-            data={evaluationQuestionGroup.results ?? [{ empty: true }]}
-          />
+          <DataDisplay data={evaluationQuestionGroup.results} />
         </Stack>
       </Grid.Col>
     </>
