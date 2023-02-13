@@ -1,0 +1,5 @@
+#!/bin/bash
+# Usage: test which files are ignored by .dockerignore
+
+# https://stackoverflow.com/questions/38946683/how-to-test-dockerignore-file
+rsync -avn . /dev/shm --exclude-from .dockerignore --exclude .git
