@@ -12,7 +12,17 @@ import {
   useTransition,
 } from "@remix-run/react"
 
-import { Box, Button, Divider, Flex, Grid, Stack, Text } from "@mantine/core"
+import {
+  Accordion,
+  Box,
+  Button,
+  Center,
+  Divider,
+  Flex,
+  Grid,
+  Stack,
+  Text,
+} from "@mantine/core"
 
 import type { Question } from "@prisma/client"
 import { FeedbackState } from "@prisma/client"
@@ -28,6 +38,8 @@ import {
   updateQuestion,
 } from "~/lib/question.server"
 import { requireUser } from "~/session.server"
+
+import { IconCheck, IconFlag, IconPlus } from "@tabler/icons-react"
 
 export enum QuestionActions {
   CREATE = "create",
@@ -160,7 +172,13 @@ function FeedbackComponent({
     questionRecord.feedbackState === FeedbackState.CORRECT ||
     questionRecord.feedbackState === FeedbackState.INCORRECT
   ) {
-    return <Text>Feedback provided</Text>
+    return (
+      <Center>
+        <Text color="blue">
+          <i>Feedback provided</i> <IconCheck size={14} />
+        </Text>
+      </Center>
+    )
   }
 
   const commonFormInputs = (
@@ -171,30 +189,93 @@ function FeedbackComponent({
   )
 
   return (
-    <Flex>
-      <Box pr="25px">
-        <Form method="post">
-          {commonFormInputs}
-          <input type="hidden" name="feedback" value={FeedbackState.CORRECT} />
-          <Button type="submit" color="green">
-            Mark Correct
-          </Button>
-        </Form>
-      </Box>
-      <Box>
-        <Form method="post">
-          <input
-            type="hidden"
-            name="feedback"
-            value={FeedbackState.INCORRECT}
+    <Grid>
+      <Grid.Col span={10} offset={1}>
+        <Center>
+          <Flex>
+            <Box pr="25px">
+              <Form method="post">
+                {commonFormInputs}
+                <input
+                  type="hidden"
+                  name="feedback"
+                  value={FeedbackState.CORRECT}
+                />
+                <Button
+                  leftIcon={<IconCheck size={16} />}
+                  type="submit"
+                  color="teal"
+                  variant="filled"
+                >
+                  Mark Correct
+                </Button>
+              </Form>
+            </Box>
+            <Box>
+              <Form method="post">
+                <input
+                  type="hidden"
+                  name="feedback"
+                  value={FeedbackState.INCORRECT}
+                />
+                {commonFormInputs}
+                <Button
+                  leftIcon={<IconFlag size={16} />}
+                  type="submit"
+                  color="red"
+                  variant="outline"
+                >
+                  Mark Incorrect
+                </Button>
+              </Form>
+            </Box>
+          </Flex>
+        </Center>
+      </Grid.Col>
+    </Grid>
+  )
+}
+
+function SQLResultComponent({
+  questionRecord,
+  isLoading,
+}: {
+  questionRecord: Question | null
+  isLoading: boolean
+}) {
+  return (
+    <Accordion
+      chevron={<IconPlus size={16} />}
+      styles={{
+        item: {
+          // styles added to all items
+          backgroundColor: "#fff",
+          border: "1px solid #ededed",
+        },
+        chevron: {
+          "&[data-rotate]": {
+            transform: "rotate(45deg)",
+          },
+        },
+      }}
+    >
+      <Accordion.Item value="sqlResultDisplay">
+        <Accordion.Control>View SQL Statement</Accordion.Control>
+        <Accordion.Panel p="sm">
+          <SQLDisplay
+            sqlText={questionRecord?.userSql ?? questionRecord?.sql ?? null}
+            additionalFields={
+              <input
+                type="hidden"
+                name="questionId"
+                value={questionRecord?.id}
+              />
+            }
+            isLoading={isLoading}
           />
-          {commonFormInputs}
-          <Button type="submit" color="red">
-            Mark Incorrect
-          </Button>
-        </Form>
-      </Box>
-    </Flex>
+        </Accordion.Panel>
+      </Accordion.Item>
+    </Accordion>
   )
 }
 
@@ -214,31 +295,26 @@ export default function QueryHeader() {
   return (
     <>
       <Grid>
-        <Grid.Col span={6} p="lg">
+        <Grid.Col span={8} offset={2} p="lg">
           <Stack mr={30}>
             <QuestionBox
               isLoading={isLoading}
               questionRecord={questionRecord}
             />
+            <SQLResultComponent
+              questionRecord={questionRecord}
+              isLoading={isLoading}
+            />
             <FeedbackComponent questionRecord={questionRecord} />
           </Stack>
         </Grid.Col>
-        <Grid.Col span={6}>
-          <SQLDisplay
-            sqlText={questionRecord?.userSql ?? questionRecord?.sql ?? null}
-            additionalFields={
-              <input
-                type="hidden"
-                name="questionId"
-                value={questionRecord?.id}
-              />
-            }
-            isLoading={isLoading}
-          />
+      </Grid>
+      <Divider my="md" variant="dotted" />
+      <Grid>
+        <Grid.Col span={10} offset={1}>
+          <DataDisplay data={questionResult?.data ?? null} />
         </Grid.Col>
       </Grid>
-      <Divider my="sm" variant="dotted" />
-      <DataDisplay data={questionResult?.data ?? null} />
     </>
   )
 }

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react"
 
 import { Form, useSubmit } from "@remix-run/react"
 
-import { Box, Text } from "@mantine/core"
+import { Box, Text, createStyles } from "@mantine/core"
 import { getHotkeyHandler } from "@mantine/hooks"
 
 import { FormActionName } from "~/routes/internal/group/$evaluationGroupId"
@@ -23,7 +23,7 @@ function SQLKeyboardShortcutOverlay() {
       <Text c="dimmed" align="center">
         <span
           style={{
-            padding: "5px",
+            padding: "6px",
             backgroundColor: "rgba(128,128,128,0.1)",
           }}
         >
@@ -33,6 +33,14 @@ function SQLKeyboardShortcutOverlay() {
     </Box>
   )
 }
+
+const useStyles = createStyles((theme) => ({
+  sqlViewer: {
+    border: "1px",
+    borderStyle: "solid",
+    borderColor: theme.colors.gray[3],
+  },
+}))
 
 export default function SQLDisplay({
   isLoading,
@@ -61,6 +69,8 @@ export default function SQLDisplay({
     setSQL(sqlText || "")
   }, [sqlText])
 
+  const { classes } = useStyles()
+
   return (
     <Form ref={formRef} method="post">
       <FormActionName actionName={QuestionActions.UPDATE} />
@@ -68,6 +78,7 @@ export default function SQLDisplay({
       {additionalFields}
       <CodeMirror
         height="275px"
+        className={classes.sqlViewer}
         value={userSQL}
         extensions={[sql({}), EditorView.lineWrapping]}
         onChange={(e) => setSQL(e)}
