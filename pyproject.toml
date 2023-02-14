@@ -7,6 +7,7 @@ readme = "README.md"
 # for cli tool
 packages = [{ include = "python" }]
 
+# TODO update to 3.11 when pytorch supports it https://github.com/pytorch/pytorch/issues/86566
 # TODO extract to internal notes before removing
 # https://stackoverflow.com/questions/51730880/where-do-i-get-a-cpu-only-version-of-pytorch
 # [[tool.poetry.source]]
@@ -76,6 +77,9 @@ pylint = "^2.16.1"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+nlp = "python.cli:cli"
 
 [tool.pytest.ini_options]
 log_cli = true
