@@ -1,2 +1,17 @@
-ignores: ["eslint", "pyright", "tsconfig-paths", "ts-node", "typesync"]
+ignores: [
+  "eslint",
+  "pyright",
+  "tsconfig-paths",
+  "ts-node",
+  "typesync",
+  "c8",
+  "@vitest/coverage-c8",
+  "dotenv",
+  "@types/prop-types",
+  "@trivago/prettier-plugin-sort-imports",
+  "@emotion/*",
+  "@mantine/*",
+  "@testing-library/*",
+]
 ignorePatterns: [".venv*", "bin/*"]
+skipMissing: ["cypress/*"]

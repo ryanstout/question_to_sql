@@ -15,11 +15,12 @@
     "vscode-extension",
     ".git/objects",
     ".vscode",
-    ".vscode-insiders"
+    ".vscode-insiders",
+    ".depcheckrc"
   ],
   // https://github.com/streetsidesoftware/vscode-spell-checker/issues/225
   "cSpell.ignoreRegExpList": ["/from\\s+(['\"]).*\\1/"],
-  "cSpell.words": ["AIRBYTE"],
+  "cSpell.words": ["AIRBYTE", "typecheck", "vitest", "depcheck", "knolbe"],
   "[python]": {
     // https://discuss.python.org/t/autopep8-isort-how-do-i-sort-using-autoformatting-absolute-imports-for-user-defined-modules-in-vs-code/20973
     "editor.defaultFormatter": "ms-python.python"

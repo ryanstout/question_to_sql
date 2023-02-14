@@ -1,4 +1,3 @@
-import * as R from "ramda"
 import type { DataTableColumn } from "mantine-datatable"
 import { DataTable } from "mantine-datatable"
 import { zx } from "zodix"
