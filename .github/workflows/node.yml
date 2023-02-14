@@ -15,7 +15,7 @@ env:
   NODE_ENV: test
   # TODO if NODE_ENV is true, then we should mock requests, although we should prob just use VCR or something
   MOCKED_QUESTION_RESPONSE: true
-  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+  # FLY_API_TOKEN: set in GH actions
 
 jobs:
   lint:
@@ -46,7 +46,6 @@ jobs:
       - uses: ./.github/actions/node-setup
 
       - name: Dependency Check
-        # uses: tj-actions/depcheck@v9
         uses: prymitive/depcheck-action@v1.4.3
 
   vitest:
@@ -135,7 +134,6 @@ jobs:
         if: ${{ github.ref == 'refs/heads/main' }}
         uses: superfly/flyctl-actions@1.3
         with:
-          # args: "deploy --image registry.fly.io/${{ steps.app_name.outputs.value }}:${{ github.ref_name }}-${{ github.sha }}"
           args: "deploy --config node.toml"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
