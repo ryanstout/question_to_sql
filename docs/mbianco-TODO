@@ -14,12 +14,13 @@
   - [ ] Structured logging when an object is passed as a second argument
   - [ ] maybe better logging package https://github.com/pimterry/loglevel/issues/170
   - [ ] extract LOG_LEVEL as a plugin https://github.com/vectrlabs/loglevel-debug/blob/master/index.js
-  - [ ] colorized log output? https://github.com/kentcdodds/loglevel-colored-level-prefix
+  - [ ] colorized log output? https://github.com/kentcdodds/loglevel-colored-level-**prefix**
 
 # Docker
 
 - [ ] we should not have to add prop-type to the package, but without it nivo is failing
 - [ ] can we only deploy the git version, not the local?
+- [ ] should add sentry versioning https://docs.sentry.io/platforms/javascript/guides/remix/sourcemaps/
 
 # Devprod
 
@@ -34,6 +35,8 @@
 # Remix
 
 - [ ] https://github.com/kiliman/rmx-cli
+- [ ] https://github.com/yesmeck/remix-routes
+- [ ] array in zod https://discord.com/channels/893487829802418277/893488038477434881/1074757486470516836
 
 # Javascript Lang
 
@@ -48,6 +51,7 @@
 
 # Github actions
 
+- [ ] integrate code coverage into CI, use c8's formatting to do this
 - [ ] https://github.com/actions/setup-node/issues/531 looks like we could use corepack to setup specific versions
 - [ ] how do the PR annotations work? Can we get pylint working like tsc? https://github.com/marketplace/actions/pylint-pr-annotator
 - [ ] https://github.com/tj-actions/depcheck/blob/main/entrypoint.sh needs to not pass the ignore flag if nothing is set
