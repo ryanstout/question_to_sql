@@ -1,10 +1,11 @@
 import python.setup  # pyright: ignore
 
 import click
-import toolz.itertoolz as R
 from importer import Importer
 from query_runner.snowflake import get_query_results, get_snowflake_cursor
 from utils.db import application_database_connection
+
+from python.questions import question_with_data_source_to_sql
 
 
 def table_output_with_format(array_of_dicts, tableFormat="md"):
@@ -44,6 +45,7 @@ def cli(verbose):
         pass
 
 
+# TODO this is hacky and broken
 @cli.command(help="Inspect a data source before importing")
 @click.option("--data-source-id", required=True, type=int)
 @click.option("--warehouse-name", type=str)
@@ -139,6 +141,14 @@ def analysis(data_source_id: int, warehouse_name: str, database_name: str, schem
 @click.option("--column-value-limit", type=int)
 def import_datasource(**kwargs):
     Importer(**kwargs)
+
+
+@cli.command(help="convert a natural language question to sql")
+@click.option("--data-source-id", type=int, required=True)
+@click.option("--question", type=str, required=True)
+def question(data_source_id, question):
+    sql = question_with_data_source_to_sql(data_source_id, question)
+    print(sql)
 
 
 if __name__ == "__main__":
