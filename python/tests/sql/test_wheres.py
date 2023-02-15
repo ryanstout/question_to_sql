@@ -1,6 +1,5 @@
 from pprint import pprint
 
-import pytest
 from rich import print
 
 from python.sql.exceptions import ColumnNotFoundException, TableNotFoundException

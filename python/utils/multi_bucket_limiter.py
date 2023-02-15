@@ -1,9 +1,12 @@
+# TODO there's got to be a package that can do this for us rather than us maintaining this
+# TODO this needs to use redis in the future so it supports multi-process
+
 # A simple class to rate limit api requests using the leaky bucket algorithm.
 import math
 import time
 from contextlib import contextmanager
 from threading import Lock
-from typing import Dict, List
+from typing import Dict
 
 from python.utils.logging import log
 
@@ -72,11 +75,11 @@ class MultiBucketLimiter:
 
             # Sleep until the next token is available
             if seconds_until_next_request > 0:
-                log.warn(f"Sleeping for {seconds_until_next_request} seconds until next request")
+                log.warn("waiting for token window", seconds=seconds_until_next_request)
                 time.sleep(seconds_until_next_request)
 
             # Yield to the block, giving it a chance to consume the resouces
             # while locked in the mutex (by calling consume_resources)
-            token_count = yield
+            yield
 
         return seconds_until_next_request
