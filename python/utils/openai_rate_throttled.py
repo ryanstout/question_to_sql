@@ -7,14 +7,16 @@
 #
 # openai_throttled.complete("Hello, world!")
 
+import inspect
 import typing as t
 from contextlib import contextmanager
 
 import backoff
 import numpy as np
 import openai
+import openai.error
 from decouple import config
-from openai.error import OpenAIError, ServiceUnavailableError
+from openai.error import OpenAIError
 
 from python.utils.batteries import log_execution_time
 from python.utils.logging import log
@@ -23,6 +25,22 @@ from python.utils.tokens import count_tokens
 from .multi_bucket_limiter import MultiBucketLimiter
 
 openai.api_key = config("OPENAI_KEY")
+
+
+# there's lots of different error types, and more can be added
+def all_retryable_openai_errors() -> list[t.Type[OpenAIError]]:
+    all_errors = [c[1] for c in inspect.getmembers(openai.error, inspect.isclass)]
+    openai_error_subclasses = [
+        cls for cls in all_errors if issubclass(cls, openai.error.OpenAIError) and cls != openai.error.OpenAIError
+    ]
+
+    # remove errors we do not want to backoff
+    openai_error_subclasses.remove(openai.error.SignatureVerificationError)
+    openai_error_subclasses.remove(openai.error.InvalidAPIType)
+    openai_error_subclasses.remove(openai.error.AuthenticationError)
+    openai_error_subclasses.remove(openai.error.PermissionError)
+
+    return openai_error_subclasses
 
 
 class ChoicesItem(t.TypedDict):
@@ -136,14 +154,15 @@ class OpenAIThrottled:
     # https://github.com/litl/backoff/issues/92
     @backoff.on_exception(
         backoff.expo,
-        (OpenAIError, ServiceUnavailableError),
+        tuple(all_retryable_openai_errors()),
         # how much each exponential backoff should increase the time by
         # https://github.com/litl/backoff/blob/d82b23c42d7a7e2402903e71e7a7f03014a00076/backoff/_wait_gen.py#L9-L10
         factor=60,
         # TODO should we just set this to an insane value since some of these operations are very hard to retry
         #      maybe this makes sense if we set a process-level timeout for the web server side of things
         max_tries=5,
-        logger=log,
+        # NOTE the logger logic is actually pretty intense within `@backoff`
+        # logger=log,
     )
     def _safe_api_request(self, consumption_request):
         with self.limiter.request_when_available(consumption_request):
