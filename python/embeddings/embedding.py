@@ -1,20 +1,23 @@
-# Wrappers the openai embedding API and db cache
 import io
 from typing import Type
 
 import numpy as np
 import xxhash
 
-from python.embeddings.base_embedder import BaseEmbedder
+from python.embeddings.msmacro_embedder import MSMarcoEmbedder
+from python.embeddings.openai_embedder import OpenAIEmbedder
+from python.utils.db import application_database_connection
 
 from prisma import Base64, Prisma
 
+db = application_database_connection()
 
-# create embeddings vector via openai from a string
+# create multiple embeddings vector via openai and store to disk.
+# docs/prompt_embeddings.md for more information
 class Embedding:
-    embedder: BaseEmbedder
+    # embedder: BaseEmbedder
 
-    def __init__(self, db: Prisma, content_str: str, embedder: Type[BaseEmbedder] = BaseEmbedder, cache_results=True):
+    def __init__(self, content_str: str, embedder: OpenAIEmbedder | MSMarcoEmbedder, cache_results=True):
         self.embedder = embedder()
         self.cache_results = cache_results
 
@@ -60,8 +63,7 @@ class Embedding:
         return xxhash.xxh64(content).hexdigest()
 
 
+# TODO should move this into a test
 if __name__ == "__main__":
-    _db = Prisma()
-    _db.connect()
-    e = Embedding(_db, "hello world")
+    e = Embedding("hello world", embedder=OpenAIEmbedder)
     print(e.embedding_numpy)

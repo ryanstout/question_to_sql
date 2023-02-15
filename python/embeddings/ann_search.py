@@ -1,7 +1,6 @@
 import numpy as np
 
 from python.embeddings.ann_faiss import AnnFaiss
-from python.embeddings.embedding import Embedding
 from python.embeddings.embedding_link_index import EmbeddingLinkIndex
 
 from prisma import Prisma
