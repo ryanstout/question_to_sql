@@ -75,9 +75,11 @@ const HistoryDisplayComponent = ({
 }
 
 export default function HistoryIndexView() {
-  const questionHistoryData = useLoaderData<typeof loader>() as HistoryResult
+  const questionHistoryData = useLoaderData<
+    typeof loader
+  >() as unknown as HistoryResult
 
-  //TODO: Add identify React DataTable component for searchable table
+  //TODO: Use Mantine DataTable component for searchable table
   //TODO: Add pagination to table with backend Prisma
 
   return (
