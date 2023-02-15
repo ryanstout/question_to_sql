@@ -7,7 +7,6 @@ import type { ActionArgs, LoaderArgs } from "@remix-run/node"
 import { json, redirect } from "@remix-run/node"
 import {
   Form,
-  Link,
   useLoaderData,
   useNavigation,
   useTransition,
@@ -29,6 +28,7 @@ import type { Question } from "@prisma/client"
 import { FeedbackState } from "@prisma/client"
 
 import DataDisplay from "~/components/dashboard/data-display"
+import QuestionActionHeader from "~/components/dashboard/question-action-header"
 import QuestionBox from "~/components/dashboard/question-box"
 import SQLDisplay from "~/components/dashboard/sql-display"
 import { prisma } from "~/db.server"
@@ -40,7 +40,7 @@ import {
 } from "~/lib/question.server"
 import { requireUser } from "~/session.server"
 
-import { IconCheck, IconFlag, IconHistory, IconPlus } from "@tabler/icons-react"
+import { IconCheck, IconFlag, IconPlus } from "@tabler/icons-react"
 
 export enum QuestionActions {
   CREATE = "create",
@@ -157,27 +157,6 @@ export async function loader({ params, request }: LoaderArgs) {
   const questionResults = await getResultsFromQuestion({ questionId })
 
   return json(questionResults)
-}
-
-function QuestionActionHeader({
-  isLoading,
-  questionRecord,
-}: {
-  isLoading: boolean
-  questionRecord: Question | null
-}) {
-  //TODO add other actions here like sharing and export
-
-  return (
-    <Box>
-      <Link to="/history">
-        <Button variant="subtle" leftIcon={<IconHistory size={18} />}>
-          History
-        </Button>
-      </Link>
-      <Divider my="sm" variant="dotted" />
-    </Box>
-  )
 }
 
 function SQLResultComponent({
