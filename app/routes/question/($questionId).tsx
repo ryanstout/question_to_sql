@@ -7,6 +7,7 @@ import type { ActionArgs, LoaderArgs } from "@remix-run/node"
 import { json, redirect } from "@remix-run/node"
 import {
   Form,
+  Link,
   useLoaderData,
   useNavigation,
   useTransition,
@@ -39,7 +40,7 @@ import {
 } from "~/lib/question.server"
 import { requireUser } from "~/session.server"
 
-import { IconCheck, IconFlag, IconPlus } from "@tabler/icons-react"
+import { IconCheck, IconFlag, IconHistory, IconPlus } from "@tabler/icons-react"
 
 export enum QuestionActions {
   CREATE = "create",
@@ -154,7 +155,72 @@ export async function loader({ params, request }: LoaderArgs) {
 
   // TODO should validate the user actually has access to this question!
   const questionResults = await getResultsFromQuestion({ questionId })
+
   return json(questionResults)
+}
+
+function QuestionActionHeader({
+  isLoading,
+  questionRecord,
+}: {
+  isLoading: boolean
+  questionRecord: Question | null
+}) {
+  //TODO add other actions here like sharing and export
+
+  return (
+    <Box>
+      <Link to="/history">
+        <Button variant="subtle" leftIcon={<IconHistory size={18} />}>
+          History
+        </Button>
+      </Link>
+      <Divider my="md" variant="dotted" />
+    </Box>
+  )
+}
+
+function SQLResultComponent({
+  isLoading,
+  questionRecord,
+}: {
+  isLoading: boolean
+  questionRecord: Question | null
+}) {
+  return (
+    <Accordion
+      chevron={<IconPlus size={16} />}
+      styles={{
+        item: {
+          // styles added to all items
+          backgroundColor: "#fff",
+          border: "1px solid #ededed",
+        },
+        chevron: {
+          "&[data-rotate]": {
+            transform: "rotate(45deg)",
+          },
+        },
+      }}
+    >
+      <Accordion.Item value="sqlResultDisplay">
+        <Accordion.Control>View SQL Statement</Accordion.Control>
+        <Accordion.Panel p="sm">
+          <SQLDisplay
+            sqlText={questionRecord?.userSql ?? questionRecord?.sql ?? null}
+            additionalFields={
+              <input
+                type="hidden"
+                name="questionId"
+                value={questionRecord?.id}
+              />
+            }
+            isLoading={isLoading}
+          />
+        </Accordion.Panel>
+      </Accordion.Item>
+    </Accordion>
+  )
 }
 
 function FeedbackComponent({
@@ -236,50 +302,7 @@ function FeedbackComponent({
   )
 }
 
-function SQLResultComponent({
-  questionRecord,
-  isLoading,
-}: {
-  questionRecord: Question | null
-  isLoading: boolean
-}) {
-  return (
-    <Accordion
-      chevron={<IconPlus size={16} />}
-      styles={{
-        item: {
-          // styles added to all items
-          backgroundColor: "#fff",
-          border: "1px solid #ededed",
-        },
-        chevron: {
-          "&[data-rotate]": {
-            transform: "rotate(45deg)",
-          },
-        },
-      }}
-    >
-      <Accordion.Item value="sqlResultDisplay">
-        <Accordion.Control>View SQL Statement</Accordion.Control>
-        <Accordion.Panel p="sm">
-          <SQLDisplay
-            sqlText={questionRecord?.userSql ?? questionRecord?.sql ?? null}
-            additionalFields={
-              <input
-                type="hidden"
-                name="questionId"
-                value={questionRecord?.id}
-              />
-            }
-            isLoading={isLoading}
-          />
-        </Accordion.Panel>
-      </Accordion.Item>
-    </Accordion>
-  )
-}
-
-export default function QueryHeader() {
+export default function QuestionView() {
   // TODO https://github.com/remix-run/remix/issues/3931
   const questionResult = useLoaderData<
     typeof loader
@@ -297,13 +320,17 @@ export default function QueryHeader() {
       <Grid>
         <Grid.Col span={8} offset={2} p="lg">
           <Stack mr={30}>
+            <QuestionActionHeader
+              isLoading={isLoading}
+              questionRecord={questionRecord}
+            />
             <QuestionBox
               isLoading={isLoading}
               questionRecord={questionRecord}
             />
             <SQLResultComponent
-              questionRecord={questionRecord}
               isLoading={isLoading}
+              questionRecord={questionRecord}
             />
             <FeedbackComponent questionRecord={questionRecord} />
           </Stack>
