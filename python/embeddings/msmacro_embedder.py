@@ -3,10 +3,8 @@ import torch
 from sentence_transformers import SentenceTransformer, util
 from torch import Tensor
 
-from python.embeddings.base_embedder import BaseEmbedder
 
-
-class MSMarcoEmbedder(BaseEmbedder):
+class MSMarcoEmbedder:
     def __init__(self):
         device = "cpu"
         # device = 'mps'  # Move to M1 Mac GPU
