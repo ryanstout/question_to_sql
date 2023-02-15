@@ -1,3 +1,4 @@
+# isort:skip_file
 import logging
 import typing as t
 
@@ -6,11 +7,59 @@ from decouple import config
 
 from python.utils.sentry import configure_sentry
 
-if config("PYTHON_RICH_STACKTRACE", default=False, cast=bool):
-    from rich.traceback import install
+# we be monkey patching
+import colorama
+import pretty_traceback
+from pretty_traceback.formatting import (
+    FMT_CALL,
+    FMT_CONTEXT,
+    FMT_LINENO,
+    FMT_MODULE,
+    PaddedRow,
+)
 
-    # not really logging, but this is a good place to set this up
-    install(show_locals=True)
+# TODO could submit a PR using named format string pieces
+# https://github.com/mbarkhau/pretty-traceback/blob/b5e06b2022a806127b1b7b5ba7972afb84e48e08/src/pretty_traceback/formatting.py#L287
+def _patched_rows_to_lines(rows: t.List[PaddedRow], color: bool = False) -> t.Iterable[str]:
+
+    # apply colors and additional separators/ spacing
+    fmt_module = FMT_MODULE if color else "{0}"
+    fmt_call = FMT_CALL if color else "{0}"
+    fmt_lineno = FMT_LINENO if color else "{0}"
+    fmt_context = FMT_CONTEXT if color else "{0}"
+
+    for alias, short_module, full_module, call, lineno, context in rows:
+        if short_module:
+            _alias = alias
+            module = short_module
+        else:
+            _alias = ""
+            module = full_module
+
+        # NOTE main goal is getting line number with file so VS code can open it
+        parts = (
+            " ",
+            _alias,
+            " ",
+            fmt_module.format(module.strip()) + ":" + fmt_lineno.format(lineno.strip()),
+            "  ",
+            fmt_call.format(call),
+            fmt_context.format(context),
+        )
+
+        # original is pretty_traceback.formatting._padded_rows
+        # TODO need to add left passing to the trace, but this is workable for now
+
+        line = "".join(parts)
+
+        if alias == "<pwd>":
+            yield line.replace(colorama.Style.NORMAL, colorama.Style.BRIGHT)
+        else:
+            yield line
+
+
+pretty_traceback.formatting._rows_to_lines = _patched_rows_to_lines
+pretty_traceback.install()
 
 
 def configure_logger():
