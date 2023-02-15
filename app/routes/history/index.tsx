@@ -1,6 +1,6 @@
 import invariant from "tiny-invariant"
 
-import { json } from "@remix-run/node"
+import { LoaderArgs, json } from "@remix-run/node"
 import { Link, useLoaderData } from "@remix-run/react"
 
 import { Button, Grid, Table } from "@mantine/core"
@@ -37,8 +37,7 @@ const HistoryDisplayComponent = ({
         {new Date(question.createdAt).toLocaleDateString("en-US")} at{" "}
         {new Date(question.createdAt).toLocaleTimeString([], {
           timeStyle: "short",
-        })}{" "}
-        by {question.user.name}
+        })}
       </td>
       <td>
         <Link
@@ -57,10 +56,10 @@ const HistoryDisplayComponent = ({
   return (
     <Grid>
       <Grid.Col span={10} offset={1}>
-        <Table verticalSpacing="sm">
+        <Table verticalSpacing="sm" mt={75}>
           <thead>
             <tr>
-              <th style={{ textAlign: "center", wordWrap: "break-word" }}>
+              <th style={{ wordWrap: "break-word", textAlign: "center" }}>
                 Question
               </th>
               <th style={{ textAlign: "center" }}>Created</th>
