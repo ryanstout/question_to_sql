@@ -20,15 +20,35 @@
   ],
   // https://github.com/streetsidesoftware/vscode-spell-checker/issues/225
   "cSpell.ignoreRegExpList": ["/from\\s+(['\"]).*\\1/"],
-  "cSpell.words": ["AIRBYTE", "typecheck", "vitest", "depcheck", "knolbe"],
+  "cSpell.words": [
+    "AIRBYTE",
+    "typecheck",
+    "vitest",
+    "depcheck",
+    "knolbe",
+    "backoff",
+    "faiss",
+    "dtype",
+    "openai",
+    "davinci",
+    "chatgpt",
+    "retryable"
+  ],
   "[python]": {
     // https://discuss.python.org/t/autopep8-isort-how-do-i-sort-using-autoformatting-absolute-imports-for-user-defined-modules-in-vs-code/20973
     "editor.defaultFormatter": "ms-python.python"
+    // "editor.codeActionsOnSave": {
+    //   "source.unusedImports": true
+    // }
+  },
+  "[toml]": {
+    "editor.defaultFormatter": "tamasfe.even-better-toml"
   },
   "python.linting.lintOnSave": true,
   "python.linting.pylintEnabled": true,
   "python.formatting.provider": "black",
   "python.analysis.typeCheckingMode": "basic",
+  // "python.envFile": "${workspaceFolder}/.env",
   "editor.rulers": [120],
   "files.exclude": {
     "**/__pycache__": true
