@@ -22,7 +22,9 @@ class SnowflakeCredentials(t.TypedDict):
     schema: str
 
 
-def get_snowflake_cursor(data_source: DataSource):
+# by default, the cursor is locked to the credentials context
+# when setting up an account it's helpful to create an unscoped cursor for DB inspection
+def get_snowflake_cursor(data_source: DataSource, without_context=False):
     snowflake_credentials = t.cast(SnowflakeCredentials, data_source.credentials)
 
     connection = snowflake.connector.connect(
@@ -33,8 +35,9 @@ def get_snowflake_cursor(data_source: DataSource):
 
     cursor = connection.cursor(cursor_class=DictCursor)
 
-    cursor.execute(f"use warehouse {snowflake_credentials['warehouse']};")
-    cursor.execute(f"use {snowflake_credentials['database']}.{snowflake_credentials['schema']};")
+    if not without_context:
+        cursor.execute(f"use warehouse {snowflake_credentials['warehouse']};")
+        cursor.execute(f"use {snowflake_credentials['database']}.{snowflake_credentials['schema']};")
 
     return cursor, connection
 
@@ -48,7 +51,7 @@ def apply_query_protections(sql):
     return sql
 
 
-def get_query_results(cursor: SnowflakeCursor, sql: str, disable_query_protections: bool):
+def get_query_results(cursor: SnowflakeCursor, sql: str, disable_query_protections: bool) -> list[dict]:
     try:
         if not disable_query_protections:
             apply_query_protections(sql)
@@ -64,7 +67,8 @@ def get_query_results(cursor: SnowflakeCursor, sql: str, disable_query_protectio
         capture_exception(e)
         # TODO I wonder if sentry logs the error and we don't need to do this?
         log.exception("snowflake connector programming error")
-        return {"error": str(e)}
+        # TODO maybe we should rethrow a custom snowflake exception instead, I hate error handling like this
+        return [{"error": str(e)}]
 
 
 def run_snowflake_query(data_source: DataSource, sql: str, disable_query_protections=False):
