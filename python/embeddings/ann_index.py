@@ -7,33 +7,34 @@ import numpy as np
 from python.embeddings.ann_faiss import AnnFaiss
 from python.embeddings.embedding import Embedding
 from python.embeddings.embedding_link_index import EmbeddingLinkIndex
+from python.embeddings.openai_embedder import OpenAIEmbedder
+from python.utils.db import application_database_connection
 from python.utils.logging import log
 
 from prisma import Prisma
 
+db: Prisma = application_database_connection()
 
 # ann = approximate nearest neighbor
 class AnnIndex:
-    def __init__(self, db: Prisma, index_number: int, path: str):
-        self.path = path
-        self.db = db
-        self.index_number = index_number
+    def __init__(self, index_number: int, path: str):
         self.index_offset = 0
         self.embeddings = []
         self.lock = Lock()
 
+        self.path = path
+        self.index_number = index_number
         self.embedding_link_index = EmbeddingLinkIndex(path)
 
     def add(
         self,
-        datasource_id: int,
         content: str,
         table_id: Union[int, None],
         column_id: Union[int, None],
         value: Union[str, None],
     ):
         log.debug("Vector for ", content=content)
-        embedding = Embedding(self.db, content)
+        embedding = Embedding(content, embedder=OpenAIEmbedder)
 
         # Needs the mutex to prevent parallel columns from adding to it at the
         # same time. The index_offset is important for the vector indexing.
