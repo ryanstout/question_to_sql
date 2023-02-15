@@ -5,7 +5,6 @@ import structlog
 from decouple import config
 
 from python.utils.sentry import configure_sentry
-from python.utils.system import is_production
 
 if config("PYTHON_RICH_STACKTRACE", default=False, cast=bool):
     from rich.traceback import install
