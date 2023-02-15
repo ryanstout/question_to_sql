@@ -74,6 +74,7 @@ rich = "^13.2.0"
 ipdb = "^0.13.11"
 pytest-flask = "^1.2.0"
 pylint = "^2.16.1"
+deptry = "^0.8.0"
 
 [build-system]
 requires = ["poetry-core"]
