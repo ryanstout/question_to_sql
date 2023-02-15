@@ -2,6 +2,8 @@ from contextlib import contextmanager
 from time import perf_counter
 from typing import Any, Iterable, List, Optional, TypeAlias, TypeVar, Union
 
+from utils.logging import log
+
 # Collection of small helper functions that should be included in any language.. (Cough)
 
 
@@ -58,4 +60,4 @@ class log_execution_time(ContextDecorator):
 
     def __exit__(self, type, value, traceback):
         elapsed = perf_counter() - self.time
-        print(f"{self.msg} took {elapsed:.3f} seconds")
+        log.debug(f"{self.msg} took {elapsed:.3f} seconds")
