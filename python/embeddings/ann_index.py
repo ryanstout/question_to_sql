@@ -5,7 +5,7 @@ from typing import Union
 import numpy as np
 
 from python.embeddings.ann_faiss import AnnFaiss
-from python.embeddings.embedding import Embedding
+from python.embeddings.embedding import generate_embedding
 from python.embeddings.embedding_link_index import EmbeddingLinkIndex
 from python.embeddings.openai_embedder import OpenAIEmbedder
 from python.utils.db import application_database_connection
@@ -33,34 +33,32 @@ class AnnIndex:
         column_id: Union[int, None],
         value: Union[str, None],
     ):
-        log.debug("Vector for ", content=content)
-        embedding = Embedding(content, embedder=OpenAIEmbedder)
+        log.debug("generating embedding for ", content=content)
+        embedding = generate_embedding(content, embedder=OpenAIEmbedder)
 
         # Needs the mutex to prevent parallel columns from adding to it at the
         # same time. The index_offset is important for the vector indexing.
         self.lock.acquire()
 
         previous_offset = self.index_offset
-
         self.embedding_link_index.add(previous_offset, table_id, column_id, value)
-
-        self.embeddings.append(embedding.embedding_numpy)
-
+        self.embeddings.append(embedding)
         self.index_offset += 1
 
         self.lock.release()
 
     def save(self):
         embed_size = len(self.embeddings)
-        log.debug(f"Build for index #{self.index_number}: ", embed_size=embed_size)
+        if embed_size == 0:
+            return
 
-        if embed_size > 0:
-            data = np.stack(self.embeddings, axis=0)
+        # TODO what is this doing?
+        data = np.stack(self.embeddings, axis=0)
 
-            # Make output folder if it doesn't exist
-            os.makedirs(os.path.dirname(self.path), exist_ok=True)
+        # Make output folder if it doesn't exist
+        os.makedirs(os.path.dirname(self.path), exist_ok=True)
 
-            self.embedding_link_index.save()
+        self.embedding_link_index.save()
 
-            log.debug("Build Faiss Index: ", dtype=data.dtype, size=data.shape)
-            AnnFaiss().build_and_save(data, self.path)
+        log.info("build faiss index", dtype=data.dtype, size=data.shape, index=self.index_number, embed_size=embed_size)
+        AnnFaiss().build_and_save(data, self.path)

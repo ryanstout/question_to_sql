@@ -4,12 +4,11 @@ import sys
 import time
 import typing as t
 
-import numpy as np
 import utils
 from decouple import config
 
 from python.embeddings.ann_search import AnnSearch
-from python.embeddings.embedding import Embedding
+from python.embeddings.embedding import generate_embedding
 from python.embeddings.openai_embedder import OpenAIEmbedder
 
 
@@ -64,7 +63,7 @@ class Ranker:
     ) -> SCHEMA_RANKING_TYPE:
 
         t1 = time.time()
-        query_embedding = Embedding(self.db, query, embedder=embedder, cache_results=cache_results).embedding_numpy
+        query_embedding = generate_embedding(query, embedder=embedder, cache_results=cache_results)
 
         log.debug("Start ranking")
         # Fetch ranked table id

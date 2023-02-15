@@ -12,7 +12,6 @@ from python.utils.entropy import token_entropy
 from python.utils.logging import log
 from python.utils.sql import unqualified_table_name
 
-from prisma import Prisma
 from prisma.models import DataSource, DataSourceTableColumn, DataSourceTableDescription
 
 # How long of a value do we create an embedding for?
@@ -26,6 +25,7 @@ MAX_EMBEDDING_TOKENS = 7500
 TOKEN_ENTROPY_THRESHOLD = 2.0  # Anything less and this is probably a GUID or similar
 
 
+# TODO should use a functional util instead / make this easier to read
 def in_groups_of(l, n):
 
     # looping till length l
@@ -33,12 +33,11 @@ def in_groups_of(l, n):
         yield l[i : i + n]
 
 
+db = utils.db.application_database_connection()
+
+
 class EmbeddingBuilder:
-    db: Prisma
-
     def __init__(self, data_source: DataSource):
-        self.db = utils.db.application_database_connection()
-
         self.data_source = data_source
 
         # See docs/prompt_embeddings.md for info on index types
@@ -72,7 +71,7 @@ class EmbeddingBuilder:
         self.table_values = []
 
         unqualified_name = unqualified_table_name(name)
-        table = self.db.datasourcetabledescription.find_first(
+        table = db.datasourcetabledescription.find_first(
             where={"fullyQualifiedName": name, "dataSourceId": self.data_source.id}
         )
 
@@ -83,7 +82,7 @@ class EmbeddingBuilder:
 
         self.idx_table_names.add(unqualified_name, table.id, None, None)
 
-        all_columns = self.db.datasourcetablecolumn.find_many(where={"dataSourceTableDescriptionId": table.id})
+        all_columns = db.datasourcetablecolumn.find_many(where={"dataSourceTableDescriptionId": table.id})
 
         log.debug(
             "generating embedding for table",
@@ -162,6 +161,7 @@ class EmbeddingBuilder:
             log.debug("skipping embeddings for column, not varchar", column_name=column.name)
             return
 
+        # TODO add a ttl
         # get all the values for this column, this is the most expensive operation in the whole indexing process
         values = query_runner.run_query(
             self.data_source.id,
@@ -219,7 +219,7 @@ class EmbeddingBuilder:
             full_column_str = column.name + "\n" + col_value_group
             self.idx_column_name_and_all_column_values.add(full_column_str, table.id, column.id, None)
 
-    # this is an expensive operation, do this as minimially as we can!
+    # this is an expensive operation, do this as minimally as we can!
     def write_indexes_to_disk(self):
         self.idx_table_names.save()
         self.idx_column_names.save()
