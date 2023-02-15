@@ -13,9 +13,19 @@ npm run dev
 
 # Deployment
 
-```
+Attach the python app to the database:
+
+```shell
 fly pg attach knolbe-db --config python.toml --database-name knolbe
 ```
+
+Proxy to the prod DB for inspection:
+
+```shell
+fly proxy 5431:5432 -a knolbe-db
+```
+
+## [Docker](docker/readme.md)
 
 # Prisma
 
@@ -45,22 +55,23 @@ http POST http://127.0.0.1:5000/ 'question:="my question"' data_source_id:=1
 
 Get results:
 
-````shell
+```shell
 http POST http://0.0.0.0:5000/query data_source_id:=1 'sql:="SELECT * FROM CUSTOMER LIMIT 10"'
 ```
 
-# CLI Tools
+## CLI Tools
 
 First, we need to import the table data:
 
 ```shell
-poetry run python python/import.py \
+poetry run nlp \
   --user-id=1 \
   --database-name=FIVETRAN_DATABASE \
   --table-limit=100 \
   --column-limit=1000 \
-  --column-value-limit=1000
-````
+  --column-value-limit=1000 \
+  | tee user.log
+```
 
 Once everything is imported, we can ask questions:
 
@@ -116,6 +127,14 @@ What percent of orders that bought a phone mount spent more than $300?
 
 Future support:
 Sumarize some text field...
+
+# Database
+
+## Snowflake
+
+- API responses do not return raw SQL, everything comes back as a JSON object
+  - Unsure if this is just the specific API we are using or if it is a limitation of Snowflake
+- You'll get a `Table 'ABANDONED_CHECKOUTS' does not exist or not authorized.` if you don't specify a specific schema when
 
 # Connections
 
