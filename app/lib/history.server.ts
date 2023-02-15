@@ -7,7 +7,7 @@ export interface HistoryResult {
   status: "success" | "error"
 }
 
-export async function getQuestionHistory(
+export async function getUserQuestionHistory(
   userId: number,
   dataSourceId: number
 ): Promise<HistoryResult> {

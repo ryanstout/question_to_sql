@@ -175,7 +175,7 @@ function QuestionActionHeader({
           History
         </Button>
       </Link>
-      <Divider my="md" variant="dotted" />
+      <Divider my="sm" variant="dotted" />
     </Box>
   )
 }

@@ -6,7 +6,7 @@ import { Link, useLoaderData } from "@remix-run/react"
 import { Button, Grid, Table } from "@mantine/core"
 
 import type { HistoryResult } from "~/lib/history.server"
-import { getQuestionHistory } from "~/lib/history.server"
+import { getUserQuestionHistory } from "~/lib/history.server"
 import { requireUser } from "~/session.server"
 
 import { IconExternalLink } from "@tabler/icons-react"
@@ -20,7 +20,7 @@ export async function loader({ params, request }: LoaderArgs) {
   )
 
   const dataSource = user.business!.dataSources[0]
-  const questionHistory = await getQuestionHistory(user.id, dataSource.id)
+  const questionHistory = await getUserQuestionHistory(user.id, dataSource.id)
 
   return json(questionHistory)
 }
@@ -79,6 +79,7 @@ export default function HistoryIndexView() {
 
   //TODO: Add identify React DataTable component for searchable table
   //TODO: Add pagination to table with backend Prisma
+
   return (
     <>
       <HistoryDisplayComponent historyResult={questionHistoryData} />
