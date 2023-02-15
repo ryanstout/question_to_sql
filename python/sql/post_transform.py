@@ -94,7 +94,7 @@ class PostTransform:
 
     def string_translations(self, sql):
         # NOW() isn't supported on snowflake, replace with CURRENT_TIMESTAMP()
-        sql = re.sub("(\s)NOW\(\)([\s,;\n])", r"\1CURRENT_TIMESTAMP()\1", sql)
+        sql = re.sub(r"(\s)NOW\(\)([\s,;\n])", r"\1CURRENT_TIMESTAMP()\1", sql)
 
         return sql
 

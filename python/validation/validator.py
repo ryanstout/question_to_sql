@@ -1,8 +1,3 @@
-# Run all of the questions marked correct or incorrect and output a confusion
-# matrix and accracy
-
-import random
-import time
 from multiprocessing.pool import ThreadPool
 from threading import Lock
 
@@ -15,30 +10,34 @@ from python.utils.batteries import not_none
 from python.utils.logging import log
 
 from prisma.enums import FeedbackState
+from prisma.models import DataSource
 
 THREAD_POOL_SIZE = 1
 
+# TODO this shares a global db connection, may cause issues with threading
+db = utils.db.application_database_connection()
 
-# TODO can we document exactly what this does in one-line?
+# Run all of the questions marked correct or incorrect and output a confusion
+# matrix and accuracy
 class Validator:
-    def run(self):
-        log.info("Running validator")
+    data_source: DataSource
+
+    def __init__(self):
         self.lock = Lock()
-
-        # TODO this shares a global db connection, may cause issues with threading
-        self.db = utils.db.application_database_connection()
-
         self.thread_pool = ThreadPool(processes=THREAD_POOL_SIZE)
 
         self.scores = {}
         self.failed_questions = []
 
+    def run(self):
+        log.info("Running validator")
+
         # TODO pull from user: user.business.dataSources[0]
         self.data_source_id = 1  # stub for now
-        self.data_source = not_none(self.db.datasource.find_first(where={"id": self.data_source_id}))
+        self.data_source = not_none(db.datasource.find_first(where={"id": self.data_source_id}))
 
         # Run through each marked question
-        db_questions = self.db.question.find_many(
+        db_questions = db.question.find_many(
             where={"feedbackState": FeedbackState.CORRECT},
             include={"questionGroup": {"include": {"questions": True}}},
             take=5,
