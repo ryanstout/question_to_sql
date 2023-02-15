@@ -327,6 +327,18 @@ jupyter = ["ipython (>=7.8.0)", "tokenize-rt (>=3.2.0)"]
 uvloop = ["uvloop (>=0.15.2)"]
 
 [[package]]
+name = "blinker"
+version = "1.5"
+description = "Fast, simple object-to-object and broadcast signaling"
+category = "main"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+files = [
+    {file = "blinker-1.5-py2.py3-none-any.whl", hash = "sha256:1eb563df6fdbc39eeddc177d953203f99f097e9bf0e2b8f9f3cf18b6ca425e36"},
+    {file = "blinker-1.5.tar.gz", hash = "sha256:923e5e2f69c155f2cc42dafbbd70e16e3fde24d2d4aa2ab72fbe386238892462"},
+]
+
+[[package]]
 name = "blobfile"
 version = "2.0.1"
 description = "Read GCS, ABS and local paths with the same interface, clone of tensorflow.io.gfile"
@@ -2883,7 +2895,9 @@ files = [
 ]
 
 [package.dependencies]
+blinker = {version = ">=1.1", optional = true, markers = "extra == \"flask\""}
 certifi = "*"
+flask = {version = ">=0.11", optional = true, markers = "extra == \"flask\""}
 urllib3 = {version = ">=1.26.11", markers = "python_version >= \"3.6\""}
 
 [package.extras]
@@ -3227,6 +3241,7 @@ typing-extensions = "*"
 [package.source]
 type = "url"
 url = "https://github.com/KumaTea/pytorch-aarch64/releases/download/v1.11.0/torch-1.11.0-cp310-cp310-linux_aarch64.whl"
+
 [[package]]
 name = "torch"
 version = "1.13.1"
@@ -3247,6 +3262,7 @@ opt-einsum = ["opt-einsum (>=3.3)"]
 [package.source]
 type = "url"
 url = "https://download.pytorch.org/whl/cpu/torch-1.13.1-cp310-none-macosx_11_0_arm64.whl"
+
 [[package]]
 name = "torch"
 version = "1.13.1+cpu"
@@ -3267,6 +3283,7 @@ opt-einsum = ["opt-einsum (>=3.3)"]
 [package.source]
 type = "url"
 url = "https://download.pytorch.org/whl/cpu/torch-1.13.1%2Bcpu-cp310-cp310-linux_x86_64.whl"
+
 [[package]]
 name = "torchmetrics"
 version = "0.11.1"
@@ -3319,6 +3336,7 @@ scipy = ["scipy"]
 [package.source]
 type = "url"
 url = "https://github.com/KumaTea/pytorch-aarch64/releases/download/v1.11.0/torchvision-0.12.0-cp310-cp310-linux_aarch64.whl"
+
 [[package]]
 name = "torchvision"
 version = "0.14.1"
@@ -3343,6 +3361,7 @@ scipy = ["scipy"]
 [package.source]
 type = "url"
 url = "https://download.pytorch.org/whl/cpu/torchvision-0.14.1-cp310-cp310-macosx_11_0_arm64.whl"
+
 [[package]]
 name = "torchvision"
 version = "0.14.1+cpu"
@@ -3367,6 +3386,7 @@ scipy = ["scipy"]
 [package.source]
 type = "url"
 url = "https://download.pytorch.org/whl/cpu/torchvision-0.14.1%2Bcpu-cp310-cp310-linux_x86_64.whl"
+
 [[package]]
 name = "tqdm"
 version = "4.64.1"
@@ -3831,4 +3851,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.10"
-content-hash = "b4638a47a9eba0bbd342dc7888a3f9e87eda269b1a13a3295c9c93feb716d1bb"
+content-hash = "b84bbc98335a69c41045151b1879054c57e77f2717ccd535a19eefaab9b874b1"
