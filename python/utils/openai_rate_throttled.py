@@ -7,17 +7,16 @@
 #
 # openai_throttled.complete("Hello, world!")
 
-
-from python.setup import log
-
-import time
 import typing as t
+from contextlib import contextmanager
 
+import backoff
 import numpy as np
 import openai
 from decouple import config
-from openai.error import OpenAIError
+from openai.error import OpenAIError, ServiceUnavailableError
 
+from python.utils.batteries import log_execution_time
 from python.utils.logging import log
 from python.utils.tokens import count_tokens
 
@@ -33,24 +32,45 @@ class ChoicesItem(t.TypedDict):
     text: str
 
 
-class Usage(t.TypedDict):
+# usage fields change depending on which endpoint you call
+class OpenAIUsage(t.TypedDict):
     completion_tokens: int
     prompt_tokens: int
     total_tokens: int
 
 
-class OpenAIResponse(t.TypedDict):
-    choices: t.List[ChoicesItem]
+# NOTE we are are cheating here: OpenAIObject is a subclass of dict which adds dot-notion accessors
+#      it's easier to type if we just treat them as dicts
+class OpenAICompletionResponse(t.TypedDict):
+    choices: list[ChoicesItem]
     created: int
     id: str
     model: str
     object: str
-    usage: Usage
+    usage: OpenAIUsage
+
+
+class EmbeddingData(t.TypedDict):
+    embedding: list[float]
+    index: int
+    object: str
+
+
+class OpenAIEmbeddingResponse(t.TypedDict):
+    data: list[EmbeddingData]
+    model: str
+    object: str
+    usage: OpenAIUsage
+
+
+def _base_consumption_request():
+    return {"requests": 1, "codex_tokens": 0, "embed_tokens": 0}
 
 
 class OpenAIThrottled:
     def __init__(
         self,
+        # TODO where do these magic numbers come from?
         max_requests_per_minute: float = 20,
         max_codex_tokens_per_minute: float = 40000,
         max_embed_tokens_per_minute: float = 250000,
@@ -65,62 +85,73 @@ class OpenAIThrottled:
             }
         )
 
-    def complete(self, prompt: str, **kwargs):
+    def complete(self, **kwargs):
         # Called in a with statement, blocks via time.sleep until the resources
         # needed for the next request are available. The return value from the
         # inside of the with should be the number of tokens consumed (in the
         # response of the API calls.) This helps keep track of actual
         # consumption, which can vary from the number of tokens requested.
 
-        token_count = count_tokens(prompt) + 1024  # add padding to handle max response
+        # add padding to handle max response
+        # TODO is there a reason we shouldn't add this padding to the embedding as well?
+        token_count = count_tokens(kwargs["prompt"]) + 1024
 
-        with self.limiter.request_when_available({"requests": 1, "codex_tokens": token_count, "embed_tokens": 0}):
-            t1 = time.time()
+        with self._safe_api_request(_base_consumption_request() | {"codex_tokens": token_count}):
+            # TODO should make this more generic and avoid tying to completion directly
+            result = openai.Completion.create(**kwargs)
 
-            result = openai.Completion.create(
-                prompt=prompt,
-                **kwargs
-                # engine="code-davinci-002",
-                # max_tokens=1024,  # was 256
-                # temperature=0.0,
-                # top_p=1,
-                # presence_penalty=0,
-                # frequency_penalty=0,
-                # best_of=1,
-                # # logprobs=4,
-                # n=1,
-                # stream=False,
-                # # tells the model to stop generating a response when it gets to the end of the SQL
-                # stop=[";", "\n\n"],
+        result = t.cast(OpenAICompletionResponse, result)
+
+        total_tokens = result["usage"]["total_tokens"]
+
+        if total_tokens != token_count:
+            log.info(
+                "incorrect token estimate", method="completion", total_tokens=total_tokens, guess_tokens=token_count
             )
-            t2 = time.time()
-            log.info(f"Got openai completion response in ", time=t2 - t1)
 
-            result = t.cast(OpenAIResponse, result)
+        self.limiter.consume_resources(_base_consumption_request() | {"codex_tokens": total_tokens})
 
-            # Count the consumed tokens and the request
-            total_tokens = result.usage["total_tokens"]
+        return result
 
-            log.info("Completion tokens: ", total_tokens=total_tokens, guess_tokens=token_count)
-            self.limiter.consume_resources({"requests": 1, "codex_tokens": total_tokens, "embed_tokens": 0})
+    def embed(self, **kwargs):
+        token_count = count_tokens(kwargs["input"])
 
-            return result
+        with self._safe_api_request(_base_consumption_request() | {"embed_tokens": token_count}):
+            result = openai.Embedding.create(**kwargs)
 
-    def embed(self, input: str, **kwargs):
-        token_count = count_tokens(input)
+        result = t.cast(OpenAIEmbeddingResponse, result)
 
-        with self.limiter.request_when_available({"requests": 1, "codex_tokens": 0, "embed_tokens": token_count}):
-            result = openai.Embedding.create(input=input, **kwargs)
+        total_tokens = result["usage"]["total_tokens"]
+        self.limiter.consume_resources(_base_consumption_request() | {"embed_tokens": total_tokens})
 
-            total_tokens = result["usage"]["total_tokens"]
-            self.limiter.consume_resources({"requests": 1, "codex_tokens": total_tokens, "embed_tokens": 0})
+        embedding_list = result["data"]
+        assert len(embedding_list) == 1, "expected exactly one embedding"
 
-            emb = np.array(result.data[0].embedding, dtype=np.float32)
+        # TODO this sort of logic should be handled up the stack
+        emb = np.array(embedding_list[0]["embedding"], dtype=np.float32)
 
-            return emb
+        return emb
+
+    @contextmanager
+    # https://github.com/litl/backoff/issues/92
+    @backoff.on_exception(
+        backoff.expo,
+        (OpenAIError, ServiceUnavailableError),
+        # how much each exponential backoff should increase the time by
+        # https://github.com/litl/backoff/blob/d82b23c42d7a7e2402903e71e7a7f03014a00076/backoff/_wait_gen.py#L9-L10
+        factor=60,
+        # TODO should we just set this to an insane value since some of these operations are very hard to retry
+        #      maybe this makes sense if we set a process-level timeout for the web server side of things
+        max_tries=5,
+        logger=log,
+    )
+    def _safe_api_request(self, consumption_request):
+        with self.limiter.request_when_available(consumption_request):
+            with log_execution_time("openai completion"):
+                yield
 
 
-# Export singleton
+# TODO should uppercase if it is a constant
 openai_throttled = OpenAIThrottled(
     max_requests_per_minute=int(20 * 0.5),
     max_codex_tokens_per_minute=int(40000 * 0.3),
