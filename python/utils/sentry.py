@@ -4,7 +4,7 @@ import sentry_sdk
 from decouple import config
 from sentry_sdk.integrations.flask import FlaskIntegration
 
-from python.utils.system import is_production
+from python.utils.environments import is_production
 
 
 def configure_sentry():

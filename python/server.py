@@ -4,7 +4,7 @@ from flask import Flask, jsonify, request
 
 from python.query_runner import run_query
 from python.questions import question_with_data_source_to_sql
-from python.utils.system import is_production
+from python.utils.environments import is_production
 
 application = Flask(__name__)
 

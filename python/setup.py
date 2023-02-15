@@ -7,7 +7,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 
-from utils.system import is_production
+from utils.environments import is_production
 from utils.logging import log
 
 import faulthandler
