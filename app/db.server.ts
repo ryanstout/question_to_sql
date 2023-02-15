@@ -4,6 +4,8 @@ import { PrismaClient } from "@prisma/client"
 
 import { isProduction, isTest } from "~/lib/environment.server"
 
+import * as Sentry from "@sentry/remix"
+
 let prisma: PrismaClient
 
 declare global {
@@ -93,6 +95,17 @@ if (isProduction()) {
     global.__db__ = getClient()
   }
   prisma = global.__db__
+}
+
+if (isProduction()) {
+  const { SENTRY_DSN } = process.env
+  invariant(SENTRY_DSN, "SENTRY_DSN is not defined")
+
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    tracesSampleRate: 1,
+    integrations: [new Sentry.Integrations.Prisma({ client: prisma })],
+  })
 }
 
 export { prisma }

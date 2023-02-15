@@ -1,4 +1,5 @@
 import { useEffect } from "react"
+import invariant from "tiny-invariant"
 
 import { RemixBrowser, useLocation, useMatches } from "@remix-run/react"
 
@@ -21,8 +22,11 @@ hydrateRoot(
 )
 
 if (isProduction()) {
+  const { SENTRY_DSN } = process.env
+  invariant(SENTRY_DSN, "SENTRY_DSN is not defined")
+
   Sentry.init({
-    dsn: process.env.SENTRY_DSN,
+    dsn: SENTRY_DSN,
     tracesSampleRate: 1,
     integrations: [
       new Sentry.BrowserTracing({
