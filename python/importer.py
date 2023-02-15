@@ -2,32 +2,24 @@ from python.setup import log
 
 import json
 import re
+import typing as t
 from multiprocessing.pool import ThreadPool
 
-import click
+import query_runner
 import utils
-from decouple import config
 
 import python.utils.sql as sql
 from python.embeddings.embedding_builder import EmbeddingBuilder
-from python.utils.logging import log
-from python.utils.sql import unqualified_table_name
 
-from prisma import Prisma
-from prisma.enums import DataSourceType
-from prisma.models import (
-    Business,
-    DataSource,
-    DataSourceTableColumn,
-    DataSourceTableDescription,
-    User,
-)
+from prisma.models import DataSource, DataSourceTableDescription
 from prisma.types import DataSourceTableColumnCreateInput
 
-# Imports the schema and metadata from the snowflake database to the
-# local database.
+# Imports the schema, and schema, metadata from the snowflake database to the local database.
+# on the SQL side, this mostly performs a bunch of describes & COUNTs
 
 SKIP_COLUMNS = [
+    # some end with one `_`, some with two
+    "^__HEVO_",
     # fivetran columns
     "^_FIVETRAN_",
     # airbyte columns
@@ -41,7 +33,6 @@ SKIP_COLUMNS = [
 
 SKIP_TABLES = ["FIVETRAN_AUDIT", "^_AIRBYTE_", "_SCD$"]
 
-
 # TODO source this from the ENV?
 THREAD_POOL_SIZE = 20
 
@@ -50,9 +41,6 @@ THREAD_POOL_SIZE = 20
 Imports the schema and metadata from the snowflake database to the
 local database.
 """
-import typing as t
-
-import query_runner
 
 SnowflakeColumnDescription = t.TypedDict(
     "SnowflakeColumnDescription",
@@ -93,46 +81,64 @@ def fqn_from_table_description(description: SnowflakeTableDescription) -> str:
     return f"{description['database_name']}.{description['schema_name']}.{description['name']}"
 
 
-class Import:
-    def __init__(self, user_id: int, data_source_id: int, table_limit: int, column_limit: int, column_value_limit: int):
+# TODO easier to define a high limit than remove `LIMIT`s in SQL`
+MAX_LIMIT = 10_000
+
+
+class Importer:
+    def __init__(self, data_source_id: int, table_limit: int, column_limit: int, column_value_limit: int):
         self.column_pool = ThreadPool(processes=THREAD_POOL_SIZE)
-        self.limits = {"table": table_limit, "column": column_limit, "column_value": column_value_limit}
+        self.limits = {
+            "table": table_limit or MAX_LIMIT,
+            "column": column_limit or MAX_LIMIT,
+            "column_value": column_value_limit or MAX_LIMIT,
+        }
 
-        log.debug("starting import", data_source_id=data_source_id, user_id=user_id)
-
+        # TODO maybe move to a file-global variable vs a class variable
         self.db = utils.db.application_database_connection()
 
-        # TODO should create helper for this, find first + throw
-        user = self.db.user.find_unique(
-            where={"id": int(user_id)}, include={"business": {"include": {"dataSources": True}}}
-        )
-        if user is None:
-            raise Exception("User not found")
+        log.debug("starting import", data_source_id=data_source_id)
 
-        data_source = user.business.dataSources[0]
+        # TODO should create helper for this, find first + throw like we have in JS
+        data_source = self.db.datasource.find_unique(where={"id": int(data_source_id)})
+        if data_source is None:
+            raise Exception("data source not found")
 
         self.embedding_builder = EmbeddingBuilder(data_source)
 
         self.create_table_records(data_source)
 
         # Save embedding indexes to the file system, this must be done in one fell swoop due to how the
-        # embeddings indexes are generated.
-        self.embedding_builder.save()
+        # embeddings indexes are generated. This cannot be done incrementally.
+        self.embedding_builder.write_indexes_to_disk()
 
     def create_table_records(self, data_source: DataSource) -> None:
         # TODO this will create a new cursor each time, we should use a single cursor for this script
         table_list = query_runner.run_query(
             data_source_id=data_source.id,
-            sql=f"SHOW TABLES LIMIT {self.limits['table'] or 1000}",
+            sql=f"SHOW TABLES LIMIT {self.limits['table']}",
             disable_query_protections=True,
         )
 
-        # TODO add return type to run_query, this can be done with generics in python
-        table_list = t.cast(t.List[SnowflakeTableDescription], table_list)
-
-        log.info("inspecting tables", table_count=len(table_list))
-
+        # TODO so terrible, refact when we settled on a functional lib
+        tables_with_content = []
         for table in table_list:
+            if table["rows"] == 0:
+                log.debug("skipping table with no rows", table=table["name"])
+                continue
+            tables_with_content.append(table)
+
+        # sorts in place, ascending
+        # start with the smallest table first (cheapest to query) in case something goes wrong
+        tables_with_content.sort(key=lambda x: x["rows"] or 0)
+
+        # TODO add return type to run_query, this can be done with generics in python
+        tables_with_content = t.cast(list[SnowflakeTableDescription], tables_with_content)
+
+        log.info("inspecting tables", table_count=len(tables_with_content))
+
+        for table in tables_with_content:
+            # TODO this is really confusing syntax, if we can land on a functional lib for python we should replace this
             if any(re.search(regex, table["name"]) for regex in SKIP_TABLES):
                 log.debug("skipping table", table=table)
             else:
@@ -143,7 +149,12 @@ class Import:
         log.debug("creating local table record", fqn=fqn)
 
         # TODO why can't pyright determine the right types here? It's clearly a str, number | string dict?
-        table_locator = {"dataSourceId": data_source.id, "fullyQualifiedName": fqn}
+        table_locator = dict(
+            {
+                "dataSourceId": data_source.id,
+                "fullyQualifiedName": fqn,
+            }
+        )
 
         # Still can't believe you can't unique query on a compound index in prisma!
         table_description = self.db.datasourcetabledescription.find_first(where=table_locator)
@@ -153,6 +164,7 @@ class Import:
 
         self.create_column_records(data_source, table_description)
 
+        # this is an expensive operation, does a full table scan for each column in
         self.embedding_builder.add_table(
             fqn, column_limit=self.limits["column"], column_value_limit=self.limits["column_value"]
         )
@@ -175,8 +187,6 @@ class Import:
             limit=self.limits["column"],
         )
 
-        breakpoint()
-
         futures = [
             self.column_pool.apply_async(
                 self.create_column_record, args=(data_source, table_description, column, row_count)
@@ -189,9 +199,10 @@ class Import:
         # Wait for futures to finish
         [future.get() for future in futures]
 
+    # TODO a better approach here would be to use the INFORMATION_SCHEMA of the database to get the row count
     def get_total_rows(self, data_source: DataSource, table_description: DataSourceTableDescription) -> int:
         raw_sql = f"""
-        SELECT COUNT(*) as count
+        SELECT COUNT(*) as COUNT
         FROM {sql.normalize_fqn_quoting(table_description.fullyQualifiedName)}
         """
 
@@ -220,7 +231,7 @@ class Import:
 
         log.info(
             "inspecting column",
-            table_name=unqualified_table_name(table_description.fullyQualifiedName),
+            table_name=sql.unqualified_table_name(table_description.fullyQualifiedName),
             name=name,
             type=type,
             column=name,
@@ -233,6 +244,7 @@ class Import:
 
         column_external_id_locator = {"dataSourceTableDescriptionId": table_description.id, "name": name}
 
+        # TODO pyright does not like merging dicts and typing, need to fix
         column_description_payload: DataSourceTableColumnCreateInput = column_external_id_locator | {
             "dataSourceId": data_source.id,
             "type": column["type"],
@@ -248,7 +260,6 @@ class Import:
                     "comment": column["comment"],
                 }
             ),
-            "embeddingsCache": "{}",
         }
 
         # TODO I hope we can use upsert here instead...
@@ -263,8 +274,9 @@ class Import:
     def get_unique_row_count(
         self, data_source: DataSource, table_description: DataSourceTableDescription, column_name: str
     ):
+        # TODO I imagine this has to do a full table scan as well, we should try to figure ouw how much these queries cost
         raw_sql = f"""
-        SELECT COUNT(DISTINCT({sql.normalize_fqn_quoting(table_description.fullyQualifiedName)}.{sql.normalize_fqn_quoting(name)})) as count
+        SELECT COUNT(DISTINCT({sql.normalize_fqn_quoting(table_description.fullyQualifiedName)}.{sql.normalize_fqn_quoting(column_name)})) as count
         FROM {sql.normalize_fqn_quoting(table_description.fullyQualifiedName)}
         """
 
@@ -275,24 +287,5 @@ class Import:
             disable_query_protections=True,
         )
 
-        # TODO we should assert against there being a single return value here
-        for count in counts:
-            distinct_row_count = count["COUNT"]
-            break
-
-        return distinct_row_count
-
-
-# TODO move this to a single command.py
-@click.command()
-@click.option("--user-id", type=int, required=True)
-@click.option("--data-source-id", type=int, required=True)
-@click.option("--table-limit", type=int)
-@click.option("--column-limit", type=int)
-@click.option("--column-value-limit", type=int)
-def cli(**kwargs):
-    Import(**kwargs)
-
-
-if __name__ == "__main__":
-    cli()
+        # TODO this will break if the upstream breaks, this is intentional for now
+        return counts[0]["COUNT"]
