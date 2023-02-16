@@ -1,6 +1,8 @@
 """
 The SqlInspector takes a simple version of the schema consisting of a dict of lists of strings (SimpleSchema type)
 
+This is needed to resolve the table and column names.
+
 
 """
 

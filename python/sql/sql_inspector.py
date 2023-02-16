@@ -73,7 +73,7 @@ class SqlInspector:
         except ParseError as e:  # sqlglot parse error
             raise SqlParseError(f"Unable to parse SQL: {sql}") from e
 
-        if os.getenv("DEBUG"):
+        if os.getenv("SQL_PARSING_DEBUG"):
             log.debug("AST: ")
             pprint(ast)
 

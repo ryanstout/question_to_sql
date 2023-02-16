@@ -63,29 +63,29 @@ def question_with_schema_to_sql(
         stops.append("<|im_end|>")  # chatgpt message end token
 
     while True:
-        t1 = time.time()
-        result = openai_throttled.complete(
-            engine=engine,
-            # engine="code-davinci-002",
-            # engine="text-chat-davinci-002-20230126",  # leaked chatgpt model
-            prompt=prompt,
-            max_tokens=1024,  # was 256
-            temperature=0.0,
-            top_p=1,
-            presence_penalty=0,
-            frequency_penalty=0,
-            best_of=1,
-            # logprobs=4,
-            n=1,
-            stream=False,
-            # tells the model to stop generating a response when it gets to the end of the SQL
-            stop=stops,
-        )
+        with log_execution_time("openai completion"):
 
-        t2 = time.time()
-        log.debug("openai completion in", time=t2 - t1)
+            # See OpenAI completion docs for details on parameters:
+            # https://platform.openai.com/docs/api-reference/completions/create
+            result = openai_throttled.complete(
+                engine=engine,
+                # engine="code-davinci-002",
+                # engine="text-chat-davinci-002-20230126",  # leaked chatgpt model
+                prompt=prompt,
+                max_tokens=1024,  # was 256
+                temperature=0.0,
+                top_p=1,
+                presence_penalty=0,
+                frequency_penalty=0,
+                best_of=1,
+                # logprobs=4,
+                n=1,
+                stream=False,
+                # tells the model to stop generating a response when it gets to the end of the SQL
+                stop=stops,
+            )
 
-        ai_sql = result.choices[0].text  # type: ignore
+        ai_sql = result["choices"][0]["text"]
 
         ai_sql = f"SELECT {ai_sql};"
 
@@ -101,12 +101,12 @@ def is_sql_valid(simple_schema: SimpleSchema, ai_sql: str) -> bool:
     Returns true if the ai_sql is valid
     """
 
-    # Disabled for now
+    # TODO: Disabled for now
     return True
     try:
         SqlInspector(ai_sql, simple_schema)
     except SqlInspectError as e:
-        log.debug("SQL is invalid", sql=ai_sql, error=e)
+        log.warn("SQL is invalid", sql=ai_sql, error=e)
         return False
 
     return True
@@ -134,24 +134,24 @@ def create_prompt(schema: str, question: str) -> str:
         f"-- {PostTransform.in_dialect.capitalize()} SQL schema",
         schema,
         "",
-        #         "-- How many orders are there per month?",
-        #         'SELECT\n  COUNT(*) AS orders_per_month,\n  EXTRACT(MONTH FROM created_at) AS month\nFROM "order"\nGROUP BY\n  month\nORDER BY\n  month NULLS LAST;',
-        #         "",
-        #         "-- Which product sells the best?",
-        #         """SELECT
-        #   COUNT(*) AS orders_per_product,
-        #   product.title
-        # FROM "order"
-        # JOIN order_line
-        #   ON order_line.order_id = "order".id
-        # JOIN product_variant
-        #   ON product_variant.id = order_line.variant_id
-        # JOIN product
-        #   ON product.id = product_variant.product_id
-        # GROUP BY
-        #   product.title
-        # ORDER BY
-        # orders_per_product DESC NULLS FIRST;""",
+        "-- How many orders are there per month?",
+        'SELECT\n  COUNT(*) AS orders_per_month,\n  EXTRACT(MONTH FROM created_at) AS month\nFROM "order"\nGROUP BY\n  month\nORDER BY\n  month NULLS LAST;',
+        "",
+        "-- Which product sells the best?",
+        """SELECT
+          COUNT(*) AS orders_per_product,
+          product.title
+        FROM "order"
+        JOIN order_line
+          ON order_line.order_id = "order".id
+        JOIN product_variant
+          ON product_variant.id = order_line.variant_id
+        JOIN product
+          ON product.id = product_variant.product_id
+        GROUP BY
+          product.title
+        ORDER BY
+        orders_per_product DESC NULLS FIRST;""",
         "",
         # "-- Calculate lifetime of a customer by taking the duration between the first and most recent order for a customer. ",
         # "-- If we're returning a day, always also return the month and year"

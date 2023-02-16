@@ -42,7 +42,7 @@ class Column(Base):
                     self._columns = {key: column}
                     return {key: column}
                 else:
-                    if os.environ.get("DEBUG"):
+                    if os.environ.get("SQL_PARSING_DEBUG"):
                         print("COLUMNS: ")
                         for key, column in columns.items():
                             print(key, column)
