@@ -113,7 +113,6 @@
     "cookie": "^0.5.0",
     "cypress": "^12.5.1",
     "dotenv": "^16.0.3",
-    "esbuild": "^0.17.8",
     "eslint": "^8.34.0",
     "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-cypress": "^2.12.1",
