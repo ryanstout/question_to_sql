@@ -8,6 +8,12 @@ then
     exit
 fi
 
+if ! command -v redis-cli &> /dev/null
+then
+    echo "redis could not be found, make sure it's installed"
+    exit
+fi
+
 cat .tool-versions | cut -d' ' -f1 | grep '^[^\#]' | xargs -I{} asdf plugin add {}
 asdf install
 
@@ -39,7 +45,7 @@ npm run build
 echo "`npm run dev` to start the server"
 
 # helpful packages for ipython
-poetry run pip install ipython ipdb pdbr ipython-autoimport rich docrepr colorama
+poetry run pip install ipython ipdb pdbr ipython-autoimport rich docrepr colorama ipython-suggestions
 
 # you need python installed properly to generate the prisma bindings
 # for now, we are nuking the entire DB, will need to change this in the future
