@@ -21,6 +21,9 @@ def is_correct_snowflake_result(val: object) -> TypeGuard[SnowflakeResponse]:
     """
     We expect snowflake queries to return a list of dicts
     """
+    if isinstance(val, dict):
+        return True
+
     if not isinstance(val, list):
         return False
 

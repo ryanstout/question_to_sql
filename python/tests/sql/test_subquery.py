@@ -3,7 +3,7 @@ from pprint import pprint
 import pytest
 from rich import print
 
-from python.sql.exceptions import ColumnNotFoundException, TableNotFoundException
+from python.sql.exceptions import ColumnNotFoundError, TableNotFoundError
 from python.sql.sql_inspector import SqlInspector
 
 
@@ -36,7 +36,7 @@ def test_subquery_pass_through():
     )
     assert inspector.touches() == {("table2", None, None): 1, ("table2", "col1", None): 3}
 
-    with pytest.raises(ColumnNotFoundException):
+    with pytest.raises(ColumnNotFoundError):
         inspector = SqlInspector(
             """
             SELECT col1, table2.col3 FROM (SELECT col1 FROM table2);
@@ -44,7 +44,7 @@ def test_subquery_pass_through():
             {"table1": ["col1", "col2"], "table2": ["col1", "col3"]},
         )
 
-    with pytest.raises(ColumnNotFoundException):
+    with pytest.raises(ColumnNotFoundError):
         inspector = SqlInspector(
             """
             SELECT col1, t1.col3 FROM (SELECT col1 FROM table2) as t1;

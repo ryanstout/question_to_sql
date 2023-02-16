@@ -38,6 +38,7 @@ class SqlState(TypedDict):
     select: "Select | None"  # The Select node will update to self for root
     branch: str
     node: exp.Expression
+    dialect: str  # 'postgres' | 'snowflake'
 
     # What tables, columns, and values (as a string) does the sql query touch
     # and therefore need to be in the in the prompt schema

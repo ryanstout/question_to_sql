@@ -3,7 +3,7 @@ from pprint import pprint
 import pytest
 from rich import print
 
-from python.sql.exceptions import ColumnNotFoundException, TableNotFoundException
+from python.sql.exceptions import ColumnNotFoundError, TableNotFoundError
 from python.sql.sql_inspector import SqlInspector
 
 
@@ -53,7 +53,7 @@ def test_simple_multitable_select_with_alias_where_aliases_used():
 
 
 def test_table_alias_should_not_allow_access_via_original_name():
-    with pytest.raises(ColumnNotFoundException):
+    with pytest.raises(ColumnNotFoundError):
         inspector = SqlInspector(
             """
             SELECT table1.col1 FROM table1 as t1;
@@ -115,4 +115,19 @@ def test_qualified_select_star():
         ("table2", None, None): 1,
         ("table1", "col1", None): 1,
         ("table1", "col2", None): 1,
+    }
+
+
+def test_count_star():
+    # Count(*)'s are a special case where they don't actually touch the columns
+    inspector = SqlInspector(
+        """
+        SELECT COUNT(*) FROM table1;
+        """,
+        {"table1": ["col1", "col2"]},
+    )
+    print(inspector)
+    print(inspector.touches())
+    assert inspector.touches() == {
+        ("table1", None, None): 1,
     }

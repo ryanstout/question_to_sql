@@ -1,6 +1,7 @@
+import os
 from dataclasses import dataclass, field
 
-from python.sql.exceptions import ColumnNotFoundException
+from python.sql.exceptions import ColumnNotFoundError
 from python.sql.nodes.base import Base
 from python.sql.types import ChildrenType, ColumnsType, SqlState
 
@@ -35,15 +36,17 @@ class Column(Base):
 
                 # See if the column exists on the SELECT at this point, only return
                 # the matched column
-                if column:
+                if column is not None:
                     # Cache the column once it's resolved to prevent stack
                     # explosion
                     self._columns = {key: column}
                     return {key: column}
                 else:
-                    raise ColumnNotFoundException(
-                        f"Unable to resolve column ({self.table_alias}.{self.name}) {column = } {columns = }"
-                    )
+                    if os.environ.get("DEBUG"):
+                        print("COLUMNS: ")
+                        for key, column in columns.items():
+                            print(key, column)
+                    raise ColumnNotFoundError(f"Unable to resolve column ({self.table_alias}.{self.name})")
             else:
                 raise Exception("Parent select not assigned")
 

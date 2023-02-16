@@ -3,7 +3,7 @@ from pprint import pprint
 import pytest
 from rich import print
 
-from python.sql.exceptions import ColumnNotFoundException, TableNotFoundException
+from python.sql.exceptions import ColumnNotFoundError, TableNotFoundError
 from python.sql.sql_inspector import SqlInspector
 
 

@@ -1,3 +1,4 @@
+from pprint import pprint
 from typing import Any, Dict, List
 
 from sqlglot import exp
@@ -5,7 +6,9 @@ from sqlglot import exp
 from python.sql.nodes.base import Base
 from python.sql.nodes.column import Column
 from python.sql.nodes.column_alias import ColumnAlias
+from python.sql.nodes.count_star import CountStar
 from python.sql.nodes.eq import EQ
+from python.sql.nodes.filter import Filter
 from python.sql.nodes.join import Join
 from python.sql.nodes.select import Select
 from python.sql.nodes.star import Star
@@ -74,13 +77,23 @@ def add_child(state: SqlState, add_to: List["Base"], start_node: exp.Expression)
         case exp.Join(
             args={
                 "this": exp.Table() as join_table_exp,
-                "kind": join_kind,
                 "on": exp.Expression() as on_expression,
                 **other,
             }
         ) as join_exp:
+            kind = None
+            match other:
+                case {"kind": join_kind, **other}:
+                    # The match above will update other
+                    kind = join_kind
+                case _:
+                    pass
+
             if len(other) > 0:
-                raise Exception(f"Unknown arg on join: {join_exp!r}")
+                raise ValueError(f"Unknown arg on join: {join_exp!r}")
+
+            # TODO: Handle join kind's
+            # "kind": join_kind,
 
             # Create a Base node to hold the join and the on
             join = Join(new_state(state, {"node": join_exp}))
@@ -100,10 +113,14 @@ def add_child(state: SqlState, add_to: List["Base"], start_node: exp.Expression)
                 "this": exp.Expression() as column_exp,
                 "expression": exp.Literal(args={"this": value_str, "is_string": True}),
             }
-        ) as eq_exp:
+        ):
             # Match on `column= 'value'` expressions
             node = EQ(state, value_str)
             add_children(state, node, {"column": column_exp})
+
+        case exp.Count(args={"this": exp.Star() as star_exp, **rest}):
+            # Special case for COUNT(*) where we don't count the star as touches
+            node = CountStar(state)
 
         case exp.Column(args={"this": exp.Star() as star_exp, **rest}):
             # Qualified star shows up in a column
@@ -114,6 +131,10 @@ def add_child(state: SqlState, add_to: List["Base"], start_node: exp.Expression)
 
         case exp.Star() as star_exp:
             node = Star(state, None)
+
+        case exp.Filter() as filter_exp:
+            node = Filter(state)
+            add_children(state, node, filter_exp.args)
 
         case exp.Expression() as expression:
             # Handle all other nodes, this combines the returned tables and

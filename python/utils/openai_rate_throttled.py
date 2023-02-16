@@ -16,7 +16,7 @@ import numpy as np
 import openai
 import openai.error
 from decouple import config
-from openai.error import OpenAIError
+from openai.error import OpenAIError, RateLimitError
 
 from python.utils.batteries import log_execution_time
 from python.utils.logging import log

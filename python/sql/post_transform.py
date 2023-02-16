@@ -76,14 +76,20 @@ class PostTransform:
         except ParseError as e:
             log.error("Could not parse SQL, trying tsql", sql=sql, error=e)
             ast = parse_one(sql, "tsql")
-        except ParseError as e:
-            log.error("Could not parse SQL, trying snowflake", sql=sql, error=e)
-            ast = parse_one(sql, "snowflake")
+            try:
+                log.error("Could not parse SQL, trying snowflake", sql=sql, error=e)
+                ast = parse_one(sql, "snowflake")
+            except ParseError as e:
+                log.error("Could not parse SQL", sql=sql, error=e)
+                raise ParseError(f"Could not parse SQL {e!r}")
 
         sql = transpile(ast.sql(), read=self.__class__.in_dialect, write=self.__class__.out_dialect)[0]
         ast = parse_one(sql, self.__class__.out_dialect)
 
-        ast = ast.transform(self.cast_divides_to_float)
+        if self.__class__.out_dialect == "postgres":
+            # Postgres needs the input to divides cast to float for "what percent" questions
+            ast = ast.transform(self.cast_divides_to_float)
+
         ast = ast.transform(self.add_fully_qualified_name)
 
         sql = ast.sql(pretty=True, max_text_width=40)

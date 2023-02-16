@@ -96,7 +96,7 @@ class SchemaBuilder:
 
         return column
 
-    def generate_column_describe(self, column_id: int, hints: t.List[str]) -> str:
+    def generate_column_describe(self, column_id: int, hints: t.List[str]) -> str | None:
         # TODO should we filter by kind?
         column = self.get_data_source_table_column(column_id)
 

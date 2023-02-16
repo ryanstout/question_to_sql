@@ -1,6 +1,8 @@
 from dataclasses import dataclass
+from pprint import pprint
 
 from python.sql.nodes.base import Base
+from python.sql.nodes.count_star import CountStar
 from python.sql.types import ColumnsType, SqlState
 
 
@@ -38,7 +40,9 @@ class ColumnAlias(Base):
             child_columns = super().columns()
 
             if len(child_columns) > 1:
-                raise Exception(f"ColumnAlias should only have one column in children: {self}")
+                raise ValueError(
+                    f"ColumnAlias should only have one column in children:\n{self.state['node']!r}\n\n{self}"
+                )
 
             child_column = next(iter(child_columns.values()))
 

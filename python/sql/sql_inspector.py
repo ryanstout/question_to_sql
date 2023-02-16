@@ -40,13 +40,16 @@ Select's need to have children run in the following order:
 8. LIMIT
 """
 
-# TODO: Don't forget: EXISTS, UNION, UNION ALL, EXCEPT, LAG, OVER
+# TODO: Don't forget: EXISTS, UNION, UNION ALL, EXCEPT, LAG, OVER, FILTER, QUALIFY
 
 import os
 from dataclasses import dataclass
+from pprint import pprint
 
 from sqlglot import parse_one
+from sqlglot.errors import ParseError
 
+from python.sql.exceptions import SqlParseError
 from python.sql.nodes.base import Base
 from python.sql.nodes.builder import add_child
 from python.sql.types import SimpleSchema, SqlState
@@ -65,17 +68,21 @@ class SqlInspector:
     root: Base
 
     def __init__(self, sql: str, schema: SimpleSchema, dialect: str = "snowflake"):
-        ast = parse_one(sql, dialect)
+        try:
+            ast = parse_one(sql, read=dialect)
+        except ParseError as e:  # sqlglot parse error
+            raise SqlParseError(f"Unable to parse SQL: {sql}") from e
 
         if os.getenv("DEBUG"):
             log.debug("AST: ")
-            log.debug(ast)
+            pprint(ast)
 
         self.start_state = {
             "node": ast,
             "select": None,
             "schema": schema,
             "branch": "select",
+            "dialect": dialect,
             "touches": {},
         }
 

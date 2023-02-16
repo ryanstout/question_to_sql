@@ -22,6 +22,7 @@ Quick reminder on the embedding indexes:
 ### For values
 
 - value (column@row) => value, column, table
+- table name, column name, and value (for row) => value, column, table
 
 # Rankers
 
@@ -29,7 +30,7 @@ Each ranker model is run bottom to top so the outputs of its children can be use
 
 ## Value Ranker
 
-Run first, simple linear transform
+Run first, simple blend of two embedding indexes
 
 ## Column Ranker
 

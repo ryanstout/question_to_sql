@@ -3,9 +3,21 @@ Exceptions used when parsing and inspecting SQL.
 """
 
 
-class TableNotFoundException(Exception):
+class SqlInspectError(Exception):
     pass
 
 
-class ColumnNotFoundException(Exception):
+class TableNotFoundError(SqlInspectError):
+    pass
+
+
+class ColumnNotFoundError(SqlInspectError):
+    pass
+
+
+class FilterNotSupportedError(SqlInspectError):
+    pass
+
+
+class SqlParseError(SqlInspectError):
     pass

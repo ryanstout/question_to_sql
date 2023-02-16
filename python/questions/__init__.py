@@ -1,9 +1,14 @@
 import datetime
+import time
 
 import python.utils.db
 from python.schema.ranker import Ranker
 from python.schema.schema_builder import SchemaBuilder
+from python.schema.simple_schema_builder import SimpleSchemaBuilder
+from python.sql.exceptions import SqlInspectError
 from python.sql.post_transform import PostTransform
+from python.sql.sql_inspector import SqlInspector
+from python.sql.types import SimpleSchema
 from python.utils.batteries import log_execution_time
 from python.utils.logging import log
 from python.utils.openai_rate_throttled import openai_throttled
@@ -29,9 +34,13 @@ def question_with_data_source_to_sql(data_source_id: int, question: str, engine:
 
     log.debug("convert question and schema to sql")
     with log_execution_time("schema to sql"):
-        sql = question_with_schema_to_sql(table_schema_limited_by_token_size, question)
+        log.debug("Convert Question to SQL")
 
-    log.debug("sql pre transform", sql=sql)
+        # TODO: this could be cached on datasource or something
+        simple_schema = SimpleSchemaBuilder().build(db, data_source_id)
+
+        sql = question_with_schema_to_sql(simple_schema, table_schema_limited_by_token_size, question)
+        log.debug("sql pre transform", sql=sql)
 
     # AST based transform of the SQL to fix up common issues
     with log_execution_time("ast transform"):
@@ -42,7 +51,72 @@ def question_with_data_source_to_sql(data_source_id: int, question: str, engine:
     return sql
 
 
-def question_with_schema_to_sql(schema: str, question: str, engine: str = "code-davinci-002") -> str:
+def question_with_schema_to_sql(
+    simple_schema: SimpleSchema, schema: str, question: str, engine: str = "code-davinci-002"
+) -> str:
+    prompt = create_prompt(schema, question)
+
+    log.debug("sending prompt to openai", prompt=prompt)
+
+    stops = [";", "\n\n"]
+    if engine == "text-chat-davinci-002-20230126":
+        stops.append("<|im_end|>")  # chatgpt message end token
+
+    while True:
+        t1 = time.time()
+        result = openai_throttled.complete(
+            engine=engine,
+            # engine="code-davinci-002",
+            # engine="text-chat-davinci-002-20230126",  # leaked chatgpt model
+            prompt=prompt,
+            max_tokens=1024,  # was 256
+            temperature=0.0,
+            top_p=1,
+            presence_penalty=0,
+            frequency_penalty=0,
+            best_of=1,
+            # logprobs=4,
+            n=1,
+            stream=False,
+            # tells the model to stop generating a response when it gets to the end of the SQL
+            stop=stops,
+        )
+
+        t2 = time.time()
+        log.debug("openai completion in", time=t2 - t1)
+
+        ai_sql = result.choices[0].text  # type: ignore
+
+        ai_sql = f"SELECT {ai_sql};"
+
+        # Verify that the ai sql is valud
+        if is_sql_valid(simple_schema, ai_sql):
+            break
+
+    return ai_sql
+
+
+def is_sql_valid(simple_schema: SimpleSchema, ai_sql: str) -> bool:
+    """
+    Returns true if the ai_sql is valid
+    """
+
+    # Disabled for now
+    return True
+    try:
+        SqlInspector(ai_sql, simple_schema)
+    except SqlInspectError as e:
+        log.debug("SQL is invalid", sql=ai_sql, error=e)
+        return False
+
+    return True
+
+
+def create_prompt(schema: str, question: str) -> str:
+    """
+    Takes in the schema and question and returns the prompt string
+    """
+
     def generate_date_suffix(n):
         if 10 <= n % 100 < 20:
             return "th"
@@ -60,40 +134,32 @@ def question_with_schema_to_sql(schema: str, question: str, engine: str = "code-
         f"-- {PostTransform.in_dialect.capitalize()} SQL schema",
         schema,
         "",
-        # "-- Treat the tables listed below in order of priority, highest priority being listed first",
-        f"-- Assuming the current date is {current_date}",
-        # an extra line break hints to the model that what comes next is different and should be treated as something different
-        "-- using NOW() instead of dates\n\n",
+        #         "-- How many orders are there per month?",
+        #         'SELECT\n  COUNT(*) AS orders_per_month,\n  EXTRACT(MONTH FROM created_at) AS month\nFROM "order"\nGROUP BY\n  month\nORDER BY\n  month NULLS LAST;',
+        #         "",
+        #         "-- Which product sells the best?",
+        #         """SELECT
+        #   COUNT(*) AS orders_per_product,
+        #   product.title
+        # FROM "order"
+        # JOIN order_line
+        #   ON order_line.order_id = "order".id
+        # JOIN product_variant
+        #   ON product_variant.id = order_line.variant_id
+        # JOIN product
+        #   ON product.id = product_variant.product_id
+        # GROUP BY
+        #   product.title
+        # ORDER BY
+        # orders_per_product DESC NULLS FIRST;""",
+        "",
+        # "-- Calculate lifetime of a customer by taking the duration between the first and most recent order for a customer. ",
+        # "-- If we're returning a day, always also return the month and year"
+        # f"-- Assuming the current date is {current_date}",
+        # "-- using NOW() instead of dates\n\n",
         f"-- {question}",
         "SELECT ",
     ]
 
     prompt = "\n".join(prompt_parts)
-
-    log.debug("sending prompt to openai", prompt=prompt)
-
-    stops = [";", "\n\n"]
-    if engine == "text-chat-davinci-002-20230126":
-        stops.append("<|im_end|>")  # chatgpt message end token
-
-    result = openai_throttled.complete(
-        engine=engine,
-        # TODO convert to string enum and document there instead
-        # engine="code-davinci-002",
-        # engine="text-chat-davinci-002-20230126",  # leaked chatgpt model
-        prompt=prompt,
-        max_tokens=1024,  # was 256
-        temperature=0.0,
-        top_p=1,
-        presence_penalty=0,
-        frequency_penalty=0,
-        best_of=1,
-        # logprobs=4,
-        n=1,
-        stream=False,
-        # tells the model to stop generating a response when it gets to the end of the SQL
-        stop=stops,
-    )
-
-    ai_sql = result["choices"][0]["text"]
-    return f"SELECT {ai_sql};"
+    return prompt

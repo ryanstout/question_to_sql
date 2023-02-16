@@ -1,16 +1,17 @@
+# Run all of the questions marked correct or incorrect and output a confusion
+# matrix and accracy
+
 from multiprocessing.pool import ThreadPool
 from threading import Lock
-
-import utils
-from tqdm import tqdm
+from typing import Tuple
 
 import python.questions as questions
+from python import utils
 from python.query_runner.snowflake import run_snowflake_query
-from python.utils.batteries import not_none
 from python.utils.logging import log
 
-from prisma.enums import FeedbackState
-from prisma.models import DataSource
+from prisma.enums import EvaluationStatus
+from prisma.models import DataSource, EvaluationQuestionGroup
 
 THREAD_POOL_SIZE = 1
 
@@ -30,16 +31,10 @@ class Validator:
         self.failed_questions = []
 
     def run(self):
-        log.info("Running validator")
-
-        # TODO pull from user: user.business.dataSources[0]
-        self.data_source_id = 1  # stub for now
-        self.data_source = not_none(db.datasource.find_first(where={"id": self.data_source_id}))
-
         # Run through each marked question
-        db_questions = db.question.find_many(
-            where={"feedbackState": FeedbackState.CORRECT},
-            include={"questionGroup": {"include": {"questions": True}}},
+        db_questions = db.evaluationquestiongroup.find_many(
+            where={"status": EvaluationStatus.CORRECT},
+            include={"evaluationQuestions": True, "dataSource": True},
             take=5,
         )
 
@@ -75,51 +70,74 @@ class Validator:
         #     log.info("Failed question: ", q=failed_question)
         log.info("Percent match: ", percent_match=percent_match)
 
-    def process_correct_question(self, idx_correct_question) -> None:
-        idx = idx_correct_question[0]
-        correct_question = idx_correct_question[1]
+    def process_correct_question(self, idx_and_evaluation_group: Tuple[int, EvaluationQuestionGroup]) -> None:
+        idx = idx_and_evaluation_group[0]
+        evaluation_group = idx_and_evaluation_group[1]
 
-        # 60 second jitter so all of the requests don't come in at once
-        # log.info(f"[{idx}] Sleeping for jitter")
-        # time.sleep(random.random() * 60)
-        # log.info(f"[{idx}] Run question: {correct_question.question}")
+        data_source = evaluation_group.dataSource
+        correct_sql = evaluation_group.correctSql
+        evaluation_questions = evaluation_group.evaluationQuestions
 
-        old_sql = correct_question.userSql
-        log.debug("Old SQL: ", old_sql=old_sql)
-
-        old_results = run_snowflake_query(self.data_source, old_sql)
-        if "error" in old_results:
-            # Query returned an error
-            log.error("Error running old query: ", sql=old_sql, results=old_results)
-            self.set_scores(correct_question.id, 0, correct_question.question)
-
+        if not data_source:
+            log.error("No data source found for question group", evaluation_group=evaluation_group)
             return None
 
-        for question in correct_question.questionGroup.questions:
-            log.info(f"[{idx}] Send to openai")
-            new_sql = questions.question_with_data_source_to_sql(self.data_source_id, question.question)
-            log.debug("new sql", new_sql=new_sql)
-            new_results = run_snowflake_query(self.data_source, new_sql)
+        if not correct_sql:
+            log.error("No sql found for question group", evaluation_group=evaluation_group)
+            return None
 
-            if "error" in new_results:
+        if not evaluation_questions:
+            log.error("No questions found for question group", evaluation_group=evaluation_group)
+            return None
+
+        log.debug("Correct SQL: ", correct_sql=correct_sql)
+
+        try:
+
+            old_results = run_snowflake_query(data_source, correct_sql)
+            if "error" in old_results:
                 # Query returned an error
-                log.error("Error running new query: ", sql=new_sql, results=new_results)
-                self.set_scores(question.id, 0, question.question)
-                continue
+                log.error("Error running old query: ", sql=correct_sql, results=old_results)
+                self.set_scores(evaluation_group.id, 0, None)
 
-            if self.check_match(old_results, new_results):
-                log.info(f"[{idx}] Results match")
-                self.set_scores(question.id, 1, question.question)
-            else:
-                log.info(f"[{idx}] Results don't match")
-                self.set_scores(question.id, 0, question.question)
+                return None
+
+            for question in evaluation_questions:
+                try:
+                    log.info(f"[{idx}] Send to openai")
+                    new_sql = questions.question_with_data_source_to_sql(data_source.id, question.question)
+                    log.debug("new sql", new_sql=new_sql)
+                    new_results = run_snowflake_query(data_source, new_sql)
+
+                    if "error" in new_results:
+                        # Query returned an error
+                        log.error("Error running new query: ", sql=new_sql, results=new_results)
+                        self.set_scores(question.id, 0, question.question)
+                        continue
+
+                    if self.check_match(old_results, new_results):
+                        log.info(f"[{idx}] Results match")
+                        self.set_scores(question.id, 1, question.question)
+                    else:
+                        log.info(f"[{idx}] Results don't match")
+                        self.set_scores(question.id, 0, question.question)
+                except Exception as e:
+                    # Some exception happened when generating or running the query, log it and fail the group
+                    log.debug("Error running question", question=question.question, e=e)
+                    self.set_scores(evaluation_group.id, 0, None)
+
+        except Exception as e:
+            # Some exception happened when generating or running the query, log it and fail the group
+            log.debug("Error running query", e=e)
+            self.set_scores(evaluation_group.id, 0, None)
 
         return None
 
-    def set_scores(self, question_id: int, score: int, question: str):
+    def set_scores(self, question_id: int, score: int, question: str | None):
         self.lock.acquire()
         self.scores[question_id] = score
-        self.failed_questions.append(question)
+        if question:
+            self.failed_questions.append(question)
         self.lock.release()
 
     def check_match(self, old_results, new_results):

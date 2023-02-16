@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from python.sql.exceptions import TableNotFoundException
+from python.sql.exceptions import TableNotFoundError
 from python.sql.nodes.base import Base
 from python.sql.refs import ColumnRef, TableRef
 from python.sql.types import ChildrenType, ColumnsType, SqlState, TablesType
@@ -37,19 +37,19 @@ class Table(Base):
                 else:
                     self._tables = {self.name: [table_ref]}
             else:
-                raise TableNotFoundException(f"Table {self.name} not found in schema")
+                raise TableNotFoundError(f"Table {self.name} not found in schema")
 
         return self._tables
 
     def columns(self) -> ColumnsType:
         table = self.tables().get(self.alias or self.name)
         if not table:
-            raise TableNotFoundException(f"Table {self.name} not found")
+            raise TableNotFoundError(f"Table {self.name} not found")
         # Grab the columns from the schema for the table
         table_columns = self.state["schema"][self.name]
 
         if not table_columns:
-            raise TableNotFoundException(f"Table {self.name} not found in schema")
+            raise TableNotFoundError(f"Table {self.name} not found in schema")
 
         if not self._columns:
             self._columns = {}
