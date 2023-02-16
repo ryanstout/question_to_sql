@@ -39,6 +39,9 @@ def get_snowflake_cursor(data_source: DataSource, without_context=False):
         cursor.execute(f"use warehouse {snowflake_credentials['warehouse']};")
         cursor.execute(f"use {snowflake_credentials['database']}.{snowflake_credentials['schema']};")
 
+    # https://community.snowflake.com/s/article/Parameter-STATEMENT-TIMEOUT-IN-SECONDS-covers-the-overall-time-of-query-execution
+    cursor.execute(f"set STATEMENT_TIMEOUT_IN_SECONDS = 45;")
+
     return cursor, connection
 
 
