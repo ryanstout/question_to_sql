@@ -20,13 +20,6 @@ def _hash(content):
     return xxhash.xxh64(content).hexdigest()
 
 
-def is_empty(content: list) -> bool:
-    if content is None:
-        return True
-
-    return any(content)
-
-
 def _retrieved_cached_embedding(content_hash: str) -> np.ndarray | None:
     embedding_cache = db.embeddingcache.find_first(where={"contentHash": content_hash})
 
@@ -36,6 +29,7 @@ def _retrieved_cached_embedding(content_hash: str) -> np.ndarray | None:
         emb_load = io.BytesIO(Base64.decode(embedding_cache.embedding))
         emb_load.seek(0)
 
+        # `x` is user defined below in `savez_compressed`
         return np.load(emb_load, allow_pickle=True)["x"]
 
 
@@ -50,6 +44,7 @@ def generate_embedding(content_str: str, embedder: Type[OpenAIEmbedder] | Type[M
     embed_engine = embedder()
     embedding: np.ndarray = embed_engine.encode(content_str)
 
+    # we are using numpy array for speed: these vectors are huge and are stored all in memory
     # Serialize it to npz
     emb_str = io.BytesIO()
     np.savez_compressed(emb_str, x=embedding, allow_pickle=True)

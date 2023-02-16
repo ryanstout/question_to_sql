@@ -33,34 +33,37 @@ class Ranker:
         indexes_path = config("FAISS_INDEXES_PATH")
 
         # Load the faiss indexes
-        self.idx_table_names = AnnSearch(db, datasource_id, 0, f"{indexes_path}/{datasource_id}/table_names")
-        self.idx_column_names = AnnSearch(db, datasource_id, 1, f"{indexes_path}/{datasource_id}/column_names")
-        self.idx_table_and_column_names = AnnSearch(
-            db, datasource_id, 3, f"{indexes_path}/{datasource_id}/table_and_column_names"
-        )
+        self.idx_table_names = AnnSearch(0, f"{indexes_path}/{datasource_id}/table_names")
+        self.idx_column_names = AnnSearch(1, f"{indexes_path}/{datasource_id}/column_names")
+        self.idx_table_and_column_names = AnnSearch(3, f"{indexes_path}/{datasource_id}/table_and_column_names")
 
         # Table and Columns indexes
         # self.idx_table_and_column_names_and_values = AnnSearch(
         #     db, datasource_id, 4, f"{indexes_path}/{datasource_id}/table_and_column_names_and_values")
         self.idx_column_name_and_all_column_values = AnnSearch(
-            db, datasource_id, 5, f"{indexes_path}/{datasource_id}/column_name_and_all_column_values"
+            5, f"{indexes_path}/{datasource_id}/column_name_and_all_column_values"
         )
-        self.idx_table_column_and_value = AnnSearch(
-            db, datasource_id, 6, f"{indexes_path}/{datasource_id}/table_column_and_value"
-        )
+        self.idx_table_column_and_value = AnnSearch(6, f"{indexes_path}/{datasource_id}/table_column_and_value")
 
         # Cell values
-        self.idx_values = AnnSearch(self.db, datasource_id, 2, f"{indexes_path}/{datasource_id}/values")
+        self.idx_values = AnnSearch(2, f"{indexes_path}/{datasource_id}/values")
 
     def rank(
         self,
         query: str,
         embedder=OpenAIEmbedder,
         cache_results=True,
-        table_weights=[1.0, 0.0, 0.3],
-        column_weights=[0.1, 0.0, 0.0],
-        value_weights=[0.5, 0.5],
+        table_weights=None,
+        column_weights=None,
+        value_weights=None,
     ) -> SCHEMA_RANKING_TYPE:
+        # lists as defaults is dangerous, so we set defaults here
+        if table_weights is None:
+            table_weights = [1.0, 0.0, 0.3]
+        if column_weights is None:
+            column_weights = [0.1, 0.0, 0.0]
+        if value_weights is None:
+            value_weights = [0.5, 0.5]
 
         t1 = time.time()
         query_embedding = generate_embedding(query, embedder=embedder, cache_results=cache_results)

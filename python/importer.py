@@ -223,7 +223,6 @@ class Importer:
         row_count: int,
     ) -> None:
         name = column["name"]
-        type = column["type"]
 
         if any(re.search(regex, name) for regex in SKIP_COLUMNS):
             log.debug("skipping column", column=name)
@@ -233,7 +232,7 @@ class Importer:
             "inspecting column",
             table_name=sql.unqualified_table_name(table_description.fullyQualifiedName),
             name=name,
-            type=type,
+            type=column["type"],
             column=name,
         )
 

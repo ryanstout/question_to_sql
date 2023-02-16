@@ -1,10 +1,9 @@
-from python.setup import log
-
 from flask import Flask, jsonify, request
 
 from python.query_runner import run_query
 from python.questions import question_with_data_source_to_sql
 from python.utils.environments import is_production
+from python.utils.logging import log
 
 application = Flask(__name__)
 
@@ -20,7 +19,7 @@ def import_data_source():
     json_data = request.get_json()
     assert json_data is not None
 
-    data_source_id = json_data["data_source_id"]
+    unused_data_source_id = json_data["data_source_id"]
     return jsonify({})
 
 
@@ -29,12 +28,12 @@ def question():
     json_data = request.get_json()
     assert json_data is not None
 
-    unused_question = json_data["question"]
+    questionText = json_data["question"]
     data_source_id = json_data["data_source_id"]
 
-    sql = question_with_data_source_to_sql(data_source_id, question)
+    sql = question_with_data_source_to_sql(data_source_id, questionText)
 
-    return jsonify({"question": question, "data_source_id": data_source_id, "sql": sql})
+    return jsonify({"question": questionText, "data_source_id": data_source_id, "sql": sql})
 
 
 @application.route("/query", methods=["POST"])

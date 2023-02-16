@@ -7,16 +7,14 @@ from prisma import Prisma
 
 
 class AnnSearch:
-    def __init__(self, db: Prisma, datasource_id: int, index_number: int, path: str):
+    def __init__(self, index_number: int, path: str):
         self.index = AnnFaiss()
         self.index.load(path)
+
         self.embedding_link_index = EmbeddingLinkIndex(path)
         self.embedding_link_index.load()
 
-        self.db = db
         self.index_number = index_number
-
-        self.datasource_id = datasource_id
 
     def lookup_link(self, index: int):
         table_id_column_id_and_value = self.embedding_link_index.query(index)
