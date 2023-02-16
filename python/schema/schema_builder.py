@@ -100,7 +100,7 @@ class SchemaBuilder:
         # TODO should we filter by kind?
         column = self.get_data_source_table_column(column_id)
 
-        if column.type == "VARCHAR(256)":
+        if re.search("^VARCHAR", column.type):
             col_type = "VARCHAR"
         elif re.search("^TIMESTAMP_TZ", column.type):
             col_type = "TIMESTAMP"
