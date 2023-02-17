@@ -18,9 +18,6 @@ export async function getUserQuestionHistory(
       userId: userId,
       dataSourceId: dataSourceId,
     },
-    include: {
-      user: true,
-    },
     orderBy: { createdAt: "desc" },
   })
 
