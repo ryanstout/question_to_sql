@@ -84,10 +84,10 @@ function downloadResultAsJSON(exportObj: any, exportName: string | undefined) {
     return
   }
 
-  var dataStr =
+  const dataStr =
     "data:text/json;charset=utf-8," +
     encodeURIComponent(JSON.stringify(exportObj))
-  var downloadAnchorNode = document.createElement("a")
+  let downloadAnchorNode = document.createElement("a")
   downloadAnchorNode.setAttribute("href", dataStr)
   downloadAnchorNode.setAttribute("download", exportName + ".json")
   document.body.appendChild(downloadAnchorNode)
