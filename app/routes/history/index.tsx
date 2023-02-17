@@ -34,8 +34,13 @@ const HistoryDisplayComponent = ({
 }) => {
   return (
     <Grid>
+      <Grid.Col span={4} offset={4} mt={80}>
+        <Link to="/question" style={{ all: "unset" }}>
+          <Button fullWidth>New Question</Button>
+        </Link>
+      </Grid.Col>
       <Grid.Col span={10} offset={1}>
-        <Box sx={{ height: 450 }} mt={80}>
+        <Box sx={{ height: 450 }}>
           <DataTable
             verticalSpacing="md"
             withBorder
