@@ -46,8 +46,6 @@ def get_snowflake_cursor(data_source: DataSource, without_context=False):
 
 
 def apply_query_protections(sql):
-    original_sql = sql
-
     if not re.search(r"\sLIMIT\s", sql):
         sql += " LIMIT 100"
 
@@ -57,7 +55,7 @@ def apply_query_protections(sql):
 def get_query_results(cursor: SnowflakeCursor, sql: str, disable_query_protections: bool) -> list[dict]:
     try:
         if not disable_query_protections:
-            apply_query_protections(sql)
+            sql = apply_query_protections(sql)
 
         log.debug("running query", sql=sql)
 

@@ -187,13 +187,23 @@ class SchemaBuilder:
         }
 
     def create_column_rank(self, column_rank: ElementRank) -> ColumnRank:
-        column = self.get_data_source_table_column(column_rank["column_id"])
+        column_id = column_rank["column_id"]
+        if not column_id:
+            raise ValueError("column_id is required")
+        column = self.get_data_source_table_column(column_id)
 
-        return {
+        result: ColumnRank = {
             "name": column.name,
             "column_id": column.id,
-            "hints": [column_rank["value_hint"]],
+            "hints": [],
         }
+
+        value_hit = column_rank["value_hint"]
+
+        if value_hit:
+            result["hints"].append(value_hit)
+
+        return result
 
     def add_tokens(self, token_str: str, add_extra: int = 0):
         # Add to the count based on the number of tokens in the string,

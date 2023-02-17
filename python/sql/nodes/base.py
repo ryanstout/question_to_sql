@@ -54,7 +54,7 @@ class Base:
         any lists
         """
         all_children = []
-        for key, child in self.children.items():
+        for child in self.children.values():
             for c in child:
                 all_children.append(c)
 

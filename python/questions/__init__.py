@@ -101,8 +101,6 @@ def is_sql_valid(simple_schema: SimpleSchema, ai_sql: str) -> bool:
     Returns true if the ai_sql is valid
     """
 
-    # TODO: Disabled for now
-    return True
     try:
         SqlInspector(ai_sql, simple_schema)
     except SqlInspectError as e:
@@ -139,19 +137,20 @@ def create_prompt(schema: str, question: str) -> str:
         "",
         "-- Which product sells the best?",
         """SELECT
-          COUNT(*) AS orders_per_product,
-          product.title
-        FROM "order"
-        JOIN order_line
-          ON order_line.order_id = "order".id
-        JOIN product_variant
-          ON product_variant.id = order_line.variant_id
-        JOIN product
-          ON product.id = product_variant.product_id
-        GROUP BY
-          product.title
-        ORDER BY
-        orders_per_product DESC NULLS FIRST;""",
+    COUNT(*) AS orders_per_product,
+    product.title
+FROM "order"
+JOIN order_line
+    ON order_line.order_id = "order".id
+JOIN product_variant
+    ON product_variant.id = order_line.variant_id
+JOIN product
+    ON product.id = product_variant.product_id
+GROUP BY
+    product.title
+ORDER BY
+orders_per_product DESC NULLS FIRST;
+        """,
         "",
         # "-- Calculate lifetime of a customer by taking the duration between the first and most recent order for a customer. ",
         # "-- If we're returning a day, always also return the month and year"
