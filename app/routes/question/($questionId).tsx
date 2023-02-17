@@ -301,7 +301,7 @@ export default function QuestionView() {
           <Stack mr={30}>
             <QuestionActionHeader
               isLoading={isLoading}
-              questionRecord={questionRecord}
+              questionResult={questionResult}
             />
             <QuestionBox
               isLoading={isLoading}

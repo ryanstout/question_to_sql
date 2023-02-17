@@ -1,21 +1,27 @@
 import { Link } from "@remix-run/react"
 
-import { Box, Button, Divider, Grid, Group, Menu } from "@mantine/core"
+import { Box, Button, Divider, Grid, Menu } from "@mantine/core"
 import { useClipboard } from "@mantine/hooks"
 
-import type { Question } from "@prisma/client"
+import type { QuestionResult } from "~/lib/question.server"
 
-import { IconHistory, IconLink, IconShare } from "@tabler/icons-react"
+import {
+  IconBraces,
+  IconCloudDownload,
+  IconHistory,
+  IconLink,
+  IconShare,
+} from "@tabler/icons-react"
 
 export default function QuestionActionHeader({
   isLoading,
-  questionRecord,
+  questionResult,
 }: {
   isLoading: boolean
-  questionRecord: Question | null
+  questionResult: QuestionResult | null
 }) {
-  //TODO Create download action
   //TODO Create other share options
+  //TODO Create export as Google Sheets, XLSX, etc
 
   return (
     <Box>
@@ -27,11 +33,12 @@ export default function QuestionActionHeader({
             </Button>
           </Link>
         </Grid.Col>
-        <Grid.Col span={10}></Grid.Col>
+        <Grid.Col span={9}></Grid.Col>
         <Grid.Col span={1}>
-          <Group>
-            <QuestionActionShareHeader />
-          </Group>
+          <Button.Group>
+            <QuestionActionDownloadMenu questionResult={questionResult} />
+            <QuestionActionShareMenu />
+          </Button.Group>
         </Grid.Col>
       </Grid>
 
@@ -40,7 +47,55 @@ export default function QuestionActionHeader({
   )
 }
 
-function QuestionActionShareHeader() {
+function QuestionActionDownloadMenu({
+  questionResult,
+}: {
+  questionResult: QuestionResult | null
+}) {
+  //TODO add support to download as CSV
+  return (
+    <Menu trigger="hover" shadow="md" width={200}>
+      <Menu.Target>
+        <Button variant="subtle" color="dark">
+          <IconCloudDownload />
+        </Button>
+      </Menu.Target>
+
+      <Menu.Dropdown>
+        <Menu.Label>Download Options</Menu.Label>
+        <Menu.Item
+          onClick={() => {
+            downloadResultAsJSON(
+              questionResult?.data,
+              questionResult?.question.question.split(" ").join("_")
+            )
+          }}
+          icon={<IconBraces size={16} />}
+        >
+          as JSON
+        </Menu.Item>
+      </Menu.Dropdown>
+    </Menu>
+  )
+}
+
+function downloadResultAsJSON(exportObj: any, exportName: string | undefined) {
+  if (exportName == undefined) {
+    return
+  }
+
+  var dataStr =
+    "data:text/json;charset=utf-8," +
+    encodeURIComponent(JSON.stringify(exportObj))
+  var downloadAnchorNode = document.createElement("a")
+  downloadAnchorNode.setAttribute("href", dataStr)
+  downloadAnchorNode.setAttribute("download", exportName + ".json")
+  document.body.appendChild(downloadAnchorNode)
+  downloadAnchorNode.click()
+  downloadAnchorNode.remove()
+}
+
+function QuestionActionShareMenu() {
   const clipboard = useClipboard({ timeout: 700 })
 
   return (
