@@ -3,8 +3,8 @@ import invariant from "tiny-invariant"
 import type { Question } from "@prisma/client"
 
 import { prisma } from "~/db.server"
-import { isMockedPythonServer } from "~/lib/environment.server"
-import { log } from "~/lib/logging.server"
+import { isMockedPythonServer } from "~/lib/environment"
+import { log } from "~/lib/logging"
 
 export interface QuestionResult {
   question: Question
@@ -38,6 +38,7 @@ export async function getResultsFromQuestion({
   invariant(retrievedQuestionRecord.sql !== null, "sql is null")
 
   try {
+    // this avoids making an additional request to openai
     const data = await runQuery(
       retrievedQuestionRecord.dataSourceId,
       retrievedQuestionRecord.sql
@@ -120,7 +121,7 @@ export async function createQuestion(
   }
 }
 
-// runs SQL and gets a result
+// runs SQL and gets a result, lower-level function which should not be run directly
 export async function runQuery(dataSourceId: number, sql: string) {
   if (isMockedPythonServer()) {
     return new Promise((resolve, reject) => {
