@@ -1,28 +1,12 @@
-import { useEffect } from "react"
 import invariant from "tiny-invariant"
 import { z } from "zod"
 import { zx } from "zodix"
 
 import type { ActionArgs, LoaderArgs } from "@remix-run/node"
 import { json, redirect } from "@remix-run/node"
-import {
-  Form,
-  useLoaderData,
-  useNavigation,
-  useTransition,
-} from "@remix-run/react"
+import { useLoaderData, useNavigation, useTransition } from "@remix-run/react"
 
-import {
-  Accordion,
-  Box,
-  Button,
-  Center,
-  Divider,
-  Flex,
-  Grid,
-  Stack,
-  Text,
-} from "@mantine/core"
+import { Accordion, Center, Divider, Grid, Stack, Text } from "@mantine/core"
 
 import type { Question } from "@prisma/client"
 import { FeedbackState } from "@prisma/client"
@@ -30,6 +14,7 @@ import { FeedbackState } from "@prisma/client"
 import DataDisplay from "~/components/dashboard/data-display"
 import QuestionActionHeader from "~/components/dashboard/question-action-header"
 import QuestionBox from "~/components/dashboard/question-box"
+import QuestionFeedback from "~/components/dashboard/question-feedback"
 import SQLDisplay from "~/components/dashboard/sql-display"
 import { prisma } from "~/db.server"
 import type { QuestionResult } from "~/lib/question.server"
@@ -40,12 +25,7 @@ import {
 } from "~/lib/question.server"
 import { requireUser } from "~/session.server"
 
-import {
-  IconAlertTriangle,
-  IconCheck,
-  IconFlag,
-  IconPlus,
-} from "@tabler/icons-react"
+import { IconAlertTriangle, IconPlus } from "@tabler/icons-react"
 
 export enum QuestionActions {
   CREATE = "create",
@@ -96,14 +76,12 @@ export async function action({ request }: ActionArgs) {
     // TODO: figure out why multiple fields in where clauses on update
     // doesn't work, for now checking the question exists for the user
     // first
-    const question = await prisma.question.findFirst({
+    const question = await prisma.question.findFirstOrThrow({
       where: {
         id: questionId,
         userId: user.id,
       },
     })
-
-    invariant(question, "Unable to find question")
 
     const questionResult = await updateQuestion(question, userSql)
 
@@ -206,85 +184,6 @@ function SQLResultComponent({
   )
 }
 
-function FeedbackComponent({
-  questionRecord,
-}: {
-  questionRecord: Question | null
-}) {
-  useEffect(() => {}, [questionRecord])
-
-  if (!questionRecord) {
-    return <></>
-  }
-
-  if (
-    questionRecord.feedbackState === FeedbackState.CORRECT ||
-    questionRecord.feedbackState === FeedbackState.INCORRECT
-  ) {
-    return (
-      <Center>
-        <Text color="blue">
-          <i>Feedback provided</i> <IconCheck size={14} />
-        </Text>
-      </Center>
-    )
-  }
-
-  const commonFormInputs = (
-    <>
-      <input type="hidden" name="actionName" value={QuestionActions.FEEDBACK} />
-      <input type="hidden" name="questionId" value={questionRecord.id} />
-    </>
-  )
-
-  return (
-    <Grid>
-      <Grid.Col span={10} offset={1}>
-        <Center>
-          <Flex>
-            <Box pr="25px">
-              <Form method="post">
-                {commonFormInputs}
-                <input
-                  type="hidden"
-                  name="feedback"
-                  value={FeedbackState.CORRECT}
-                />
-                <Button
-                  leftIcon={<IconCheck size={16} />}
-                  type="submit"
-                  color="teal"
-                  variant="filled"
-                >
-                  Mark Correct
-                </Button>
-              </Form>
-            </Box>
-            <Box>
-              <Form method="post">
-                <input
-                  type="hidden"
-                  name="feedback"
-                  value={FeedbackState.INCORRECT}
-                />
-                {commonFormInputs}
-                <Button
-                  leftIcon={<IconFlag size={16} />}
-                  type="submit"
-                  color="red"
-                  variant="outline"
-                >
-                  Mark Incorrect
-                </Button>
-              </Form>
-            </Box>
-          </Flex>
-        </Center>
-      </Grid.Col>
-    </Grid>
-  )
-}
-
 function QuestionErrorComponent() {
   // TODO should we use ErrorBoundary here?
   // TODO should we move this to its own component?
@@ -320,6 +219,7 @@ export default function QuestionView() {
 
   const questionRecord = questionResult?.question ?? null
 
+  // TODO I have a helper for this elsewhere that we should use instead
   const transition = useTransition()
   const navigation = useNavigation()
   const isLoading =
@@ -342,7 +242,7 @@ export default function QuestionView() {
               isLoading={isLoading}
               questionRecord={questionRecord}
             />
-            <FeedbackComponent questionRecord={questionRecord} />
+            <QuestionFeedback questionRecord={questionRecord} />
           </Stack>
         </Grid.Col>
       </Grid>
