@@ -5,9 +5,11 @@ import { useClipboard } from "@mantine/hooks"
 
 import type { QuestionResult } from "~/lib/question.server"
 
+import processDownload from "../helpers/downloader"
 import {
   IconBraces,
   IconCloudDownload,
+  IconFileSpreadsheet,
   IconHistory,
   IconLink,
   IconShare,
@@ -20,8 +22,8 @@ export default function QuestionActionHeader({
   isLoading: boolean
   questionResult: QuestionResult | null
 }) {
-  //TODO Create other share options
-  //TODO Create export as Google Sheets, XLSX, etc
+  //TODO Create other share options (e.g. Slack, Teams, etc)
+  //TODO Create other export options (e.g. Google Sheets, etc)
 
   return (
     <Box>
@@ -52,7 +54,6 @@ function QuestionActionDownloadMenu({
 }: {
   questionResult: QuestionResult | null
 }) {
-  //TODO add support to download as CSV
   return (
     <Menu trigger="hover" shadow="md" width={200}>
       <Menu.Target>
@@ -60,39 +61,57 @@ function QuestionActionDownloadMenu({
           <IconCloudDownload />
         </Button>
       </Menu.Target>
-
       <Menu.Dropdown>
         <Menu.Label>Download Options</Menu.Label>
-        <Menu.Item
-          onClick={() => {
-            downloadResultAsJSON(
-              questionResult?.data,
-              questionResult?.question.question.split(" ").join("_")
-            )
-          }}
-          icon={<IconBraces size={16} />}
-        >
-          as JSON
-        </Menu.Item>
+        <DownloadMenuItem
+          fileType={"json"}
+          questionResult={questionResult}
+          displayIcon={<IconBraces size={16} />}
+        />
+        <DownloadMenuItem
+          fileType={"csv"}
+          questionResult={questionResult}
+          displayIcon={<IconFileSpreadsheet size={16} />}
+        />
       </Menu.Dropdown>
     </Menu>
   )
 }
 
-function downloadResultAsJSON(exportObj: any, exportName: string | undefined) {
-  if (exportName == undefined) {
-    return
-  }
+function DownloadMenuItem({
+  fileType,
+  questionResult,
+  displayIcon,
+}: {
+  fileType: string
+  questionResult: QuestionResult | null
+  displayIcon: React.ReactNode
+}) {
+  return (
+    <Menu.Item
+      onClick={() => {
+        processDownload(
+          fileType,
+          questionResult?.data,
+          questionResult?.question.question.split(" ").join("_")
+        )
+      }}
+      icon={displayIcon}
+    >
+      {getMenuDisplayTitleFromFileType(fileType)}
+    </Menu.Item>
+  )
+}
 
-  const dataStr =
-    "data:text/json;charset=utf-8," +
-    encodeURIComponent(JSON.stringify(exportObj))
-  let downloadAnchorNode = document.createElement("a")
-  downloadAnchorNode.setAttribute("href", dataStr)
-  downloadAnchorNode.setAttribute("download", exportName + ".json")
-  document.body.appendChild(downloadAnchorNode)
-  downloadAnchorNode.click()
-  downloadAnchorNode.remove()
+function getMenuDisplayTitleFromFileType(fileType: string) {
+  switch (fileType) {
+    case "json":
+      return "as JSON"
+    case "csv":
+      return "as CSV"
+    default:
+      return ""
+  }
 }
 
 function QuestionActionShareMenu() {
