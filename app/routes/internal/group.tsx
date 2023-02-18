@@ -81,11 +81,11 @@ export default function EvaluationGroupSelection({
     typeof loader
   >() as unknown as EvaluationQuestionGroup[]
 
+  const fetcher = useFetcher()
   const hotKeyConfig: any = [
     [
       "mod+Enter",
       () => {
-        const fetcher = useFetcher()
         const formData = new FormData()
         fetcher.submit(formData, { method: "post" })
       },
