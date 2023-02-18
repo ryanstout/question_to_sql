@@ -26,7 +26,8 @@ SKIP_COLUMNS = [
     "^_AIRBYTE_",
     "_SCD$",
     # TODO these keywords cause issues with snowflake SQL, so we are excluding them
-    # (?i) for inline regexhttps://stackoverflow.com/questions/500864/case-insensitive-regular-expression-without-re-compile
+    # (?i) for inline regex
+    # https://stackoverflow.com/questions/500864/case-insensitive-regular-expression-without-re-compile
     "(?i)default",
     "(?i)values",
 ]

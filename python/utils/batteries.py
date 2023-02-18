@@ -1,10 +1,9 @@
-from contextlib import contextmanager
+# Collection of small helper functions that should be included in any language.. (Cough)
+from contextlib import ContextDecorator
 from time import perf_counter
-from typing import Any, Iterable, List, Optional, TypeAlias, TypeVar, Union
+from typing import Optional, TypeAlias, TypeVar, Union
 
 from utils.logging import log
-
-# Collection of small helper functions that should be included in any language.. (Cough)
 
 
 def unique(values):
@@ -17,8 +16,6 @@ def unique(values):
 
 
 # https://stackoverflow.com/questions/66030444/dealing-with-lack-of-non-null-assertion-operator-in-python
-import typing as t
-
 T = TypeVar("T")
 
 
@@ -26,9 +23,6 @@ def not_none(obj: Optional[T]) -> T:
     assert obj is not None
     return obj
 
-
-from contextlib import ContextDecorator
-from time import perf_counter
 
 L = TypeVar("L")
 
@@ -59,6 +53,6 @@ class log_execution_time(ContextDecorator):
         return self
 
     # NOTE exit is still called even if an exception is raised
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, _type, _value, _traceback):
         elapsed = perf_counter() - self.time
         log.debug(f"{self.msg} took {elapsed:.3f} seconds")

@@ -13,7 +13,7 @@ import { requireUser } from "~/session.server"
 
 import { IconExternalLink } from "@tabler/icons-react"
 
-export async function loader({ params, request }: LoaderArgs) {
+export async function loader({ request }: LoaderArgs) {
   const user = await requireUser(request) // eslint-disable-line
 
   invariant(
@@ -98,9 +98,5 @@ export default function HistoryIndexView() {
   //TODO: Add searching for DataTable
   //TODO: Add pagination to table with backend Prisma
 
-  return (
-    <>
-      <HistoryDisplayComponent historyResult={questionHistoryData} />
-    </>
-  )
+  return <HistoryDisplayComponent historyResult={questionHistoryData} />
 }

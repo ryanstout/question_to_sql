@@ -4,7 +4,6 @@ import re
 import typing as t
 
 import snowflake.connector
-from decouple import config
 from sentry_sdk import capture_exception
 from snowflake.connector.cursor import DictCursor, SnowflakeCursor
 
@@ -40,7 +39,7 @@ def get_snowflake_cursor(data_source: DataSource, without_context=False):
         cursor.execute(f"use {snowflake_credentials['database']}.{snowflake_credentials['schema']};")
 
     # https://community.snowflake.com/s/article/Parameter-STATEMENT-TIMEOUT-IN-SECONDS-covers-the-overall-time-of-query-execution
-    cursor.execute(f"set STATEMENT_TIMEOUT_IN_SECONDS = 45;")
+    cursor.execute("set STATEMENT_TIMEOUT_IN_SECONDS = 20;")
 
     return cursor, connection
 
