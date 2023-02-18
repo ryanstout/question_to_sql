@@ -67,7 +67,8 @@ def run_query(data_source_id: int, sql: str, allow_cached_queries=False, **kwarg
         result = run_snowflake_query(data_source, sql, **kwargs)
 
         if is_correct_snowflake_result(result):
-            _cache_query_result(data_source_id, sql, result)
+            if allow_cached_queries:
+                _cache_query_result(data_source_id, sql, result)
             return result
         else:
             raise TypeError("Unexpected snowflake return type: " + str(type(result)))
