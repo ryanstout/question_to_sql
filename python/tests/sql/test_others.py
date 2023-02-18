@@ -1,9 +1,3 @@
-from pprint import pprint
-
-import pytest
-from rich import print
-
-from python.sql.exceptions import ColumnNotFoundError, TableNotFoundError
 from python.sql.sql_inspector import SqlInspector
 
 
@@ -12,7 +6,7 @@ def test_sum_propigation():
         """
         SELECT SUM(col1) as col1_sum  FROM table1;
         """,
-        {"table1": ["col1", "col2"]},
+        {"table1": {"name": "table1", "columns": {"col1": {"name": "col1"}, "col2": {"name": "col2"}}}},
     )
     assert inspector.touches() == {("table1", None, None): 1, ("table1", "col1", None): 2}
 
@@ -20,7 +14,7 @@ def test_sum_propigation():
         """
         SELECT SUM(col1) FROM table1;
         """,
-        {"table1": ["col1", "col2"]},
+        {"table1": {"name": "table1", "columns": {"col1": {"name": "col1"}, "col2": {"name": "col2"}}}},
     )
     assert inspector.touches() == {("table1", None, None): 1, ("table1", "col1", None): 1}
 
@@ -30,7 +24,7 @@ def test_sum_propigation():
 #         """
 #         SELECT * FROM orders WHERE state = 'Montana';
 #         """,
-#         {"orders": ["id", "total_dollars"]},
+#         {'orders': {'name': 'orders', 'columns': {'id': {'name': 'id'}, 'total_dollars': {'name': 'total_dollars'}}}},
 #     )
 #     assert inspector.touches() == [("orders", "state")]
 #     # assert inspector.values == [("orders", "state", "Montana")]

@@ -6,7 +6,6 @@ This is needed to resolve the table and column names.
 
 """
 
-from python import utils
 from python.sql.types import SimpleSchema
 from python.utils.sql import unqualified_table_name
 
@@ -29,10 +28,11 @@ class SimpleSchemaBuilder:
 
         for table in db.datasourcetabledescription.find_many(where={"dataSourceId": data_source_id}):
             fqn = table.fullyQualifiedName
-            table_name = unqualified_table_name(fqn).lower()
-            self.schema[table_name] = []
+            table_name = unqualified_table_name(fqn)
+            lower_table_name = table_name.lower()
+            self.schema[lower_table_name] = {"name": table_name, "columns": {}}
 
             for column in db.datasourcetablecolumn.find_many(where={"dataSourceTableDescriptionId": table.id}):
-                self.schema[table_name].append(column.name.lower())
+                self.schema[lower_table_name]["columns"][column.name.lower()] = {"name": column.name}
 
         return self.schema

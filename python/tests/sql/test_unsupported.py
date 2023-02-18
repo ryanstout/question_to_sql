@@ -10,7 +10,7 @@ def test_filter_unsupported():
             """
             SELECT SUM(col1) FILTER(WHERE col1 > 100) as sum_col1 FROM table1;
             """,
-            {"table1": ["col1"]},
+            {"table1": {"name": "table1", "columns": {"col1": {"name": "col1"}}}},
             dialect="snowflake",
         )
 
@@ -18,6 +18,6 @@ def test_filter_unsupported():
         """
         SELECT (SUM(col1) FILTER(WHERE col1 > 100)) as sum_col1 FROM table1;
         """,
-        {"table1": ["col1"]},
+        {"table1": {"name": "table1", "columns": {"col1": {"name": "col1"}}}},
         dialect="postgres",
     )

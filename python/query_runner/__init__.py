@@ -1,9 +1,10 @@
 import json
+import pickle
 from typing import Any, Dict, List, TypeAlias, TypeGuard
 
 import xxhash
-from utils.db import application_database_connection
 
+from python.utils.db import application_database_connection
 from python.utils.logging import log
 from python.utils.redis import application_redis_connection
 
@@ -40,7 +41,7 @@ def _cached_query_result(data_source_id: int, sql: str) -> None | list[dict]:
 
     if cached_query_result:
         log.debug("query cache hit")
-        return json.loads(cached_query_result)
+        return pickle.loads(cached_query_result)
 
 
 def _cache_query_result(data_source_id: int, sql: str, result: list[dict]):
@@ -48,7 +49,7 @@ def _cache_query_result(data_source_id: int, sql: str, result: list[dict]):
         _query_cache_key(data_source_id, sql),
         # 48hr is completely arbitrary and is geared towards the import script
         60 * 60 * 24 * 2,
-        json.dumps(result),
+        pickle.dumps(result),
     )
 
 

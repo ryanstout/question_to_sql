@@ -4,28 +4,20 @@
 # always include ID, include ID first, NOT NULL annotations, all `_id` columns on all tables that we include
 # order the columns naturally
 
-from python.setup import log
-
 import re
-import time
 import typing as t
 
-import python.utils as utils
-import python.utils.tokens
-from python.schema.full_schema import FullSchema
+from sql.sql_parser import SqlParser
+
 from python.schema.ranker import SCHEMA_RANKING_TYPE, ElementRank, Ranker
-from python.sql.post_transform import PostTransform
 from python.utils.batteries import unique
+from python.utils.db import application_database_connection
+from python.utils.logging import log
+from python.utils.sql import unqualified_table_name
 from python.utils.tokens import count_tokens
 
 from prisma import Prisma
-from prisma.models import (
-    Business,
-    DataSource,
-    DataSourceTableColumn,
-    DataSourceTableDescription,
-    User,
-)
+from prisma.models import DataSourceTableColumn
 
 # from transformers import GPT2Tokenizer
 
@@ -45,7 +37,7 @@ class TableRank(t.TypedDict):
     columns: t.List[ColumnRank]
 
 
-TABLE_SCHEMA = t.List[TableRank]
+TableSchema = t.List[TableRank]
 
 
 class SchemaBuilder:
@@ -92,7 +84,7 @@ class SchemaBuilder:
             return column
 
         if column is None:
-            raise Exception(f"column not found {column_id}")
+            raise ValueError(f"column not found {column_id}")
 
         return column
 
@@ -107,7 +99,7 @@ class SchemaBuilder:
         elif re.search("^VARIANT", column.type):
             return None  # skip this column
         elif re.search("^NUMBER", column.type):
-            if PostTransform.in_dialect == "postgres":
+            if SqlParser.in_dialect == "postgres":
                 # NUMBER(38,0) is how int's get encoded in snowflake via fivetran
                 col_type = column.type.replace("NUMBER(38,0)", "INTEGER")
                 col_type = col_type.replace("NUMBER", "NUMERIC")
@@ -145,21 +137,21 @@ class SchemaBuilder:
                 column_sql.append(column_description)
 
         rendered_column_sql = "\n".join(column_sql)
-        rendered_table_name = utils.sql.unqualified_table_name(table_rank["fully_qualified_name"]).lower()
+        rendered_table_name = unqualified_table_name(table_rank["fully_qualified_name"]).lower()
 
         return f"CREATE TABLE {rendered_table_name} (\n{rendered_column_sql}\n);\n"
 
-    def generate_sql_describe(self, table_ranks: TABLE_SCHEMA) -> str:
+    def generate_sql_describe(self, table_ranks: TableSchema) -> str:
         return "\n".join([self.generate_sql_table_describe(table_rank) for table_rank in table_ranks])
 
-    def create_table_rank(self, tableId: int) -> TableRank:
-        table = self.cached_tables[tableId]
+    def create_table_rank(self, table_id: int) -> TableRank:
+        table = self.cached_tables[table_id]
 
         # we want to include the primary key and all foreign keys by default as columns
         id_columns = self.db.datasourcetablecolumn.find_many(
             where={
                 "AND": [
-                    {"dataSourceTableDescriptionId": tableId},
+                    {"dataSourceTableDescriptionId": table_id},
                     {
                         "OR": [
                             {
@@ -176,7 +168,7 @@ class SchemaBuilder:
         )
 
         default_id_columns = [
-            self.create_column_rank(ElementRank(table_id=tableId, column_id=column.id, value_hint=None, score=0.0))
+            self.create_column_rank(ElementRank(table_id=table_id, column_id=column.id, value_hint=None, score=0.0))
             for column in id_columns
         ]
 
@@ -208,7 +200,7 @@ class SchemaBuilder:
     def add_tokens(self, token_str: str, add_extra: int = 0):
         # Add to the count based on the number of tokens in the string,
         # add_extra is used to add in counts for things like line breaks
-        self.tokens_so_far += count_tokens(token_str)
+        self.tokens_so_far += count_tokens(token_str) + add_extra
 
     def generate_sql_from_element_rank(self, ranked_schema: SCHEMA_RANKING_TYPE) -> str:
         # we need to transform the ranking schema into a list of table
@@ -227,7 +219,7 @@ class SchemaBuilder:
             if not table_rank:
                 table_id = element_rank["table_id"]
                 table_rank = self.create_table_rank(element_rank["table_id"])
-                table_ranks.append(table_rank)
+                table_ranks.insert(0, table_rank)
                 self.add_tokens(f"CREATE TABLE {self.cached_tables[table_id]} (\n \n);\n")
 
                 # Option to add all columns as soon as we see the table
@@ -256,7 +248,7 @@ class SchemaBuilder:
                         else:
                             self.add_tokens(f", {value_hint}")
 
-                        column_rank["hints"].append(element_rank["value_hint"])
+                        column_rank["hints"].append(value_hint)
                 else:
                     self.add_column_to_table(element_rank, table_rank)
 
@@ -276,11 +268,12 @@ class SchemaBuilder:
 
 
 if __name__ == "__main__":
-    db = utils.db.application_database_connection()
-    datasource = db.datasource.find_first(where={"id": 2})
+    _db = application_database_connection()
+    datasource = _db.datasource.find_first(where={"id": 2})
 
-    ranks = Ranker(db, 2).rank("What product sells best in Montana?")
+    if datasource:
+        ranks = Ranker(_db, 2).rank("What product sells best in Montana?")
 
-    # generate via: `poetry run python -m python.schema.ranker "What product sells best in Montana?"`
+        # generate via: `poetry run python -m python.schema.ranker "What product sells best in Montana?"`
 
-    print(SchemaBuilder(1, db).build(ranks))
+        print(SchemaBuilder(_db).build(datasource.id, ranks))

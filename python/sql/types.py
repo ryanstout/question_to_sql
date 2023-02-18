@@ -12,9 +12,31 @@ if TYPE_CHECKING:
 
 from sqlglot import exp
 
-from python.sql.refs import ColumnRef, TableRef
+from python.sql.refs import (  # pylint: disable=unused-import,ungrouped-imports
+    ColumnRef,
+    TableRef,
+)
 
-SimpleSchema: TypeAlias = Dict[str, List[str]]
+# SimpleSchema provides a way for the SqlInspector to look up the table and column names. Because we usually need to
+# do case insensitive lookups, we store the names in lowercase, then have a mapping back to the original.
+
+# simple_schema = {
+#   "table1": {name: "Table1", "columns": {"column1": "Column1", "column2": "Column2"}},
+#   "table2": {name: "Table2", "columns": {"column1": "Column1", "column2": "Column2"}},
+#   ...
+# }
+
+
+class SimpleColumn(TypedDict):
+    name: str  # the original name of the column, not lowercased
+
+
+class SimpleTable(TypedDict):
+    name: str  # the original name of the table, not lowercased
+    columns: Dict[str, SimpleColumn]  # the original name of the column, not lowercased
+
+
+SimpleSchema: TypeAlias = Dict[str, SimpleTable]
 
 TablesType: TypeAlias = Dict[str, List["TableRef"]]
 

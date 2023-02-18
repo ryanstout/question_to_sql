@@ -1,6 +1,8 @@
 import os
 from dataclasses import dataclass, field
 
+from sql.utils.snowflake_keywords import SNOWFLAKE_KEYWORDS
+
 from python.sql.exceptions import ColumnNotFoundError
 from python.sql.nodes.base import Base
 from python.sql.types import ChildrenType, ColumnsType, SqlState
@@ -37,6 +39,9 @@ class Column(Base):
                 # See if the column exists on the SELECT at this point, only return
                 # the matched column
                 if column is not None:
+                    # Rename the column to the correct casing from the schema
+                    self.correct_case(column)
+
                     # Cache the column once it's resolved to prevent stack
                     # explosion
                     self._columns = {key: column}
@@ -48,6 +53,31 @@ class Column(Base):
                             print(key, column)
                     raise ColumnNotFoundError(f"Unable to resolve column ({self.table_alias}.{self.name})")
             else:
-                raise Exception("Parent select not assigned")
+                raise ValueError("Parent select not assigned")
 
         return self._columns
+
+    def correct_case(self, column):
+        """
+        When a table, column, or alias is a keyword, we need to quote it, and then it becomes case sensitive.
+
+        Below does not do the quoting, but it updates to the correct case based on the actual database schema.
+        """
+        if (
+            self.name.upper() not in SNOWFLAKE_KEYWORDS
+            and self.table_alias
+            and self.table_alias.upper() not in SNOWFLAKE_KEYWORDS
+        ):
+            return
+
+        for column_ref in column:
+            simple_table = self.state["schema"].get(column_ref.table.name)
+            if simple_table:
+                simple_column = simple_table["columns"].get(self.name.lower())
+                if simple_column:
+                    if self.name.upper() in SNOWFLAKE_KEYWORDS:
+                        self.state["node"].args["this"].args["this"] = simple_column["name"]
+
+                    if self.table_alias is not None and self.table_alias.upper() in SNOWFLAKE_KEYWORDS:
+                        self.state["node"].args["table"].args["this"] = simple_table["name"]
+                    break

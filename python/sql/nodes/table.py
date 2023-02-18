@@ -4,6 +4,7 @@ from python.sql.exceptions import TableNotFoundError
 from python.sql.nodes.base import Base
 from python.sql.refs import ColumnRef, TableRef
 from python.sql.types import ChildrenType, ColumnsType, SqlState, TablesType
+from python.sql.utils.snowflake_keywords import SNOWFLAKE_KEYWORDS
 
 
 @dataclass(init=False)
@@ -31,7 +32,15 @@ class Table(Base):
     def tables(self) -> TablesType:
         if len(self._tables) == 0:
             table_ref = TableRef(self.name)
-            if self.name in self.state["schema"]:
+            simple_table = self.state["schema"].get(self.name.lower())
+
+            if simple_table:
+                if self.name.upper() in SNOWFLAKE_KEYWORDS:
+                    # Update the identifier to the table name with the correct casing (if the name is a keyword, we have
+                    # to quote it and then it will be looked up in a case sensisitive way)
+                    node = self.state["node"]
+                    node.args["this"].args["this"] = simple_table["name"]
+
                 if self.alias:
                     self._tables = {self.alias: [table_ref]}
                 else:
@@ -46,24 +55,24 @@ class Table(Base):
         if not table:
             raise TableNotFoundError(f"Table {self.name} not found")
         # Grab the columns from the schema for the table
-        table_columns = self.state["schema"][self.name]
+        simple_table = self.state["schema"].get(self.name.lower())
 
-        if not table_columns:
+        if not simple_table:
             raise TableNotFoundError(f"Table {self.name} not found in schema")
 
         if not self._columns:
             self._columns = {}
-            for column_name in table_columns:
-                column_ref = ColumnRef(column_name, table[0])
+            for column_name_lower, _ in simple_table["columns"].items():
+                column_ref = ColumnRef(column_name_lower, table[0])
 
                 # Add unqualified
-                self._columns[(None, column_name)] = [column_ref]
+                self._columns[(None, column_name_lower)] = [column_ref]
 
                 if self.alias:
                     # Add qualified table
-                    self._columns[(self.alias, column_name)] = [column_ref]
+                    self._columns[(self.alias, column_name_lower)] = [column_ref]
                 else:
                     # Add fully qualified
-                    self._columns[(table[0].name, column_name)] = [column_ref]
+                    self._columns[(table[0].name, column_name_lower)] = [column_ref]
 
         return self._columns

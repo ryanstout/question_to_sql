@@ -1,10 +1,8 @@
-from pprint import pprint
+from sql.sql_parser import SqlParser
 
-import pytest
-from rich import print
-
-from python.sql.exceptions import ColumnNotFoundError, TableNotFoundError
 from python.sql.sql_inspector import SqlInspector
+from python.sql.types import SimpleSchema
+from python.tests.sql.fixtures.pens_schema import pens_schema
 
 
 def test_complex1():
@@ -25,11 +23,54 @@ ORDER BY
 orders_per_product DESC NULLS FIRST
 LIMIT 10;"""
 
-    simple_schema = {
-        "order": ["id", "created_at"],
-        "order_line": ["order_id", "variant_id"],
-        "product_variant": ["id", "product_id"],
-        "product": ["id", "title"],
+    simple_schema: SimpleSchema = {
+        "order": {"name": "order", "columns": {"id": {"name": "id"}, "created_at": {"name": "created_at"}}},
+        "order_line": {
+            "name": "order_line",
+            "columns": {"order_id": {"name": "order_id"}, "variant_id": {"name": "variant_id"}},
+        },
+        "product_variant": {
+            "name": "product_variant",
+            "columns": {"id": {"name": "id"}, "product_id": {"name": "product_id"}},
+        },
+        "product": {"name": "product", "columns": {"id": {"name": "id"}, "title": {"name": "title"}}},
     }
 
-    inspector = SqlInspector(query, simple_schema)
+    SqlInspector(query, simple_schema)
+
+
+def test_over_and_partition_complex2():
+    query = """
+  SELECT 
+    EXTRACT(YEAR FROM created_at) AS year,
+    EXTRACT(QUARTER FROM created_at) AS quarter,
+    SUM(total_price) AS total_sales,
+    SUM(total_price) / LAG(SUM(total_price)) OVER (PARTITION BY EXTRACT(YEAR FROM created_at) ORDER BY EXTRACT(QUARTER FROM created_at)) - 1 AS percent_change
+FROM "order"
+GROUP BY
+    year,
+    quarter
+ORDER BY
+    year,
+    quarter;
+    """
+
+    SqlInspector(query, pens_schema)
+
+
+def test_case_fixup():
+    query = """
+  SELECT
+  MIN(created_at)
+FROM order
+JOIN customer_address
+  ON customer_address.customer_id = order.customer_id
+WHERE
+  customer_address.province = 'Washington';
+  """
+
+    result_query = """SELECT MIN(created_at) FROM ORDER JOIN customer_address ON customer_address.customer_id = ORDER.customer_id WHERE customer_address.province = 'Washington'"""
+
+    ast = SqlParser().run(query)
+    SqlInspector(ast, pens_schema)
+    assert ast.sql() == result_query

@@ -46,7 +46,7 @@ import os
 from dataclasses import dataclass
 from pprint import pprint
 
-from sqlglot import parse_one
+from sqlglot import exp, parse_one
 from sqlglot.errors import ParseError
 
 from python.sql.exceptions import SqlParseError
@@ -67,11 +67,15 @@ class SqlInspector:
     start_state: SqlState  # = field(init=False, repr=False)
     root: Base
 
-    def __init__(self, sql: str, schema: SimpleSchema, dialect: str = "snowflake"):
-        try:
-            ast = parse_one(sql, read=dialect)
-        except ParseError as e:  # sqlglot parse error
-            raise SqlParseError(f"Unable to parse SQL: {sql}") from e
+    def __init__(self, sql: str | exp.Expression, schema: SimpleSchema, dialect: str = "snowflake"):
+        if isinstance(sql, exp.Expression):
+            # Option to use a pre-parsed sqlglot AST
+            ast = sql
+        else:
+            try:
+                ast = parse_one(sql, read=dialect)
+            except ParseError as e:  # sqlglot parse error
+                raise SqlParseError(f"Unable to parse SQL: {sql}") from e
 
         if os.getenv("SQL_PARSING_DEBUG"):
             log.debug("AST: ")

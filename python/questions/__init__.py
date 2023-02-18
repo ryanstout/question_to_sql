@@ -6,8 +6,9 @@ from python.schema.ranker import Ranker
 from python.schema.schema_builder import SchemaBuilder
 from python.schema.simple_schema_builder import SimpleSchemaBuilder
 from python.sql.exceptions import SqlInspectError
-from python.sql.post_transform import PostTransform
 from python.sql.sql_inspector import SqlInspector
+from python.sql.sql_parser import SqlParser
+from python.sql.sql_resolve_and_fix import SqlResolveAndFix
 from python.sql.types import SimpleSchema
 from python.utils.batteries import log_execution_time
 from python.utils.logging import log
@@ -40,11 +41,6 @@ def question_with_data_source_to_sql(data_source_id: int, question: str, engine:
         simple_schema = SimpleSchemaBuilder().build(db, data_source_id)
 
         sql = question_with_schema_to_sql(simple_schema, table_schema_limited_by_token_size, question)
-        log.debug("sql pre transform", sql=sql)
-
-    # AST based transform of the SQL to fix up common issues
-    with log_execution_time("ast transform"):
-        sql = PostTransform(data_source_id).run(sql)
 
     log.debug("sql post transform", sql=sql)
 
@@ -89,25 +85,31 @@ def question_with_schema_to_sql(
 
         ai_sql = f"SELECT {ai_sql};"
 
+        log.debug("sql pre transform", ai_sql=ai_sql)
+
         # Verify that the ai sql is valud
-        if is_sql_valid(simple_schema, ai_sql):
+        ai_sql = fixup_sql(simple_schema, ai_sql)
+        if ai_sql:
             break
+
+    if ai_sql is None:
+        raise ValueError("OpenAI failed to generate a valid SQL query")
 
     return ai_sql
 
 
-def is_sql_valid(simple_schema: SimpleSchema, ai_sql: str) -> bool:
+def fixup_sql(simple_schema: SimpleSchema, ai_sql: str) -> str | None:
     """
-    Returns true if the ai_sql is valid
+    Returns fixed sql if it is valid, otherwise returns None
     """
 
-    try:
-        SqlInspector(ai_sql, simple_schema)
-    except SqlInspectError as e:
-        log.warn("SQL is invalid", sql=ai_sql, error=e)
-        return False
-
-    return True
+    with log_execution_time("sql fix up"):
+        try:
+            sql = SqlResolveAndFix().run(ai_sql, simple_schema)
+            return sql
+        except SqlInspectError as e:
+            log.warn("SQL is invalid", sql=ai_sql, error=e)
+            return None
 
 
 def create_prompt(schema: str, question: str) -> str:
@@ -129,7 +131,7 @@ def create_prompt(schema: str, question: str) -> str:
     current_date = datetime.datetime.now().strftime(f"%B %-d{suffix}, %Y")
 
     prompt_parts = [
-        f"-- {PostTransform.in_dialect.capitalize()} SQL schema",
+        f"-- {SqlParser.in_dialect.capitalize()} SQL schema",
         schema,
         "",
         "-- How many orders are there per month?",
@@ -152,10 +154,15 @@ ORDER BY
 orders_per_product DESC NULLS FIRST;
         """,
         "",
+        "-- A few rules for building SQL queries: ",
+        "-- Return `SELECT 'unsure'` if we don't know how to answer the question",
+        # "-- 1. Do case insensitive matches using LOWER unless the case matters",
         # "-- Calculate lifetime of a customer by taking the duration between the first and most recent order for a customer. ",
         # "-- If we're returning a day, always also return the month and year"
         # f"-- Assuming the current date is {current_date}",
         # "-- using NOW() instead of dates\n\n",
+        "",
+        "",
         f"-- {question}",
         "SELECT ",
     ]

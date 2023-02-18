@@ -1,14 +1,12 @@
 #!/usr/bin/env python
-from python.setup import log
 
 import json
 
 import IPython
-import query_runner
 from decouple import config
-from utils.db import application_database_connection
 
 from python.query_runner.snowflake import get_snowflake_cursor
+from python.utils.db import application_database_connection
 
 from prisma.enums import DataSourceType
 from prisma.types import DataSourceCreateInput

@@ -1,4 +1,3 @@
-from pprint import pprint
 from typing import Any, Dict, List
 
 from sqlglot import exp
@@ -10,6 +9,7 @@ from python.sql.nodes.count_star import CountStar
 from python.sql.nodes.eq import EQ
 from python.sql.nodes.filter import Filter
 from python.sql.nodes.join import Join
+from python.sql.nodes.over import Over
 from python.sql.nodes.select import Select
 from python.sql.nodes.star import Star
 from python.sql.nodes.subquery import Subquery
@@ -118,7 +118,7 @@ def add_child(state: SqlState, add_to: List["Base"], start_node: exp.Expression)
             node = EQ(state, value_str)
             add_children(state, node, {"column": column_exp})
 
-        case exp.Count(args={"this": exp.Star() as star_exp, **rest}):
+        case exp.Count(args={"this": exp.Star(), **rest}):
             # Special case for COUNT(*) where we don't count the star as touches
             node = CountStar(state)
 
@@ -135,6 +135,11 @@ def add_child(state: SqlState, add_to: List["Base"], start_node: exp.Expression)
         case exp.Filter() as filter_exp:
             node = Filter(state)
             add_children(state, node, filter_exp.args)
+
+        case exp.Window() as over_exp:
+            # the OVER/PARTITION BY clauses end up as a exp.Window
+            node = Over(state)
+            add_children(state, node, over_exp.args)
 
         case exp.Expression() as expression:
             # Handle all other nodes, this combines the returned tables and

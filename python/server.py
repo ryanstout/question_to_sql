@@ -28,12 +28,12 @@ def question():
     json_data = request.get_json()
     assert json_data is not None
 
-    questionText = json_data["question"]
+    question_text = json_data["question"]
     data_source_id = json_data["data_source_id"]
 
-    sql = question_with_data_source_to_sql(data_source_id, questionText)
+    sql = question_with_data_source_to_sql(data_source_id, question_text)
 
-    return jsonify({"question": questionText, "data_source_id": data_source_id, "sql": sql})
+    return jsonify({"question": question_text, "data_source_id": data_source_id, "sql": sql})
 
 
 @application.route("/query", methods=["POST"])
