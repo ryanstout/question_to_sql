@@ -4,6 +4,7 @@
 - [ ] check total number of values to see if we hit all values for a highly weighted column with low? cardinality (or close < 5 maybe just add all of them?)
 - [ ] Lowercase select makes for a lower case query, which we can use logprobs to construct confidence intervals on sections
 - [ ] ILIKE and REGEX_ILIKE should get converted to ILIKE(LOWER({..}), "%something%"{.lower()})
+- [ ] Try generating mysql instead of postgres, mysql doesn't have as many extensions, might help keep things in bounds for snowflake more.
 
 SqlInspector:
 

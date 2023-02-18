@@ -4,7 +4,13 @@ import { zx } from "zodix"
 
 import type { ActionArgs, LoaderArgs } from "@remix-run/node"
 import { json, redirect } from "@remix-run/node"
-import { Outlet, useLoaderData, useNavigate } from "@remix-run/react"
+import {
+  Form,
+  Outlet,
+  useFetcher,
+  useLoaderData,
+  useNavigate,
+} from "@remix-run/react"
 
 import { Box, Button, Grid } from "@mantine/core"
 import { getHotkeyHandler, useHotkeys } from "@mantine/hooks"
@@ -50,6 +56,20 @@ export async function loader({ request, params }: LoaderArgs) {
 
 export async function action({ request }: ActionArgs) {
   // TODO create new evaluation group
+  const user = await requireUser(request)
+
+  const questionGroup = await prisma.evaluationQuestionGroup.create({
+    data: {
+      status: EvaluationStatus.UNREAD,
+      dataSourceId: user.business!.dataSources[0].id,
+    },
+  })
+
+  if (!questionGroup) {
+    throw new Error("Failed to create question group")
+  }
+
+  return redirect("/internal/group/" + questionGroup.id)
 }
 
 export default function EvaluationGroupSelection({
@@ -65,7 +85,9 @@ export default function EvaluationGroupSelection({
     [
       "mod+Enter",
       () => {
-        // TODO maybe add keyboard navigation
+        const fetcher = useFetcher()
+        const formData = new FormData()
+        fetcher.submit(formData, { method: "post" })
       },
     ],
   ]
@@ -93,8 +115,11 @@ export default function EvaluationGroupSelection({
       onKeyDown={getHotkeyHandler(hotKeyConfig)}
     >
       <Grid.Col span={2}>
-        TODO fix button
-        <Button mb={15}>New Group ctrl+g</Button>
+        <Form method="post">
+          <Button type="submit" mb={15}>
+            New Group ctrl+g
+          </Button>
+        </Form>
         <Box sx={{ height: "100%" }}>
           <DataTable
             striped
