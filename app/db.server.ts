@@ -2,7 +2,7 @@ import invariant from "tiny-invariant"
 
 import { PrismaClient } from "@prisma/client"
 
-import { isProduction, isTest } from "~/lib/environment.server"
+import { isProduction, isTest } from "~/lib/environment"
 
 import * as Sentry from "@sentry/remix"
 

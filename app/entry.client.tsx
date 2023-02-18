@@ -5,7 +5,7 @@ import { RemixBrowser, useLocation, useMatches } from "@remix-run/react"
 
 import { ClientProvider } from "@mantine/remix"
 
-import { isProduction } from "~/lib/environment.server"
+import { isProduction } from "~/lib/environment"
 
 import * as Sentry from "@sentry/remix"
 import { hydrateRoot } from "react-dom/client"
