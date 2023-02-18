@@ -40,7 +40,12 @@ import {
 } from "~/lib/question.server"
 import { requireUser } from "~/session.server"
 
-import { IconCheck, IconFlag, IconPlus } from "@tabler/icons-react"
+import {
+  IconAlertTriangle,
+  IconCheck,
+  IconFlag,
+  IconPlus,
+} from "@tabler/icons-react"
 
 export enum QuestionActions {
   CREATE = "create",
@@ -171,7 +176,6 @@ function SQLResultComponent({
       chevron={<IconPlus size={16} />}
       styles={{
         item: {
-          // styles added to all items
           backgroundColor: "#fff",
           border: "1px solid #ededed",
         },
@@ -281,6 +285,33 @@ function FeedbackComponent({
   )
 }
 
+function QuestionErrorComponent() {
+  // TODO should we use ErrorBoundary here?
+  // TODO should we move this to its own component?
+  // TODO Should we automatically set feedback to incorrect if there is an error? We could do that on the server
+
+  return (
+    <Stack
+      sx={(theme) => ({
+        padding: theme.spacing.xl,
+        borderRadius: theme.radius.md,
+        backgroundColor: theme.colors.yellow[7],
+        cursor: "pointer",
+      })}
+    >
+      <Center>
+        <IconAlertTriangle color="white" size={40} />
+      </Center>
+      <Center>
+        <Text c="white">
+          Mea Culpa! There was an error retrieving your results. Our team will
+          investigate and reach out when we have your answer!
+        </Text>
+      </Center>
+    </Stack>
+  )
+}
+
 export default function QuestionView() {
   // TODO https://github.com/remix-run/remix/issues/3931
   const questionResult = useLoaderData<
@@ -317,9 +348,15 @@ export default function QuestionView() {
       </Grid>
       <Divider my="md" variant="dotted" />
       <Grid>
-        <Grid.Col span={10} offset={1}>
-          <DataDisplay data={questionResult?.data ?? null} />
-        </Grid.Col>
+        {questionResult?.status === "success" ? (
+          <Grid.Col span={10} offset={1}>
+            <DataDisplay data={questionResult?.data ?? null} />
+          </Grid.Col>
+        ) : (
+          <Grid.Col span={8} offset={2}>
+            <QuestionErrorComponent />
+          </Grid.Col>
+        )}
       </Grid>
     </>
   )

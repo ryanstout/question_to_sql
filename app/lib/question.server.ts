@@ -33,19 +33,28 @@ export async function getResultsFromQuestion({
       },
     })
   }
-
+  //TODO move invariant into try catch for error handling in client
   invariant(retrievedQuestionRecord !== null, "question record not found")
   invariant(retrievedQuestionRecord.sql !== null, "sql is null")
 
-  const data = await runQuery(
-    retrievedQuestionRecord.dataSourceId,
-    retrievedQuestionRecord.sql
-  )
+  try {
+    const data = await runQuery(
+      retrievedQuestionRecord.dataSourceId,
+      retrievedQuestionRecord.sql
+    )
 
-  return {
-    question: retrievedQuestionRecord,
-    status: "success",
-    data: data,
+    return {
+      question: retrievedQuestionRecord,
+      status: "success",
+      data: data,
+    }
+  } catch (e) {
+    // TODO handle different errors here based on type of error
+    return {
+      question: retrievedQuestionRecord,
+      status: "error",
+      data: [{ error: e }],
+    }
   }
 }
 
