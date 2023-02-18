@@ -7,6 +7,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
 } from "@remix-run/react"
 
 import { AppShell, MantineProvider, createEmotionCache } from "@mantine/core"
@@ -24,11 +25,16 @@ export const meta: MetaFunction = () => ({
   viewport: "width=device-width,initial-scale=1",
 })
 
-// TODO this seems strange... is this used anywhere? Why wouldn't you just use `getUser`?
-// We make the user available in root, then all children can useMatchesData to
-// access it.
 export async function loader({ request }: LoaderArgs) {
   return json({
+    // pass non-sensitive environment variables to the client
+    ENV: {
+      SENTRY_DSN: process.env.SENTRY_DSN,
+      LOG_LEVEL: process.env.LOG_LEVEL,
+    },
+    // TODO this seems strange... is this used anywhere? Why wouldn't you just use `getUser`?
+    // We make the user available in root, then all children can useMatchesData to
+    // access it.
     user: await getUser(request),
   })
 }
@@ -38,6 +44,8 @@ createEmotionCache({ key: "mantine" })
 // TODO add error & catch boundaries here
 
 export default function App() {
+  const data = useLoaderData()
+
   return (
     <MantineProvider theme={theme} withGlobalStyles withNormalizeCSS>
       <NotificationsProvider position="top-right">
@@ -66,6 +74,14 @@ export default function App() {
             <ScrollRestoration />
             <Scripts />
             <LiveReload />
+            {/* this seems dangerous, but seems like the most obvious way to use process.env on the client */}
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `window.process = ${JSON.stringify({
+                  env: data.ENV,
+                })}`,
+              }}
+            />
           </body>
         </html>
       </NotificationsProvider>
