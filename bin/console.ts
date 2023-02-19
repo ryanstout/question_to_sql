@@ -1,6 +1,6 @@
 #!/usr/bin/env tsn
 import { prisma } from "app/db.server"
-import { log } from "app/lib/logging.server"
+import { log } from "app/lib/logging"
 
 import { loadEnv } from "@remix-run/dev/dist/env"
 
@@ -118,4 +118,8 @@ prisma[Symbol.for("nodejs.util.inspect.custom")] = function (_depth, _options) {
   return "prisma database client"
 }
 
-repl({ db: prisma })
+async function exampleQuestion() {
+  return await prisma.question.findFirst()
+}
+
+repl({ prisma, prismaClient: require("@prisma/client"), exampleQuestion })

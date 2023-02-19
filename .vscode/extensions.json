@@ -10,6 +10,8 @@
     "Gruntfuggly.todo-tree",
     "tamasfe.even-better-toml",
     "meganrogge.template-string-converter",
-    "formulahendry.auto-rename-tag"
-  ]
+    "formulahendry.auto-rename-tag",
+    "ZixuanChen.vitest-explorer"
+  ],
+  "unwantedRecommendations": ["firsttris.vscode-jest-runner"]
 }

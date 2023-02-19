@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+`cd "${0%/*}/.."`
+
 node -r ts-node/register/transpile-only \
      -r tsconfig-paths/register \
      $@

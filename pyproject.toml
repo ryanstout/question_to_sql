@@ -113,3 +113,7 @@ multi_line_output = 3
 sections = "SETUP,FUTURE,STDLIB,THIRDPARTY,FIRSTPARTY,PRISMA,LOCALFOLDER"
 known_setup = "python.setup"
 known_prisma = "prisma"
+
+
+[tool.pyright]
+ignore = ["bin/console.py"]

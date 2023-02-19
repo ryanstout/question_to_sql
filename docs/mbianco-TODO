@@ -44,6 +44,12 @@
 - [ ] https://www.npmjs.com/package/sort-package-json
 - [ ] https://github.com/trivago/prettier-plugin-sort-imports/issues/112 is broken and does not support ignores should use https://www.npmjs.com/package/prettier-plugin-organize-imports?activeTab=versions instead.
 - [ ] npm alternative? https://pnpm.io/installation
+- [ ] cleaner stack traces with relative paths? https://github.com/tapjs/stack-utils
+
+# Prisma
+
+- [ ] https://www.prisma.io/docs/concepts/components/prisma-client/working-with-prismaclient/logging
+- [ ] add findfirstorthrow to python library
 
 # Javascript Packages
 
@@ -56,12 +62,22 @@
 - [ ] how do the PR annotations work? Can we get pylint working like tsc? https://github.com/marketplace/actions/pylint-pr-annotator
 - [ ] https://github.com/tj-actions/depcheck/blob/main/entrypoint.sh needs to not pass the ignore flag if nothing is set
 
+# Infrastructure
+
+- [ ] https://resend.com/secret?utm_source=waitlist_valid
+
 # Python Lang
 
+- [ ] list comprehensions are messy https://github.com/psf/black/issues/2121
 - [ ] functional https://github.com/EntilZha/PyFunctional
 - [ ] another runtime type checking option https://docs.pydantic.dev
 - [ ] typeguard for runtime type checking https://github.com/agronholm/typeguard
 - [ ] automatically remove unused imports https://github.com/PyCQA/isort/issues/1105
+
+# Snowflake
+
+- [ ] should get table count all in one query using INFORMATION_SCEMA
+- [ ] should avoid running queries on tables with a ton of data
 
 ---
 
@@ -76,3 +92,55 @@ assert_results_match_without_while_being_column_agnostic(
 result,
 question.resultdata
 )
+
+--- open ai stack trace
+
+```
+raceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/Users/mike/Projects/nlpquery/.venv/lib/python3.10/site-packages/click/core.py", line 1130, in __call__
+    return self.main(*args, **kwargs)
+  File "/Users/mike/Projects/nlpquery/.venv/lib/python3.10/site-packages/click/core.py", line 1055, in main
+    rv = self.invoke(ctx)
+  File "/Users/mike/Projects/nlpquery/.venv/lib/python3.10/site-packages/click/core.py", line 1657, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+  File "/Users/mike/Projects/nlpquery/.venv/lib/python3.10/site-packages/click/core.py", line 1404, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "/Users/mike/Projects/nlpquery/.venv/lib/python3.10/site-packages/click/core.py", line 760, in invoke
+    return __callback(*args, **kwargs)
+  File "/Users/mike/Projects/nlpquery/python/cli.py", line 141, in import_datasource
+    Importer(**kwargs)
+  File "/Users/mike/Projects/nlpquery/python/importer.py", line 109, in __init__
+    self.create_table_records(data_source)
+  File "/Users/mike/Projects/nlpquery/python/importer.py", line 145, in create_table_records
+    self.create_table_record(data_source, table)
+  File "/Users/mike/Projects/nlpquery/python/importer.py", line 168, in create_table_record
+    self.embedding_builder.add_table(
+  File "/Users/mike/Projects/nlpquery/python/embeddings/embedding_builder.py", line 133, in add_table
+    result.get()
+  File "/Users/mike/.asdf/installs/python/3.10.9/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/multiprocessing/pool.py", line 774, in get
+    raise self._value
+  File "/Users/mike/.asdf/installs/python/3.10.9/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/multiprocessing/pool.py", line 125, in worker
+    result = (True, func(*args, **kwds))
+  File "/Users/mike/Projects/nlpquery/python/embeddings/embedding_builder.py", line 205, in add_table_column_values
+
+  File "/Users/mike/Projects/nlpquery/python/embeddings/ann_index.py", line 37, in add
+    embedding = Embedding(content, embedder=OpenAIEmbedder)
+  File "/Users/mike/Projects/nlpquery/python/embeddings/embedding.py", line 41, in __init__
+    embedding: np.ndarray = self.embedder.encode(content_str)
+  File "/Users/mike/Projects/nlpquery/python/embeddings/openai_embedder.py", line 12, in encode
+    result = openai_throttled.embed(model="text-embedding-ada-002", input=content_str)
+  File "/Users/mike/Projects/nlpquery/python/utils/openai_rate_throttled.py", line 113, in embed
+    result = openai.Embedding.create(input=input, **kwargs)
+  File "/Users/mike/Projects/nlpquery/.venv/lib/python3.10/site-packages/openai/api_resources/embedding.py", line 33, in create
+    response = super().create(*args, **kwargs)
+  File "/Users/mike/Projects/nlpquery/.venv/lib/python3.10/site-packages/openai/api_resources/abstract/engine_api_resource.py", line 153, in create
+    response, _, api_key = requestor.request(
+  File "/Users/mike/Projects/nlpquery/.venv/lib/python3.10/site-packages/openai/api_requestor.py", line 226, in request
+    resp, got_stream = self._interpret_response(result, stream)
+  File "/Users/mike/Projects/nlpquery/.venv/lib/python3.10/site-packages/openai/api_requestor.py", line 619, in _interpret_response
+    self._interpret_response_line(
+  File "/Users/mike/Projects/nlpquery/.venv/lib/python3.10/site-packages/openai/api_requestor.py", line 679, in _interpret_response_line
+    raise self.handle_error_response(
+openai.error.RateLimitError: The server is currently overloaded with other requests. Sorry about that! You can retry your request, or contact us through our help center at help.openai.com if the error persists.
+```
