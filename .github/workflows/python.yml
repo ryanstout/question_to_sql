@@ -31,7 +31,7 @@ jobs:
       - uses: ./.github/actions/python-setup
 
       - name: lint
-        run: poetry run pylint **/*.py
+        run: bin/pylint
 
   formatting:
     name: Black Formatting

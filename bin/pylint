@@ -1,0 +1,3 @@
+#!/bin/bash
+# https://stackoverflow.com/questions/36873096/run-pylint-for-all-python-files-in-a-directory-and-all-subdirectories
+find . -type f -name "*.py" -not -path "./.venv/*" -not -path "./node_modules/*" | xargs poetry run pylint
