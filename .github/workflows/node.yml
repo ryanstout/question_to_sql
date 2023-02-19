@@ -13,8 +13,6 @@ permissions:
 env:
   TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
   NODE_ENV: test
-  # TODO if NODE_ENV is true, then we should mock requests, although we should prob just use VCR or something
-  MOCKED_QUESTION_RESPONSE: true
   # FLY_API_TOKEN: set in GH actions
 
 jobs:

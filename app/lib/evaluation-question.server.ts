@@ -2,7 +2,7 @@ import { EvaluationStatus } from "@prisma/client"
 
 import { prisma } from "~/db.server"
 import { log } from "~/lib/logging"
-import { runQuery } from "~/lib/question.server"
+import { runQuery } from "~/lib/python.server"
 
 export async function createEvaluationQuestionGroup(questionIdList: number[]) {
   log.info("creating question group", { questionIdList })
