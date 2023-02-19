@@ -5,6 +5,7 @@ import type { Question } from "@prisma/client"
 import { prisma } from "~/db.server"
 import { isMockedPythonServer } from "~/lib/environment"
 import { log } from "~/lib/logging"
+import { pythonRequest, runQuery } from "~/lib/python.server"
 
 export interface QuestionResult {
   question: Question
@@ -37,12 +38,12 @@ export async function getResultsFromQuestion({
   invariant(retrievedQuestionRecord !== null, "question record not found")
   invariant(retrievedQuestionRecord.sql !== null, "sql is null")
 
+  const targetSql =
+    retrievedQuestionRecord.userSql || retrievedQuestionRecord.sql
+
   try {
     // this avoids making an additional request to openai
-    const data = await runQuery(
-      retrievedQuestionRecord.dataSourceId,
-      retrievedQuestionRecord.sql
-    )
+    const data = await runQuery(retrievedQuestionRecord.dataSourceId, targetSql)
 
     return {
       question: retrievedQuestionRecord,
@@ -121,22 +122,6 @@ export async function createQuestion(
   }
 }
 
-// runs SQL and gets a result, lower-level function which should not be run directly
-export async function runQuery(dataSourceId: number, sql: string) {
-  if (isMockedPythonServer()) {
-    return new Promise((resolve, reject) => {
-      resolve([{ count: 100 }])
-    })
-  }
-
-  const response = await pythonRequest("query", {
-    data_source_id: dataSourceId,
-    sql: sql,
-  })
-
-  return response["results"]
-}
-
 export async function questionToSql(
   dataSourceId: number,
   naturalQuestion: string
@@ -154,28 +139,4 @@ export async function questionToSql(
   })
 
   return response["sql"]
-}
-
-// TODO we need an openapi spec for the python server so we have full stack typing
-async function pythonRequest(endpoint: string, requestParams: any) {
-  const serverHost = process.env.PYTHON_SERVER
-  invariant(serverHost, "PYTHON_SERVER env var not set")
-
-  const postURL = `${serverHost}/${endpoint}`
-
-  log.debug("making python request", {
-    requestParams,
-    postURL,
-  })
-
-  const response = await fetch(postURL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(requestParams),
-  })
-
-  const json = await response.json()
-  return json
 }
