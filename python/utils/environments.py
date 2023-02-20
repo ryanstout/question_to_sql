@@ -8,7 +8,7 @@ def _python_env():
 
 
 def is_testing():
-    return _python_env() == "testing"
+    return _python_env() == "test"
 
 
 def is_production():

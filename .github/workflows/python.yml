@@ -11,15 +11,18 @@ permissions:
   contents: read
 
 env:
-  TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
-  TEST_REDIS_URL: redis://localhost:6379/0
   PYTHON_ENV: test
-  PRISMA_EXPECTED_ENGINE_VERSION: aead147aa326ccb985dcfed5b065b4fdabd44b19
-  OPENAI_KEY: sk-ca4240cf-ca50-4b16-8eaa-742a68473ff8
   PYTHONPATH: ${{ github.workspace }}
-  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
   # for depreciated sklearn package, hopefully we can remove in the future
   SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL: true
+
+  TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+  TEST_REDIS_URL: redis://localhost:6379/0
+
+  PRISMA_EXPECTED_ENGINE_VERSION: aead147aa326ccb985dcfed5b065b4fdabd44b19
+  OPENAI_KEY: sk-ca4240cf-ca50-4b16-8eaa-742a68473ff8
+
+  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
 jobs:
   # TODO why can't we define runs-on this for the entire workflow?
