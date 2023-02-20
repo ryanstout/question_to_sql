@@ -3,9 +3,9 @@ import { Link } from "@remix-run/react"
 import { Box, Button, Divider, Grid, Menu } from "@mantine/core"
 import { useClipboard } from "@mantine/hooks"
 
+import processDownload from "~/lib/downloader.client"
 import type { QuestionResult } from "~/lib/question.server"
 
-import processDownload from "../helpers/downloader"
 import {
   IconBraces,
   IconCloudDownload,
