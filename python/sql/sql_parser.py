@@ -11,51 +11,11 @@ from sqlglot.errors import ParseError
 
 from python.utils.logging import log
 
-SNOWFLAKE_KEYWORDS = [
-    "ACCOUNT",
-    "ALTER",
-    "ANY",
-    "BY",
-    "CASE",
-    "CHECK",
-    "CONNECT",
-    "CONSTRAINT",
-    "CROSS",
-    "CURRENT_DATE",
-    "CURRENT_TIMESTAMP",
-    "DELETE",
-    "DROP",
-    "ELSE",
-    "FOLLOWING",
-    "FROM",
-    "GROUP",
-    "IN",
-    "INNER",
-    "INTERSECT",
-    "IS",
-    "LEFT",
-    "LOCALTIME",
-    "NOT",
-    "ON",
-    "ORDER",
-    "REVOKE",
-    "RLIKE",
-    "ROWS",
-    "SAMPLE",
-    "SELECT",
-    "SOME",
-    "TABLESAMPLE",
-    "TO",
-    "TRUE",
-    "UNIQUE",
-    "USING",
-    "VALUES",
-    "WHENEVER",
-    "WITH",
-]
-
 
 class SqlParser:
+    # TODO why aren't these function params? Feels like this is more of a data transformation step which could be a
+    #      simple functional style thing
+
     in_dialect = "postgres"
     # in_dialect = "tsql"
     # in_dialect = "snowflake"
