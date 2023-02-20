@@ -1,6 +1,7 @@
 import invariant from "tiny-invariant"
 
 import type { Question } from "@prisma/client"
+import { FeedbackState } from "@prisma/client"
 
 import { prisma } from "~/db.server"
 import { isMockedPythonServer } from "~/lib/environment"
@@ -66,6 +67,17 @@ export async function getResultsFromQuestion({
         },
         data: [],
       }
+    }
+
+    // TODO include sentry logging here
+
+    if (questionId) {
+      retrievedQuestionRecord = await prisma.question.update({
+        data: {
+          feedbackState: FeedbackState.INCORRECT,
+        },
+        where: { id: questionId },
+      })
     }
 
     return {
