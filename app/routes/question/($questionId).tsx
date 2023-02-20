@@ -26,6 +26,7 @@ import { prisma } from "~/db.server"
 import type { QuestionResult } from "~/lib/question.server"
 import {
   createQuestion,
+  getQuestionRecord,
   getResultsFromQuestion,
   updateQuestion,
 } from "~/lib/question.server"
@@ -142,8 +143,13 @@ export async function loader({ params, request }: LoaderArgs) {
     return null
   }
 
-  // TODO should validate the user actually has access to this question!
-  const questionResults = await getResultsFromQuestion({ questionId })
+  const questionRecord = await getQuestionRecord(questionId, user.id)
+
+  if (!questionRecord) {
+    throw new Response("Question not found", { status: 404 })
+  }
+
+  const questionResults = await getResultsFromQuestion({ questionRecord })
 
   if (questionResults.status === "error") {
     throw new Response(questionResults.error?.message, {

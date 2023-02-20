@@ -18,26 +18,41 @@ export interface QuestionResult {
   data: any[] | null
 }
 
+export async function getQuestionRecord(
+  questionId: number,
+  userId: number
+): Promise<Question | null> {
+  try {
+    // TODO should we scope this to DataSource instead of user?
+    const questionRecord = await prisma.question.findFirstOrThrow({
+      where: {
+        AND: {
+          id: {
+            equals: questionId,
+          },
+          userId: {
+            equals: userId,
+          },
+        },
+      },
+    })
+
+    return questionRecord
+  } catch (e: any) {
+    return null
+  }
+}
+
 // if you have a question, and just want the results from the warehouse
 export async function getResultsFromQuestion({
   questionRecord,
-  questionId,
 }: {
   questionRecord?: Question
-  questionId?: number
 }): Promise<QuestionResult> {
   let retrievedQuestionRecord: Question | null = null
 
   if (questionRecord) {
     retrievedQuestionRecord = questionRecord
-  }
-
-  if (!questionRecord && questionId) {
-    retrievedQuestionRecord = await prisma.question.findFirst({
-      where: {
-        id: questionId,
-      },
-    })
   }
 
   invariant(retrievedQuestionRecord !== null, "question record not found")
@@ -63,15 +78,15 @@ export async function getResultsFromQuestion({
       data: {
         feedbackState: FeedbackState.INVALID,
       },
-      where: { id: questionId },
+      where: { id: questionRecord?.id },
     })
 
     return {
       question: retrievedQuestionRecord,
       status: "error",
       error: {
-        code: 404,
-        message: "Question not found",
+        code: 500,
+        message: "Error running query in Snowflake",
       },
       data: null,
     }
