@@ -4,14 +4,20 @@ import { zx } from "zodix"
 
 import type { ActionArgs, LoaderArgs } from "@remix-run/node"
 import { json, redirect } from "@remix-run/node"
-import { useLoaderData, useNavigation, useTransition } from "@remix-run/react"
+import {
+  useCatch,
+  useLoaderData,
+  useNavigation,
+  useTransition,
+} from "@remix-run/react"
 
-import { Accordion, Center, Divider, Grid, Stack, Text } from "@mantine/core"
+import { Accordion, Divider, Grid, Stack } from "@mantine/core"
 
 import type { Question } from "@prisma/client"
 import { FeedbackState } from "@prisma/client"
 
 import DataDisplay from "~/components/dashboard/data-display"
+import ErrorDisplay from "~/components/dashboard/error"
 import QuestionActionHeader from "~/components/dashboard/question-action-header"
 import QuestionBox from "~/components/dashboard/question-box"
 import QuestionFeedback from "~/components/dashboard/question-feedback"
@@ -25,7 +31,7 @@ import {
 } from "~/lib/question.server"
 import { requireUser } from "~/session.server"
 
-import { IconAlertTriangle, IconPlus } from "@tabler/icons-react"
+import { IconPlus } from "@tabler/icons-react"
 
 export enum QuestionActions {
   CREATE = "create",
@@ -139,6 +145,12 @@ export async function loader({ params, request }: LoaderArgs) {
   // TODO should validate the user actually has access to this question!
   const questionResults = await getResultsFromQuestion({ questionId })
 
+  if (questionResults.status === "error") {
+    throw new Response(questionResults.error?.message, {
+      status: questionResults.error?.code,
+    })
+  }
+
   return json(questionResults)
 }
 
@@ -184,33 +196,6 @@ function SQLResultComponent({
   )
 }
 
-function QuestionErrorComponent() {
-  // TODO should we use ErrorBoundary here?
-  // TODO should we move this to its own component?
-  // TODO Should we automatically set feedback to incorrect if there is an error? We could do that on the server
-
-  return (
-    <Stack
-      sx={(theme) => ({
-        padding: theme.spacing.xl,
-        borderRadius: theme.radius.md,
-        backgroundColor: theme.colors.yellow[7],
-        cursor: "pointer",
-      })}
-    >
-      <Center>
-        <IconAlertTriangle color="white" size={40} />
-      </Center>
-      <Center>
-        <Text c="white">
-          Mea Culpa! There was an error retrieving your results. Our team will
-          investigate and reach out when we have your answer!
-        </Text>
-      </Center>
-    </Stack>
-  )
-}
-
 export default function QuestionView() {
   // TODO https://github.com/remix-run/remix/issues/3931
   const questionResult = useLoaderData<
@@ -248,16 +233,46 @@ export default function QuestionView() {
       </Grid>
       <Divider my="md" variant="dotted" />
       <Grid>
-        {questionResult?.status === "success" ? (
-          <Grid.Col span={10} offset={1}>
-            <DataDisplay data={questionResult?.data ?? null} />
-          </Grid.Col>
-        ) : (
-          <Grid.Col span={8} offset={2}>
-            <QuestionErrorComponent />
-          </Grid.Col>
-        )}
+        <Grid.Col span={10} offset={1}>
+          <DataDisplay data={questionResult?.data ?? null} />
+        </Grid.Col>
       </Grid>
     </>
   )
+}
+
+export function CatchBoundary() {
+  const caught = useCatch()
+
+  if (caught.status === 500) {
+    return (
+      <ErrorDisplay
+        returnLink="/question"
+        returnLinkText="New Question"
+        userMessage="Mea Culpa! There was an error retrieving your results. Our team will investigate and reach out when we have your answer!"
+      />
+    )
+  }
+  if (caught.status === 404) {
+    return (
+      <ErrorDisplay
+        returnLink="/question"
+        returnLinkText="New Question"
+        userMessage="We couldn't find a question with this id. Please ask a new question instead!"
+      />
+    )
+  }
+
+  return (
+    <ErrorDisplay
+      returnLink="/question"
+      returnLinkText="New Question"
+      userMessage="We encountered an unexpected error. Please try a new question!"
+    />
+  )
+}
+
+export function ErrorBoundary({ error }: { error: Error }) {
+  console.error(error)
+  return <div>An error ocurred.</div>
 }

@@ -6,10 +6,12 @@ import { prisma } from "~/db.server"
 import { isMockedPythonServer } from "~/lib/environment"
 import { log } from "~/lib/logging"
 import { pythonRequest, runQuery } from "~/lib/python.server"
+import type { ResponseError } from "~/models/responseError.server"
 
 export interface QuestionResult {
   question: Question
   status: "success" | "error"
+  error?: ResponseError | null
   data: any[] | null
 }
 
@@ -34,14 +36,14 @@ export async function getResultsFromQuestion({
       },
     })
   }
-  //TODO move invariant into try catch for error handling in client
-  invariant(retrievedQuestionRecord !== null, "question record not found")
-  invariant(retrievedQuestionRecord.sql !== null, "sql is null")
-
-  const targetSql =
-    retrievedQuestionRecord.userSql || retrievedQuestionRecord.sql
 
   try {
+    invariant(retrievedQuestionRecord !== null, "question record not found")
+    invariant(retrievedQuestionRecord.sql !== null, "sql is null")
+
+    const targetSql =
+      retrievedQuestionRecord.userSql || retrievedQuestionRecord.sql
+
     // this avoids making an additional request to openai
     const data = await runQuery(retrievedQuestionRecord.dataSourceId, targetSql)
 
@@ -50,12 +52,30 @@ export async function getResultsFromQuestion({
       status: "success",
       data: data,
     }
-  } catch (e) {
-    // TODO handle different errors here based on type of error
+  } catch (e: any) {
+    // TODO is there a better way to check for Invariant error than this specific string message?
+    // TODO should we catch null sql error specifically?
+
+    if (e.message === "Invariant failed: question record not found") {
+      return {
+        question: retrievedQuestionRecord || ({} as Question),
+        status: "error",
+        error: {
+          code: 404,
+          message: "Question not found",
+        },
+        data: [],
+      }
+    }
+
     return {
-      question: retrievedQuestionRecord,
+      question: retrievedQuestionRecord || ({} as Question),
       status: "error",
-      data: [{ error: e }],
+      error: {
+        code: 500,
+        message: "Error running query",
+      },
+      data: [],
     }
   }
 }
