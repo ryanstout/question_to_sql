@@ -9,6 +9,8 @@ import { log } from "~/lib/logging"
 import { pythonRequest, runQuery } from "~/lib/python.server"
 import type { ResponseError } from "~/models/responseError.server"
 
+import * as Sentry from "@sentry/remix"
+
 export interface QuestionResult {
   question: Question
   status: "success" | "error"
@@ -38,10 +40,10 @@ export async function getResultsFromQuestion({
     })
   }
 
-  try {
-    invariant(retrievedQuestionRecord !== null, "question record not found")
-    invariant(retrievedQuestionRecord.sql !== null, "sql is null")
+  invariant(retrievedQuestionRecord !== null, "question record not found")
+  invariant(retrievedQuestionRecord.sql !== null, "sql is null")
 
+  try {
     const targetSql =
       retrievedQuestionRecord.userSql || retrievedQuestionRecord.sql
 
@@ -54,40 +56,24 @@ export async function getResultsFromQuestion({
       data: data,
     }
   } catch (e: any) {
-    // TODO is there a better way to check for Invariant error than this specific string message?
-    // TODO should we catch null sql error specifically?
+    Sentry.captureException(e)
 
-    if (e.message === "Invariant failed: question record not found") {
-      return {
-        question: retrievedQuestionRecord || ({} as Question),
-        status: "error",
-        error: {
-          code: 404,
-          message: "Question not found",
-        },
-        data: [],
-      }
-    }
-
-    // TODO include sentry logging here
-
-    if (questionId) {
-      retrievedQuestionRecord = await prisma.question.update({
-        data: {
-          feedbackState: FeedbackState.INCORRECT,
-        },
-        where: { id: questionId },
-      })
-    }
+    // if snowflake is not responding properly, SQL is malformed and it's an invalid query
+    retrievedQuestionRecord = await prisma.question.update({
+      data: {
+        feedbackState: FeedbackState.INVALID,
+      },
+      where: { id: questionId },
+    })
 
     return {
-      question: retrievedQuestionRecord || ({} as Question),
+      question: retrievedQuestionRecord,
       status: "error",
       error: {
-        code: 500,
-        message: "Error running query",
+        code: 404,
+        message: "Question not found",
       },
-      data: [],
+      data: null,
     }
   }
 }

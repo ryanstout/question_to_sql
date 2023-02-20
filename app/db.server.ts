@@ -97,6 +97,7 @@ if (isProduction()) {
   prisma = global.__db__
 }
 
+// NOTE sentry setup is on the server so we can pass the prisma reference
 if (isProduction()) {
   const { SENTRY_DSN } = process.env
   invariant(SENTRY_DSN, "SENTRY_DSN is not defined")
