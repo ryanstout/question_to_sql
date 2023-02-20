@@ -39,6 +39,7 @@ export async function getQuestionRecord(
 
     return questionRecord
   } catch (e: any) {
+    // TODO should we handle other error conditions differently?
     return null
   }
 }
@@ -46,13 +47,23 @@ export async function getQuestionRecord(
 // if you have a question, and just want the results from the warehouse
 export async function getResultsFromQuestion({
   questionRecord,
+  questionId,
 }: {
   questionRecord?: Question
+  questionId?: number
 }): Promise<QuestionResult> {
   let retrievedQuestionRecord: Question | null = null
 
   if (questionRecord) {
     retrievedQuestionRecord = questionRecord
+  }
+
+  if (!questionRecord && questionId) {
+    retrievedQuestionRecord = await prisma.question.findFirst({
+      where: {
+        id: questionId,
+      },
+    })
   }
 
   invariant(retrievedQuestionRecord !== null, "question record not found")
@@ -78,7 +89,7 @@ export async function getResultsFromQuestion({
       data: {
         feedbackState: FeedbackState.INVALID,
       },
-      where: { id: questionRecord?.id },
+      where: { id: questionId },
     })
 
     return {
