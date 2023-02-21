@@ -58,12 +58,13 @@ class Ranker:
         value_weights=None,
     ) -> SCHEMA_RANKING_TYPE:
         # lists as defaults is dangerous, so we set defaults here
+        # the array represents weights for 3 faiss indexes for each type
         if table_weights is None:
-            table_weights = [1.0, 0.0, 0.3]
+            table_weights = [0.3, 0.0, 0.1]
         if column_weights is None:
             column_weights = [0.1, 0.0, 0.0]
         if value_weights is None:
-            value_weights = [0.5, 0.5]
+            value_weights = [0.5, 0.0]
 
         t1 = time.time()
         query_embedding = generate_embedding(query, embedder=embedder, cache_results=cache_results)
@@ -80,8 +81,10 @@ class Ranker:
         )
         # log.debug("Column matches", matches=columns_matches)
 
-        value_matches = self.idx_values.search(query_embedding, 1000)
-        table_column_value_matches = self.idx_values.search(query_embedding, 1000)
+        # search for value hint matches in the faaise index
+        value_hint_search_limit = 50
+        value_matches = self.idx_values.search(query_embedding, value_hint_search_limit)
+        table_column_value_matches = self.idx_values.search(query_embedding, value_hint_search_limit)
 
         tables = self.merge_ranks([table_matches, tables_with_columns_matches, value_matches], table_weights, 0)
         columns = self.merge_ranks(
