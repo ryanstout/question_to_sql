@@ -16,7 +16,7 @@ import numpy as np
 import openai
 import openai.error
 from decouple import config
-from openai.error import OpenAIError, RateLimitError
+from openai.error import OpenAIError
 
 from python.utils.batteries import log_execution_time
 from python.utils.logging import log
@@ -85,16 +85,49 @@ def _base_consumption_request():
     return {"requests": 1, "codex_tokens": 0, "embed_tokens": 0}
 
 
+# pylint: disable=pointless-string-statement
+"""
+You cannot use a backoff decorator with a context manager:
+    https://github.com/litl/backoff/issues/18#issuecomment-297772840
+
+To get around this, we create a decorator function with all of the params we need,
+and then wrap individual functions.
+
+TODO in the future we can include this directly in the context manager in the class,
+but I've spent enough time on this problem already at this point.
+
+TODO the numbers here are just guesses, feel free to change them
+"""
+BACKOFF_MAX_RETRIES = 5
+BACKOFF_RETRY_BASE = 60
+
+
+# we don't cache the decorator result because it allows us to patch the config values for testing
+def _backoff_decorator(func: t.Callable) -> t.Callable:
+    return backoff.on_exception(
+        # TODO consider adding min delay https://github.com/litl/backoff/issues/92
+        wait_gen=backoff.expo,
+        exception=tuple(all_retryable_openai_errors()),
+        # how much each exponential backoff should increase the time by
+        # https://github.com/litl/backoff/blob/d82b23c42d7a7e2402903e71e7a7f03014a00076/backoff/_wait_gen.py#L9-L10
+        factor=BACKOFF_RETRY_BASE,
+        # TODO should we just set this to an insane value since some of these operations are very hard to retry
+        #      maybe this makes sense if we set a process-level timeout for the web server side of things
+        max_tries=BACKOFF_MAX_RETRIES,
+        # NOTE the logger logic is actually pretty intense within `@backoff`, I'm not sure what's going on there yet,
+        #      so let's use the default logger for now
+        # logger=log,
+    )(func)
+
+
 class OpenAIThrottled:
     def __init__(
         self,
-        # TODO where do these magic numbers come from?
-        max_requests_per_minute: float = 20,
-        max_codex_tokens_per_minute: float = 40000,
-        max_embed_tokens_per_minute: float = 250000,
-        max_attempts: int = 5,
+        # https://platform.openai.com/docs/guides/rate-limits/overview
+        max_requests_per_minute: int = 20,
+        max_codex_tokens_per_minute: int = 40_000,
+        max_embed_tokens_per_minute: int = 250_000,
     ):
-        self.max_attempts = max_attempts
         self.limiter = MultiBucketLimiter(
             {
                 "requests": max_requests_per_minute,
@@ -113,10 +146,11 @@ class OpenAIThrottled:
         # add padding to handle max response
         # TODO is there a reason we shouldn't add this padding to the embedding as well?
         token_count = count_tokens(kwargs["prompt"]) + 1024
+        completion_call = _backoff_decorator(openai.Completion.create)
 
         with self._safe_api_request(_base_consumption_request() | {"codex_tokens": token_count}):
             # TODO should make this more generic and avoid tying to completion directly
-            result = openai.Completion.create(**kwargs)
+            result = completion_call(**kwargs)
 
         result = t.cast(OpenAICompletionResponse, result)
 
@@ -133,9 +167,10 @@ class OpenAIThrottled:
 
     def embed(self, **kwargs):
         token_count = count_tokens(kwargs["input"])
+        embedding_call = _backoff_decorator(openai.Embedding.create)
 
         with self._safe_api_request(_base_consumption_request() | {"embed_tokens": token_count}):
-            result = openai.Embedding.create(**kwargs)
+            result = embedding_call(**kwargs)
 
         result = t.cast(OpenAIEmbeddingResponse, result)
 
@@ -151,28 +186,12 @@ class OpenAIThrottled:
         return emb
 
     @contextmanager
-    # https://github.com/litl/backoff/issues/92
-    @backoff.on_exception(
-        backoff.expo,
-        tuple(all_retryable_openai_errors()),
-        # how much each exponential backoff should increase the time by
-        # https://github.com/litl/backoff/blob/d82b23c42d7a7e2402903e71e7a7f03014a00076/backoff/_wait_gen.py#L9-L10
-        factor=60,
-        # TODO should we just set this to an insane value since some of these operations are very hard to retry
-        #      maybe this makes sense if we set a process-level timeout for the web server side of things
-        max_tries=5,
-        # NOTE the logger logic is actually pretty intense within `@backoff`
-        # logger=log,
-    )
     def _safe_api_request(self, consumption_request):
         with self.limiter.request_when_available(consumption_request):
             with log_execution_time("openai completion"):
                 yield
 
 
-# TODO should uppercase if it is a constant
-openai_throttled = OpenAIThrottled(
-    max_requests_per_minute=int(20 * 0.5),
-    max_codex_tokens_per_minute=int(40000 * 0.3),
-    max_embed_tokens_per_minute=int(250000 * 0.3),
-)
+# TODO should uppercase if it is a constant?
+openai_throttled = OpenAIThrottled()
+OPENAI_THROTTLED = openai_throttled
