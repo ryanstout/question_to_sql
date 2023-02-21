@@ -63,6 +63,9 @@ class SchemaBuilder:
     def cache_columns_and_tables(self, data_source_id: int) -> None:
         tables = self.db.datasourcetabledescription.find_many(where={"dataSourceId": data_source_id})
 
+        if len(tables):
+            log.warn("no tables found for data source, cannot cache")
+
         for table in tables:
             self.cached_tables[table.id] = table
 
