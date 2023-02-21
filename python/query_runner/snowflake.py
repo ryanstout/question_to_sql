@@ -51,6 +51,24 @@ def apply_query_protections(sql):
     return sql
 
 
+import typing as t
+
+SnowflakeResponse: t.TypeAlias = list[dict[str, t.Any]]
+
+
+def is_correct_snowflake_result(val: object) -> t.TypeGuard[SnowflakeResponse]:
+    """
+    We expect snowflake queries to return a list of dicts
+    """
+    if isinstance(val, dict):
+        return True
+
+    if not isinstance(val, list):
+        return False
+
+    return all(isinstance(x, dict) for x in val)
+
+
 def get_query_results(cursor: SnowflakeCursor, sql: str, disable_query_protections: bool) -> list[dict]:
     try:
         if not disable_query_protections:
@@ -61,12 +79,17 @@ def get_query_results(cursor: SnowflakeCursor, sql: str, disable_query_protectio
         with log_execution_time("snowflake query runtime"):
             results = not_none(cursor.execute(sql)).fetchall()
 
+        if not is_correct_snowflake_result(results):
+            raise TypeError("Unexpected snowflake return type: " + str(type(results)))
+
         # Return the result of the query, not the uses
         return results
-    except Exception as e:
+    except snowflake.connector.errors.ProgrammingError as e:
         capture_exception(e)
+
         # TODO I wonder if sentry logs the error and we don't need to do this?
         log.exception("snowflake connector programming error")
+
         # TODO maybe we should rethrow a custom snowflake exception instead, I hate error handling like this
         return [{"error": str(e)}]
 

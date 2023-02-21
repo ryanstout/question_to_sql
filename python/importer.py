@@ -12,7 +12,13 @@ import python.utils.sql as sql
 from python.embeddings.embedding_builder import EmbeddingBuilder
 
 from prisma.models import DataSource, DataSourceTableDescription
-from prisma.types import DataSourceTableColumnCreateInput
+from prisma.types import (
+    DataSourceTableColumnCreateInput,
+    DataSourceTableColumnUpdateInput,
+    DataSourceTableColumnWhereInput,
+    DataSourceTableDescriptionCreateInput,
+    DataSourceTableDescriptionWhereInput,
+)
 
 # Imports the schema, and schema, metadata from the snowflake database to the local database.
 # on the SQL side, this mostly performs a bunch of describes & COUNTs
@@ -103,7 +109,7 @@ class Importer:
         # TODO should create helper for this, find first + throw like we have in JS
         data_source = self.db.datasource.find_unique(where={"id": int(data_source_id)})
         if data_source is None:
-            raise Exception("data source not found")
+            raise RuntimeError("data source not found")
 
         self.embedding_builder = EmbeddingBuilder(data_source)
 
@@ -149,9 +155,8 @@ class Importer:
         fqn = fqn_from_table_description(table)
         log.debug("creating local table record", fqn=fqn)
 
-        # TODO why can't pyright determine the right types here? It's clearly a str, number | string dict?
-        table_locator = dict(
-            {
+        table_locator = DataSourceTableDescriptionWhereInput(
+            **{
                 "dataSourceId": data_source.id,
                 "fullyQualifiedName": fqn,
             }
@@ -161,6 +166,8 @@ class Importer:
         table_description = self.db.datasourcetabledescription.find_first(where=table_locator)
 
         if not table_description:
+            # TODO this isn't great, but typedicts aren't great either...
+            table_locator = t.cast(DataSourceTableDescriptionCreateInput, table_locator)
             table_description = self.db.datasourcetabledescription.create(data=table_locator)
 
         self.create_column_records(data_source, table_description)
@@ -242,31 +249,40 @@ class Importer:
 
         distinct_row_count = self.get_unique_row_count(data_source, table_description, name)
 
-        column_external_id_locator = {"dataSourceTableDescriptionId": table_description.id, "name": name}
+        column_external_id_locator = DataSourceTableColumnWhereInput(
+            **{"dataSourceTableDescriptionId": table_description.id, "name": name}
+        )
 
-        # TODO pyright does not like merging dicts and typing, need to fix
-        column_description_payload: DataSourceTableColumnCreateInput = column_external_id_locator | {
-            "dataSourceId": data_source.id,
-            "type": column["type"],
-            "kind": column["kind"],
-            "isNull": column["null?"] == "Y",
-            "default": column["default"],
-            "distinctRows": distinct_row_count,
-            # TODO ideally, this should not be passed here and already added upstream
-            "rows": row_count,
-            "extendedProperties": json.dumps(
-                # TODO are there any other properties from snowflake?
-                {
-                    "comment": column["comment"],
+        # TODO this is terrible, but do are typedicts
+        column_description_payload = DataSourceTableColumnCreateInput(
+            **(
+                # TODO if there's a way around this, please please please do it
+                t.cast(dict, column_external_id_locator)
+                | {
+                    "dataSourceId": data_source.id,
+                    "type": column["type"],
+                    "kind": column["kind"],
+                    "isNull": column["null?"] == "Y",
+                    "default": column["default"],
+                    "distinctRows": distinct_row_count,
+                    # TODO ideally, this should not be passed here and already added upstream
+                    "rows": row_count,
+                    "extendedProperties": json.dumps(
+                        # TODO are there any other properties from snowflake?
+                        {
+                            "comment": column["comment"],
+                        }
+                    ),
                 }
-            ),
-        }
+            )
+        )
 
         # TODO I hope we can use upsert here instead...
         table_column = self.db.datasourcetablecolumn.find_first(where=column_external_id_locator)
 
         if table_column:
             log.debug("updating column record", column=name)
+            column_description_payload = t.cast(DataSourceTableColumnUpdateInput, column_description_payload)
             self.db.datasourcetablecolumn.update(data=column_description_payload, where={"id": table_column.id})
         else:
             self.db.datasourcetablecolumn.create(data=column_description_payload)

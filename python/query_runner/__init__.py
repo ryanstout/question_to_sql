@@ -1,4 +1,3 @@
-import json
 import pickle
 from typing import Any, Dict, List, TypeAlias, TypeGuard
 
@@ -9,26 +8,10 @@ from python.utils.logging import log
 from python.utils.redis import application_redis_connection
 
 from prisma.enums import DataSourceType
-from prisma.models import DataSource
 
 from .snowflake import run_snowflake_query
 
-SnowflakeResponse: TypeAlias = List[Dict[str, Any]]
-
 redis = application_redis_connection()
-
-
-def is_correct_snowflake_result(val: object) -> TypeGuard[SnowflakeResponse]:
-    """
-    We expect snowflake queries to return a list of dicts
-    """
-    if isinstance(val, dict):
-        return True
-
-    if not isinstance(val, list):
-        return False
-
-    return all(isinstance(x, dict) for x in val)
 
 
 def _query_cache_key(data_source_id: int, sql: str) -> str:
@@ -66,12 +49,9 @@ def run_query(data_source_id: int, sql: str, allow_cached_queries=False, **kwarg
     if data_source.type == DataSourceType.SNOWFLAKE:
         result = run_snowflake_query(data_source, sql, **kwargs)
 
-        if is_correct_snowflake_result(result):
-            if allow_cached_queries:
-                _cache_query_result(data_source_id, sql, result)
-            return result
-        else:
-            raise TypeError("Unexpected snowflake return type: " + str(type(result)))
+        if allow_cached_queries:
+            _cache_query_result(data_source_id, sql, result)
 
+        return result
     else:
-        raise Exception("Unknown data source type: " + data_source.type)
+        raise RuntimeError("Unknown data source type: " + data_source.type)

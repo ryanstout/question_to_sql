@@ -37,6 +37,7 @@ class RankerModel(pl.LightningModule):
         self.log("val_loss", loss)
 
 
+"""
 # data
 mnist_train, mnist_val = random_split(dataset, [55000, 5000])
 
@@ -49,3 +50,4 @@ model = LitAutoEncoder()
 # training
 trainer = pl.Trainer(gpus=4, num_nodes=8, precision=16, limit_train_batches=0.5)
 trainer.fit(model, train_loader, val_loader)
+"""

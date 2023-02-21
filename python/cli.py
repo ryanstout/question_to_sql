@@ -45,7 +45,8 @@ def cli(verbose):
         pass
 
 
-# TODO this is hacky and broken
+# TODO this is hacky and broken, we need to decide on a functional library
+"""
 @cli.command(help="Inspect a data source before importing")
 @click.option("--data-source-id", required=True, type=int)
 @click.option("--warehouse-name", type=str)
@@ -127,10 +128,10 @@ def analysis(data_source_id: int, warehouse_name: str, database_name: str, schem
             count_table.append({"count": get_table_count(cursor, name), "name": name})
         except Exception:
             click.echo(f"failed to get table count for {name}")
-            pass
 
     print("\n\n# TABLE COUNT\n\n")
     click.echo(markdown_table_output(count_table))
+"""
 
 
 @cli.command(help="create a vector index and related tables from a datasource")
