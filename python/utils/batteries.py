@@ -56,3 +56,21 @@ class log_execution_time(ContextDecorator):
     def __exit__(self, _type, _value, _traceback):
         elapsed = perf_counter() - self.time
         log.debug(f"{self.msg} took {elapsed:.3f} seconds")
+
+
+# TODO add decorator for log_execution_time
+
+# TODO add context manager for profiling
+"""
+    # ob = cProfile.Profile()
+    # ob.enable()
+    with log_execution_time("schema build"):
+        table_schema_limited_by_token_size = SchemaBuilder(db, engine).build(data_source_id, ranked_structure)
+    # ob.disable()
+    # sec = io.StringIO()
+    # sortby = SortKey.CUMULATIVE
+    # ps = pstats.Stats(ob, stream=sec).sort_stats(sortby)
+    # ps.print_stats()
+
+    # print(sec.getvalue())
+"""

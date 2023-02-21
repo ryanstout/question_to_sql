@@ -21,17 +21,8 @@ def question_with_data_source_to_sql(data_source_id: int, question: str, engine:
     ranked_structure = Ranker(db, data_source_id).rank(question)
     log.debug("building schema")
 
-    # ob = cProfile.Profile()
-    # ob.enable()
     with log_execution_time("schema build"):
         table_schema_limited_by_token_size = SchemaBuilder(db, engine).build(data_source_id, ranked_structure)
-    # ob.disable()
-    # sec = io.StringIO()
-    # sortby = SortKey.CUMULATIVE
-    # ps = pstats.Stats(ob, stream=sec).sort_stats(sortby)
-    # ps.print_stats()
-
-    # print(sec.getvalue())
 
     log.debug("convert question and schema to sql")
     with log_execution_time("schema to sql"):
