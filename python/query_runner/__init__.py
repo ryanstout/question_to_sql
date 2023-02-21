@@ -32,11 +32,12 @@ def _cache_query_result(data_source_id: int, sql: str, result: list[dict]):
         _query_cache_key(data_source_id, sql),
         # 48hr is completely arbitrary and is geared towards the import script
         60 * 60 * 24 * 2,
+        # TODO since the result is returned as JSON, shouldn't we be able to store it as JSON?
         pickle.dumps(result),
     )
 
 
-# TODO allow data_source to be passed in
+# TODO allow data_source record to be passed in
 def run_query(data_source_id: int, sql: str, allow_cached_queries=False, **kwargs) -> list[dict]:
     db = application_database_connection()
 

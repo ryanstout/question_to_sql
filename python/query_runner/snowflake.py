@@ -8,6 +8,7 @@ from sentry_sdk import capture_exception
 from snowflake.connector.cursor import DictCursor, SnowflakeCursor
 
 from python.utils.batteries import log_execution_time, not_none
+from python.utils.environments import is_production
 
 from prisma.models import DataSource
 
@@ -38,8 +39,13 @@ def get_snowflake_cursor(data_source: DataSource, without_context=False):
         cursor.execute(f"use warehouse {snowflake_credentials['warehouse']};")
         cursor.execute(f"use {snowflake_credentials['database']}.{snowflake_credentials['schema']};")
 
+    # set timeout in non-prod lower to avoid long-running queries by accident
     # https://community.snowflake.com/s/article/Parameter-STATEMENT-TIMEOUT-IN-SECONDS-covers-the-overall-time-of-query-execution
-    cursor.execute("set STATEMENT_TIMEOUT_IN_SECONDS = 20;")
+    default_timeout = 15
+    if is_production():
+        default_timeout = 30
+
+    cursor.execute(f"set STATEMENT_TIMEOUT_IN_SECONDS = {default_timeout};")
 
     return cursor, connection
 
@@ -50,8 +56,6 @@ def apply_query_protections(sql):
 
     return sql
 
-
-import typing as t
 
 SnowflakeResponse: t.TypeAlias = list[dict[str, t.Any]]
 
