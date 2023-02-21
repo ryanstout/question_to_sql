@@ -2501,6 +2501,21 @@ spelling = ["pyenchant (>=3.2,<4.0)"]
 testutils = ["gitpython (>3)"]
 
 [[package]]
+name = "pylint-pytest"
+version = "1.1.2"
+description = "A Pylint plugin to suppress pytest-related false positives."
+category = "dev"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "pylint_pytest-1.1.2-py2.py3-none-any.whl", hash = "sha256:fb20ef318081cee3d5febc631a7b9c40fa356b05e4f769d6e60a337e58c8879b"},
+]
+
+[package.dependencies]
+pylint = "*"
+pytest = ">=4.6"
+
+[[package]]
 name = "pyopenssl"
 version = "22.1.0"
 description = "Python wrapper module around the OpenSSL library"
@@ -4065,4 +4080,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.10"
-content-hash = "306e182e25e07730c18723df8e557f3306aca15212cf94af00fbcea19b795489"
+content-hash = "c06e49a232d7c7477964289bdda56f9aac6658db73674ea5eb3e18cc9fef7fc9"
