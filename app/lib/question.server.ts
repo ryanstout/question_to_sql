@@ -22,26 +22,19 @@ export async function getQuestionRecord(
   questionId: number,
   userId: number
 ): Promise<Question | null> {
-  try {
-    // TODO should we scope this to DataSource instead of user?
-    const questionRecord = await prisma.question.findFirstOrThrow({
-      where: {
-        AND: {
-          id: {
-            equals: questionId,
-          },
-          userId: {
-            equals: userId,
-          },
+  // TODO should this be scoped to DataSource id instead?
+  return await prisma.question.findFirst({
+    where: {
+      AND: {
+        id: {
+          equals: questionId,
+        },
+        userId: {
+          equals: userId,
         },
       },
-    })
-
-    return questionRecord
-  } catch (e: any) {
-    // TODO should we handle other error conditions differently?
-    return null
-  }
+    },
+  })
 }
 
 // if you have a question, and just want the results from the warehouse
