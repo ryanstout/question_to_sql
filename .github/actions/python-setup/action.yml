@@ -25,12 +25,17 @@ runs:
         virtualenvs-in-project: true
 
     - name: Load cached venv
-      id: cached-poetry-dependencies
+      id: cache-poetry
       uses: actions/cache@v3
       with:
         path: .venv
         # TODO should break on python version
         key: venv-${{ runner.os }}-${{ hashFiles('poetry.lock') }}
+
+    - name: Ensure cache is healthy
+      if: steps.cache-poetry.outputs.cache-hit == 'true'
+      run: timeout 10s poetry run pip --version || rm -rf .venv
+      shell: bash
 
     - name: ⎔ Setup node
       uses: actions/setup-node@v3
@@ -51,7 +56,7 @@ runs:
       uses: bahmutov/npm-install@v1
 
     - name: Install dependencies
-      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      if: steps.cache-poetry.outputs.cache-hit != 'true'
       shell: bash
       run: |
         poetry install

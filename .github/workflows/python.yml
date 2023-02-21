@@ -84,7 +84,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/python-setup
-      - run: DATABASE_URL=$TEST_DATABASE_URL npx prisma migrate reset --force
+      - run: DATABASE_URL=$TEST_DATABASE_URL poetry run npx prisma migrate reset --force
 
       - name: ⚡ Run Pytest
         run: poetry run pytest
