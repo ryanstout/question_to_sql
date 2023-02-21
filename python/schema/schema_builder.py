@@ -7,9 +7,8 @@
 import re
 import typing as t
 
-from sql.sql_parser import SqlParser
-
 from python.schema.ranker import SCHEMA_RANKING_TYPE, ElementRank, Ranker
+from python.sql.sql_parser import SqlParser
 from python.utils.batteries import unique
 from python.utils.db import application_database_connection
 from python.utils.logging import log
@@ -75,6 +74,7 @@ class SchemaBuilder:
                 self.cached_table_column_ids[table_id] = []
 
             column_id = column.id
+
             self.cached_table_column_ids[table_id].append(column_id)
             self.cached_columns[column_id] = column
 
@@ -94,7 +94,7 @@ class SchemaBuilder:
 
         if re.search("^VARCHAR", column.type):
             col_type = "VARCHAR"
-        elif re.search("^TIMESTAMP_TZ", column.type):
+        elif re.search("^TIMESTAMP_N?TZ", column.type):
             col_type = "TIMESTAMP"
         elif re.search("^VARIANT", column.type):
             return None  # skip this column
