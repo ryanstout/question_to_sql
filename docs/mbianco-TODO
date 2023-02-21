@@ -24,6 +24,7 @@
 
 # Devprod
 
+- [ ] use localhost redirects https://www.npmjs.com/package/chalet
 - [ ] shell formatting
 - [ ] Maybe use trunk?
 - [ ] sync line size across everything https://github.com/ryanstout/nlpquery/commit/56872f3eaca35722b4398a47c7e3dd2367d7ee11#r100412156
@@ -68,11 +69,20 @@
 
 # Python Lang
 
+- [ ] explicitly version pip
 - [ ] list comprehensions are messy https://github.com/psf/black/issues/2121
 - [ ] functional https://github.com/EntilZha/PyFunctional
 - [ ] another runtime type checking option https://docs.pydantic.dev
 - [ ] typeguard for runtime type checking https://github.com/agronholm/typeguard
 - [ ] automatically remove unused imports https://github.com/PyCQA/isort/issues/1105
+
+# Python Testing
+
+- [ ] take over pytest vcr plugin
+
+# Python VS Code
+
+- Why isn't pylint working on all files in vs code?
 
 # Snowflake
 
