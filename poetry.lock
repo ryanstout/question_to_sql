@@ -2227,37 +2227,6 @@ dev = ["pre-commit", "tox"]
 testing = ["pytest", "pytest-benchmark"]
 
 [[package]]
-name = "polars"
-version = "0.16.6"
-description = "Blazingly fast DataFrame library"
-category = "main"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "polars-0.16.6-cp37-abi3-macosx_10_7_x86_64.whl", hash = "sha256:686f628003b237a0e27ea97f0e1892f03a3c6b4a2b7de5a8703d5dabdd6aa4a6"},
-    {file = "polars-0.16.6-cp37-abi3-macosx_11_0_arm64.whl", hash = "sha256:d5d62bfb4ecd0bbcbeadf80c1d1849b5eb8a569fd732976dea3a0ab1a8adbf56"},
-    {file = "polars-0.16.6-cp37-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:e46b206305b39c452b6d6799ea35f9c7076bd49982268fd8a90795c63f6387a2"},
-    {file = "polars-0.16.6-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b32cde3d87a855bb431d48a319d3b576910a99e71ac70eac28632f817ec91574"},
-    {file = "polars-0.16.6-cp37-abi3-win_amd64.whl", hash = "sha256:b38c032031f807fd7b9095d58fa09b2325ae976b19aa6c4b76b67da786494581"},
-    {file = "polars-0.16.6.tar.gz", hash = "sha256:5abba6e55a0226737adc4291c29cf7a1ef0c3d78f0f442999fc7a98b1295d347"},
-]
-
-[package.dependencies]
-typing_extensions = {version = ">=4.0.1", markers = "python_version < \"3.11\""}
-
-[package.extras]
-all = ["polars[connectorx,deltalake,fsspec,matplotlib,numpy,pandas,pyarrow,timezone,xlsx2csv]"]
-connectorx = ["connectorx"]
-deltalake = ["deltalake (>=0.6.2)"]
-fsspec = ["fsspec"]
-matplotlib = ["matplotlib"]
-numpy = ["numpy (>=1.16.0)"]
-pandas = ["pandas", "pyarrow (>=4.0.0)"]
-pyarrow = ["pyarrow (>=4.0.0)"]
-timezone = ["backports.zoneinfo", "tzdata"]
-xlsx2csv = ["xlsx2csv (>=0.8.0)"]
-
-[[package]]
 name = "pretty-traceback"
 version = "2022.1018"
 description = "Human readable stacktraces."
@@ -4079,4 +4048,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.10"
-content-hash = "8ca5e2b8d5cf9bf559ced6380ff0bba2952072fe6cc576aaf561d0fa4391db01"
+content-hash = "32b1c58810bcd73a3b6c3c05667aa3365d3f46c09ad5f1573ee6ac493f5d58b7"
