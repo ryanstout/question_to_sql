@@ -1,8 +1,9 @@
 import json
+import pickle
 import typing as t
 from unittest.mock import patch
 
-from python.query_runner import run_query
+from python.query_runner import _cache_query_result, run_query
 from python.utils.db import application_database_connection
 from python.utils.redis import application_redis_connection
 
@@ -20,7 +21,7 @@ def make_data_source():
             name="snowflake",
             type=DataSourceType.SNOWFLAKE,
             # TODO not good, we should be able to pass in a dict
-            credentials=t.cast(prisma.Json, json.dumps({"creds": "here"})),
+            credentials=t.cast(prisma.Json, json.dumps({"credentials": "here"})),
         )
     )
 
@@ -36,12 +37,10 @@ def test_caches_result(run_snowflake_query):
     keys = redis.keys()
     assert len(keys) == 1
     key = keys[0]
-    json_str = redis.get(key)
-    assert json_str is not None
-    assert json.loads(json_str) == results
 
-
-from python.query_runner import _cache_query_result
+    pickle_str = redis.get(key)
+    assert pickle_str is not None
+    assert pickle.loads(pickle_str) == results
 
 
 @patch("python.query_runner.run_snowflake_query", return_value=[{"COUNT": 1}])
