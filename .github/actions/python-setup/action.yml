@@ -29,7 +29,7 @@ runs:
       with:
         path: .venv
         # TODO should break on python and poetry version
-        key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+        key: venv-v2-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
 
     # cache health seems like a good idea
     # https://github.com/dj-stripe/dj-stripe/blob/b17d637fede5b4d9f34c58de280a6029dfa90d6a/.github/install_poetry_action/action.yaml#L33
