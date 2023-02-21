@@ -96,7 +96,7 @@ def analysis(data_source_id: int, warehouse_name: str, database_name: str, schem
     if not (database_name and schema_name):
         click.echo("need database & schema name to continue")
         return
-    breakpoint()
+
     cursor.execute(f"use {database_name}.{schema_name};")
 
     table_list = get_query_results(cursor, "SHOW TERSE TABLES", disable_query_protections=True)
@@ -115,7 +115,6 @@ def analysis(data_source_id: int, warehouse_name: str, database_name: str, schem
     table_counts = get_query_results(
         cursor, f"select * from tables where table_schema = '{schema_name}';", disable_query_protections=True
     )
-    breakpoint()
 
     def get_table_count(cursor, table_name):
         return get_query_results(cursor, f"select count(*) as count from {table_name}", disable_query_protections=True)[

@@ -62,7 +62,7 @@ class Base:
 
     def mark_touched(self):
         """Marks all tables and columns in this node as touched"""
-        touches = self.state["touches"]
+        _touches = self.state["touches"]
         for table_refs in self.tables().values():
             for table_ref in table_refs:
                 self._track_touch((table_ref.name, None, None))
