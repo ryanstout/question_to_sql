@@ -11,7 +11,6 @@ permissions:
   contents: read
 
 env:
-  PYTHON_ENV: test
   PYTHONPATH: ${{ github.workspace }}
   # for depreciated sklearn package, hopefully we can remove in the future
   SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL: true

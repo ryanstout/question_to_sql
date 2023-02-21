@@ -13,7 +13,7 @@ import pytest
 
 from python.server import application
 
-os.environ["PYTHON_ENV"] = "testing"
+os.environ["PYTHON_ENV"] = "test"
 
 redis = application_redis_connection()
 
