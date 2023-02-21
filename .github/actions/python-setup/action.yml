@@ -21,7 +21,7 @@ runs:
         # TODO should extract from tool-versions
         version: 1.3.2
         # TODO can we version this as well?
-        virtualenvs-create: false
+        # virtualenvs-create: false
         virtualenvs-in-project: true
 
     - name: Load cached venv
@@ -29,7 +29,8 @@ runs:
       uses: actions/cache@v3
       with:
         path: .venv
-        key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+        # TODO should break on python version
+        key: venv-${{ runner.os }}-${{ hashFiles('poetry.lock') }}
 
     - name: ⎔ Setup node
       uses: actions/setup-node@v3

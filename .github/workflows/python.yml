@@ -49,7 +49,7 @@ jobs:
           black --check .
       - name: import sorting
         shell: bash
-        run: isort **/*.py -c -v
+        run: poetry run isort **/*.py -c -v
 
   typecheck:
     name: pyright
