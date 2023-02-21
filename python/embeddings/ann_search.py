@@ -21,7 +21,7 @@ class AnnSearch:
 
         return table_id_column_id_and_value
 
-    def search(self, embedding, number_of_matches):
+    def search(self, embedding, number_of_matches: int):
         scores, results = self.index.query(embedding, number_of_matches)
 
         reject_idxs = results == -1

@@ -1,9 +1,7 @@
 from dataclasses import dataclass
 
-from sqlglot import exp
-
 from python.sql.nodes.base import Base
-from python.sql.types import ColumnsType, SqlState
+from python.sql.types import SqlState
 
 
 @dataclass(init=False)
@@ -17,7 +15,7 @@ class EQ(Base):
     def resolve(self):
         child_columns = super().columns()
 
-        for ((table, col), col_refs) in child_columns.items():
+        for ((_table, _col), col_refs) in child_columns.items():
             for col_ref in col_refs:
                 # When we have an EQ node that matches a string, we want to track
                 # the column(s) and value that it matches against.

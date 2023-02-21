@@ -1,7 +1,5 @@
 from dataclasses import dataclass
 
-from sqlglot import exp
-
 from python.sql.nodes.base import Base
 from python.sql.types import ColumnsType, SqlState
 
