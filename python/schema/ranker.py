@@ -4,12 +4,12 @@ import sys
 import time
 import typing as t
 
-import utils
 from decouple import config
 
 from python.embeddings.ann_search import AnnSearch
 from python.embeddings.embedding import generate_embedding
 from python.embeddings.openai_embedder import OpenAIEmbedder
+from python.utils.db import application_database_connection
 
 
 # Taking in the question, generate the following data structure to pass to
@@ -142,7 +142,7 @@ class Ranker:
 
 
 if __name__ == "__main__":
-    db = utils.db.application_database_connection()
+    db = application_database_connection()
 
     datasource_id = db.datasource.find_first()
     if datasource_id:

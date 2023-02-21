@@ -4,7 +4,8 @@
 #  "table_name1": ["col1", "col2"],
 #  "table_name2"...
 # }
-from typing import TYPE_CHECKING, Dict, List, Tuple, TypeAlias, TypedDict
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Dict, List, NamedTuple, Tuple, TypeAlias, TypedDict
 
 if TYPE_CHECKING:
     from python.sql.nodes.base import Base
@@ -49,6 +50,37 @@ TablesType: TypeAlias = Dict[str, List["TableRef"]]
 ColumnsType: TypeAlias = Dict[Tuple[str | None, str], List["ColumnRef"]]
 ChildrenType: TypeAlias = Dict[str, List["Base"]]
 
+# A DbElement points to either a table, column, or value. If pointing to a value for example, the table and column
+# will also be specified.
+class DbElement(NamedTuple):
+    table: str
+    column: str | None
+    value: str | None
+
+
+# When querying the faiss index, we don't need most of the results, so just working with the id's for table and column
+# means we can avoid lookups when we don't end up using the DbElementIds
+class DbElementIds(NamedTuple):
+    table: int
+    column: int | None
+    value: str | None
+
+
+# value `int` represents the how many times the entry was touched/used
+DbTouchPointCounts: TypeAlias = Dict[DbElement, int]
+
+
+# Each individual DbElement can be given a score from the various faiss indicies
+@dataclass
+class ElementScores:
+    # Scores for each of the indexes
+    table_names_score: float | None = field(default=None)
+    column_names_score: float | None = field(default=None)
+    table_and_column_names_score: float | None = field(default=None)
+    column_name_and_all_column_values_score: float | None = field(default=None)
+    table_column_and_value_score: float | None = field(default=None)
+    values_score: float | None = field(default=None)
+
 
 class SqlState(TypedDict):
     """
@@ -64,4 +96,4 @@ class SqlState(TypedDict):
 
     # What tables, columns, and values (as a string) does the sql query touch
     # and therefore need to be in the in the prompt schema
-    touches: Dict[Tuple[str, str | None, str | None], int]
+    touches: DbTouchPointCounts

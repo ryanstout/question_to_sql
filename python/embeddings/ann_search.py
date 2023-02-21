@@ -2,6 +2,7 @@ import numpy as np
 
 from python.embeddings.ann_faiss import AnnFaiss
 from python.embeddings.embedding_link_index import EmbeddingLinkIndex
+from python.sql.types import DbElement, DbElementIds
 
 from prisma import Prisma
 
@@ -16,12 +17,12 @@ class AnnSearch:
 
         self.index_number = index_number
 
-    def lookup_link(self, index: int):
+    def lookup_link(self, index: int) -> DbElementIds:
         table_id_column_id_and_value = self.embedding_link_index.query(index)
 
         return table_id_column_id_and_value
 
-    def search(self, embedding, number_of_matches: int):
+    def search(self, embedding, number_of_matches: int) -> list[tuple[float, DbElementIds]]:
         scores, results = self.index.query(embedding, number_of_matches)
 
         reject_idxs = results == -1

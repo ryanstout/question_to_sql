@@ -1,5 +1,6 @@
 # Wrapper around Faiss library for building and querying ANN indexes
 import time
+from typing import Tuple
 
 import faiss
 import numpy as np
@@ -73,12 +74,10 @@ class AnnFaiss:
 
         # ParameterSpace().set_index_parameter(self.index, "nprobe", 6)
 
-    def query(self, query, number_of_matches):
-        t1 = time.time()
+    def query(self, query, number_of_matches) -> Tuple[np.ndarray, np.ndarray]:
         query = np.expand_dims(query, axis=0)
         # if query.shape[0] > 1:
         faiss.normalize_L2(query)
         scores, indexes = self.index.search(query, number_of_matches)  # type: ignore
-        t2 = time.time()
 
         return scores, indexes[0]

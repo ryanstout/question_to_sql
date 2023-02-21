@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from python.sql.exceptions import TableNotFoundError
 from python.sql.nodes.base import Base
 from python.sql.refs import ColumnRef, TableRef
-from python.sql.types import ChildrenType, ColumnsType, SqlState, TablesType
+from python.sql.types import ChildrenType, ColumnsType, DbElement, SqlState, TablesType
 from python.sql.utils.snowflake_keywords import SNOWFLAKE_KEYWORDS
 
 
@@ -27,7 +27,7 @@ class Table(Base):
         self._columns = None
 
         # Mark the table only as touched
-        self._track_touch((self.name, None, None))
+        self._track_touch(DbElement(self.name, None, None))
 
     def tables(self) -> TablesType:
         if len(self._tables) == 0:

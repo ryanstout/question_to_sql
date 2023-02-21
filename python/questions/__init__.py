@@ -58,6 +58,8 @@ def question_with_schema_to_sql(
     if engine == "text-chat-davinci-002-20230126":
         stops.append("<|im_end|>")  # chatgpt message end token
 
+    run_count = 0
+    temperature = 0.0
     while True:
         with log_execution_time("openai completion"):
 
@@ -69,7 +71,7 @@ def question_with_schema_to_sql(
                 # engine="text-chat-davinci-002-20230126",  # leaked chatgpt model
                 prompt=prompt,
                 max_tokens=1024,  # was 256
-                temperature=0.0,
+                temperature=temperature,
                 top_p=1,
                 presence_penalty=0,
                 frequency_penalty=0,
@@ -90,7 +92,21 @@ def question_with_schema_to_sql(
         # Verify that the ai sql is valud
         ai_sql = fixup_sql(simple_schema, ai_sql)
         if ai_sql:
+            # If we got back None, try the next result
             break
+        else:
+            # If we got back None, try the next result
+            run_count += 1
+
+            # If openAI is generating invalid sql queries, we could increase N and work our way down, but this will
+            # run us out of tokens pretty quickly. Instead we bump the temperature a bit and try again.
+            #
+            # TODO: if OpenAI ever bumps the token limits, we should switch to taking N. Might be worth creating a
+            # smaller prompt and then trying to generate more results.
+            temperature += 0.03
+
+            if run_count > 4:
+                break
 
     if ai_sql is None:
         raise ValueError("OpenAI failed to generate a valid SQL query")
@@ -108,6 +124,8 @@ def fixup_sql(simple_schema: SimpleSchema, ai_sql: str) -> str | None:
             sql = SqlResolveAndFix().run(ai_sql, simple_schema)
             return sql
         except SqlInspectError as e:
+            # A SqlInspectError means the sql will not run correctly at run time. This is usually due to a non-existent
+            # table or column being referenced, or just invalid sql.
             log.warn("SQL is invalid", sql=ai_sql, error=e)
             return None
 

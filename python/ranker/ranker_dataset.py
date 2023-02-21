@@ -57,6 +57,12 @@ class RankerDataset(Dataset):
 
         print(x, y)
 
+        # Training example for the column dataset
+        #
+        # [{match on column name}, {match on column name+column values}, {30 histogram values of all child value faiss matches}] => [1 if it should be included, 0 if not]
+
+        # [3,4,5,6,3] => [1]
+
         return x, y
 
     def __len__(self) -> int:

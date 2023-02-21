@@ -3,6 +3,7 @@
 
 import numpy as np
 
+from python.sql.types import DbElement, DbElementIds
 from python.utils.logging import log
 
 
@@ -48,13 +49,13 @@ class EmbeddingLinkIndex:
         np.save(self.path + ".table_cols", self.table_and_columns)
         np.save(self.path + ".values", self.values)
 
-    def query(self, index: int):
-        table_id = self.table_and_columns[index, 0].item()
-        column_id = self.table_and_columns[index, 1].item()
-        value = self.values[index]
+    def query(self, index: int) -> DbElementIds:
+        table_id: int = self.table_and_columns[index, 0].item()
+        column_id: int | None = self.table_and_columns[index, 1].item()
+        value: str | None = self.values[index]
 
         if table_id == -1:
-            table_id = None
+            raise ValueError("Table ID is -1, should always be provided")
 
         if column_id == -1:
             column_id = None
@@ -62,4 +63,4 @@ class EmbeddingLinkIndex:
         if value == "":
             value = None
 
-        return [table_id, column_id, value]
+        return DbElementIds(table_id, column_id, value)

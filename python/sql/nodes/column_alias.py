@@ -39,15 +39,14 @@ class ColumnAlias(Base):
         if not self._columns:
             child_columns = super().columns()
 
+            if len(child_columns) == 0:
+                # this can happen if the alias is for a literal string expression
+                return {}
+
             if len(child_columns) > 1:
                 raise ValueError(
                     f"ColumnAlias should only have one column in children:\n{self.state['node']!r}\n\n{self}"
                 )
-
-            # this can happen if the alias is for a literal string expression
-            if len(child_columns) == 0:
-                return {}
-
             child_column = next(iter(child_columns.values()))
 
             key = (self.table_qualifier, self.alias)

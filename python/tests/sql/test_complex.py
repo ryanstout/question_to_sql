@@ -1,6 +1,5 @@
-from sql.sql_parser import SqlParser
-
 from python.sql.sql_inspector import SqlInspector
+from python.sql.sql_parser import SqlParser
 from python.sql.types import SimpleSchema
 from python.tests.sql.fixtures.pens_schema import pens_schema
 
@@ -74,3 +73,23 @@ WHERE
     ast = SqlParser().run(query)
     SqlInspector(ast, pens_schema)
     assert ast.sql() == result_query
+
+
+def test_value_lookup1():
+    sql = """SELECT
+  COUNT(*) AS paid_orders_last_week
+FROM order
+WHERE
+  financial_status = 'paid'
+  AND created_at >= CURRENT_TIMESTAMP() - INTERVAL '7 days'
+  AND billing_address_province IN ('California', 'Oregon', 'Washington')"""
+
+    inspector = SqlInspector(sql, pens_schema)
+    print(inspector.touches())
+    assert inspector.touches() == {
+        ("order", None, None): 1,
+        ("order", "financial_status", None): 1,
+        ("order", "financial_status", "paid"): 1,
+        ("order", "created_at", None): 1,
+        ("order", "billing_address_province", None): 1,
+    }

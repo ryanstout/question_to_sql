@@ -3,7 +3,7 @@ from typing import List, Tuple
 
 from deepmerge import always_merger as deep
 
-from python.sql.types import ChildrenType, ColumnsType, SqlState, TablesType
+from python.sql.types import ChildrenType, ColumnsType, DbElement, SqlState, TablesType
 
 
 @dataclass(init=False)
@@ -65,13 +65,13 @@ class Base:
         _touches = self.state["touches"]
         for table_refs in self.tables().values():
             for table_ref in table_refs:
-                self._track_touch((table_ref.name, None, None))
+                self._track_touch(DbElement(table_ref.name, None, None))
 
         for columns in self.columns().values():
             for column in columns:
-                self._track_touch((column.table.name, column.name, None))
+                self._track_touch(DbElement(column.table.name, column.name, None))
 
-    def _track_touch(self, key: Tuple[str, str | None, str | None]):
+    def _track_touch(self, key: DbElement):
         """Tracks a touch on a column"""
         touches = self.state["touches"]
         if key not in touches:
