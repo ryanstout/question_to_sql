@@ -20,8 +20,7 @@ runs:
       with:
         # TODO should extract from tool-versions
         version: 1.3.2
-        # TODO can we version this as well?
-        # virtualenvs-create: false
+        # TODO can we version this as well vs doing in it multiple places? Can we include in `toml`?
         virtualenvs-in-project: true
 
     - name: Load cached venv
@@ -29,12 +28,14 @@ runs:
       uses: actions/cache@v3
       with:
         path: .venv
-        # TODO should break on python version
-        key: venv-${{ runner.os }}-${{ hashFiles('poetry.lock') }}
+        # TODO should break on python and poetry version
+        key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
 
+    # cache health seems like a good idea
+    # https://github.com/dj-stripe/dj-stripe/blob/b17d637fede5b4d9f34c58de280a6029dfa90d6a/.github/install_poetry_action/action.yaml#L33
     - name: Ensure cache is healthy
       if: steps.cache-poetry.outputs.cache-hit == 'true'
-      run: timeout 10s poetry run pip --version || rm -rf .venv
+      run: (timeout 10s poetry run pip --version && timeout 10s poetry run pip list) || rm -rf .venv
       shell: bash
 
     - name: ⎔ Setup node
