@@ -35,7 +35,9 @@ runs:
     # https://github.com/dj-stripe/dj-stripe/blob/b17d637fede5b4d9f34c58de280a6029dfa90d6a/.github/install_poetry_action/action.yaml#L33
     - name: Ensure cache is healthy
       if: steps.cache-poetry.outputs.cache-hit == 'true'
-      run: (timeout 10s poetry run pip --version && timeout 10s poetry run pip list) || rm -rf .venv
+      run: |
+        poetry run pip --version
+        poetry run pip list
       shell: bash
 
     - name: ⎔ Setup node
