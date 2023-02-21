@@ -1,12 +1,28 @@
 from python.sql.sql_inspector import SqlInspector
+from python.sql.types import SimpleSchema
+
+BASIC_SCHEMA_STRUCTURE: SimpleSchema = {
+    "table1": {"name": "table1", "columns": {"col1": {"name": "col1"}, "col2": {"name": "col2"}}}
+}
 
 
-def test_sum_propigation():
+def test_static_alias():
+    inspector = SqlInspector(
+        """
+        SELECT 'unsure' AS user_name;
+        """,
+        BASIC_SCHEMA_STRUCTURE,
+    )
+
+    assert inspector.touches() == {}
+
+
+def test_sum_propagation():
     inspector = SqlInspector(
         """
         SELECT SUM(col1) as col1_sum  FROM table1;
         """,
-        {"table1": {"name": "table1", "columns": {"col1": {"name": "col1"}, "col2": {"name": "col2"}}}},
+        BASIC_SCHEMA_STRUCTURE,
     )
     assert inspector.touches() == {("table1", None, None): 1, ("table1", "col1", None): 2}
 
@@ -14,7 +30,7 @@ def test_sum_propigation():
         """
         SELECT SUM(col1) FROM table1;
         """,
-        {"table1": {"name": "table1", "columns": {"col1": {"name": "col1"}, "col2": {"name": "col2"}}}},
+        BASIC_SCHEMA_STRUCTURE,
     )
     assert inspector.touches() == {("table1", None, None): 1, ("table1", "col1", None): 1}
 
