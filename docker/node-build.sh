@@ -10,6 +10,8 @@ npx prisma --version
 remove_python_prisma_generator
 npx prisma generate
 
+npx remix-routes
+
 npm run build
 
 # after building, let's remove all of the dev packages that we do not need

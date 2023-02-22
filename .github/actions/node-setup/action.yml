@@ -34,6 +34,10 @@ runs:
         remove_python_prisma_generator
         npx prisma generate
 
+    - name: Remix Routes
+      shell: bash
+      run: npx remix routes
+
     - name: 🛠 Setup Database
       if: ${{ inputs.setup-db == 'true' }}
       shell: bash
