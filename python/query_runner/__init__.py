@@ -26,6 +26,8 @@ def _cached_query_result(data_source_id: int, sql: str) -> None | list[dict]:
         log.debug("query cache hit")
         return pickle.loads(cached_query_result)
 
+    return None
+
 
 def _cache_query_result(data_source_id: int, sql: str, result: list[dict]):
     redis.setex(
@@ -54,5 +56,5 @@ def run_query(data_source_id: int, sql: str, allow_cached_queries=False, **kwarg
             _cache_query_result(data_source_id, sql, result)
 
         return result
-    else:
-        raise RuntimeError("Unknown data source type: " + data_source.type)
+
+    raise RuntimeError("Unknown data source type: " + data_source.type)

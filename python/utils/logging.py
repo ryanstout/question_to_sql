@@ -20,7 +20,7 @@ from pretty_traceback.formatting import (
 
 # TODO could submit a PR using named format string pieces
 # https://github.com/mbarkhau/pretty-traceback/blob/b5e06b2022a806127b1b7b5ba7972afb84e48e08/src/pretty_traceback/formatting.py#L287
-def _patched_rows_to_lines(rows: t.List[PaddedRow], color: bool = False) -> t.Iterable[str]:
+def _patched_rows_to_lines(rows: t.List[PaddedRow], color: bool = False) -> t.Iterable[str]:  # pylint: disable=all
 
     # apply colors and additional separators/ spacing
     fmt_module = FMT_MODULE if color else "{0}"
@@ -59,7 +59,11 @@ def _patched_rows_to_lines(rows: t.List[PaddedRow], color: bool = False) -> t.It
 
 
 pretty_traceback.formatting._rows_to_lines = _patched_rows_to_lines
-pretty_traceback.install()
+pretty_traceback.install(
+    # https://github.com/mbarkhau/pretty-traceback/blob/b5e06b2022a806127b1b7b5ba7972afb84e48e08/src/pretty_traceback/hook.py#L41
+    # only_hook_if_default_excepthook=False,
+    # only_tty=False,
+)
 
 
 def configure_logger():
@@ -67,7 +71,7 @@ def configure_logger():
 
     # allow user to specify a log in case they want to do something meaningful with the stdout
     if python_log_path := config("PYTHON_LOG_PATH", default=None):
-        python_log = open(python_log_path, "a")
+        python_log = open(python_log_path, "a", encoding="utf-8")  # pylint: disable=consider-using-with
         logger_factory = structlog.PrintLoggerFactory(file=python_log)
 
     log_level = t.cast(str, config("LOG_LEVEL", default="WARN", cast=str))
