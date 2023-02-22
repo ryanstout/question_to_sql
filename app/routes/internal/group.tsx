@@ -1,5 +1,7 @@
 import type { DataTableColumn } from "mantine-datatable"
 import { DataTable } from "mantine-datatable"
+import { useEffect, useState } from "react"
+import { $path } from "remix-routes"
 import { zx } from "zodix"
 
 import type { ActionArgs, LoaderArgs } from "@remix-run/node"
@@ -12,7 +14,7 @@ import {
   useNavigate,
 } from "@remix-run/react"
 
-import { Box, Button, Grid } from "@mantine/core"
+import { Box, Button, Checkbox, Grid } from "@mantine/core"
 import { getHotkeyHandler, useHotkeys } from "@mantine/hooks"
 
 import type {
@@ -25,16 +27,15 @@ import { prisma } from "~/db.server"
 import { requireUser } from "~/session.server"
 import { isEmpty } from "~/utils"
 
+const QUESTION_PREVIEW_LIMIT = 3
+
 export async function loader({ request, params }: LoaderArgs) {
   const user = await requireUser(request) // eslint-disable-line
 
   const evaluationGroups = await prisma.evaluationQuestionGroup.findMany({
-    where: {
-      status: EvaluationStatus.UNREAD, // TODO EvaluationStatus.INCOMPLETE],
-    },
     include: {
       evaluationQuestions: {
-        take: 3,
+        take: QUESTION_PREVIEW_LIMIT,
       },
     },
     orderBy: { createdAt: "desc" },
@@ -58,28 +59,33 @@ export async function loader({ request, params }: LoaderArgs) {
 }
 
 export async function action({ request }: ActionArgs) {
-  // TODO create new evaluation group
   const user = await requireUser(request)
+  const dataSource = user.business!.dataSources[0]
 
   const questionGroup = await prisma.evaluationQuestionGroup.create({
     data: {
       status: EvaluationStatus.UNREAD,
-      dataSourceId: user.business!.dataSources[0].id,
+      dataSourceId: dataSource.id,
     },
   })
 
+  // TODO is this not thrown automatically if there's a schema failure?
   if (!questionGroup) {
     throw new Error("Failed to create question group")
   }
 
-  return redirect("/internal/group/" + questionGroup.id)
+  // TODO since this is a redirect, we need to use a flash cookie
+  return redirect(
+    // TODO 3rd arg is annoying this needs to be fixed when the underlying library is fixed
+    $path(
+      "/internal/group/:evaluationGroupId",
+      { evaluationGroupId: questionGroup.id },
+      {}
+    )
+  )
 }
 
-export default function EvaluationGroupSelection({
-  data,
-}: {
-  data: EvaluationQuestionGroup[]
-}) {
+export default function EvaluationGroupSelection() {
   type EvaluationQuestionGroupWithQuestions = EvaluationQuestionGroup & {
     evaluationQuestions: EvaluationQuestion[]
   }
@@ -89,18 +95,30 @@ export default function EvaluationGroupSelection({
     // TODO this is worse than most; waiting on a remix bug to fix
   >() as unknown as EvaluationQuestionGroupWithQuestions[]
 
+  const [excludeCompletedGroups, setExcludeCompletedGroups] = useState(true)
+  const [filteredEvaluationGroupList, setFilteredEvaluationGroupList] =
+    useState(evaluationGroupList)
+
+  // create a new group on hotkey shortcut
   const fetcher = useFetcher()
+  // TODO any is used because the hotkey library doesn't have the correct types; check again later
   const hotKeyConfig: any = [
     [
       "mod+Enter",
       () => {
-        const formData = new FormData()
-        fetcher.submit(formData, { method: "post" })
+        fetcher.submit(null, { method: "post" })
       },
     ],
   ]
-
   useHotkeys(hotKeyConfig)
+
+  useEffect(() => {
+    const filteredList = evaluationGroupList.filter(
+      (group) =>
+        !excludeCompletedGroups || group.status !== EvaluationStatus.CORRECT
+    )
+    setFilteredEvaluationGroupList(filteredList)
+  }, [excludeCompletedGroups, evaluationGroupList])
 
   const navigate = useNavigate()
   const rowClick = (record: EvaluationQuestionGroup, recordIndex: number) => {
@@ -116,7 +134,7 @@ export default function EvaluationGroupSelection({
       render: (record) => {
         const questionString = record.evaluationQuestions
           .map((q) => q.question)
-          .slice(0, 3)
+          .slice(0, QUESTION_PREVIEW_LIMIT)
           .join(", ")
 
         return isEmpty(questionString) ? <i>No questions</i> : questionString
@@ -136,11 +154,17 @@ export default function EvaluationGroupSelection({
             New Group ctrl+g
           </Button>
         </Form>
+        <Checkbox
+          mb={15}
+          label="Exclude completed groups"
+          checked={excludeCompletedGroups}
+          onChange={(e) => setExcludeCompletedGroups(e.currentTarget.checked)}
+        />
         <Box sx={{ height: "100%" }}>
           <DataTable
             striped
             highlightOnHover
-            records={evaluationGroupList}
+            records={filteredEvaluationGroupList}
             columns={dataColumns}
             onRowClick={rowClick}
           />
