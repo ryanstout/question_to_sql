@@ -36,7 +36,7 @@ runs:
 
     - name: Remix Routes
       shell: bash
-      run: npx remix routes
+      run: npx remix-routes
 
     - name: 🛠 Setup Database
       if: ${{ inputs.setup-db == 'true' }}
