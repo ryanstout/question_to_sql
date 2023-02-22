@@ -30,9 +30,11 @@ import { questionToSql } from "~/lib/question.server"
 import { QuestionActions } from "~/routes/question/($questionId)"
 import { isBlank, isEmpty } from "~/utils"
 
-type EvaluationQuestionGroupWithQuestions = EvaluationQuestionGroup & {
-  evaluationQuestions: EvaluationQuestion[]
-}
+type EvaluationQuestionGroupWithQuestionsAndDataSource =
+  EvaluationQuestionGroup & {
+    evaluationQuestions: EvaluationQuestion[]
+    dataSource: { name: string }
+  }
 
 export async function loader({ params }: LoaderArgs) {
   const { evaluationGroupId } = zx.parseParams(params, {
@@ -41,7 +43,10 @@ export async function loader({ params }: LoaderArgs) {
 
   let evaluationGroup = await prisma.evaluationQuestionGroup.findUniqueOrThrow({
     where: { id: evaluationGroupId },
-    include: { evaluationQuestions: true },
+    include: {
+      evaluationQuestions: true,
+      dataSource: { select: { name: true } },
+    },
   })
 
   const lastQuestion = evaluationGroup.evaluationQuestions.at(-1)
@@ -59,7 +64,10 @@ export async function loader({ params }: LoaderArgs) {
       where: { id: evaluationGroupId },
       data: { correctSql: generatedSql },
       // TODO this is inefficient, but it avoids having to manage model state right now
-      include: { evaluationQuestions: true },
+      include: {
+        evaluationQuestions: true,
+        dataSource: { select: { name: true } },
+      },
     })
   }
 
@@ -75,7 +83,10 @@ export async function loader({ params }: LoaderArgs) {
       where: { id: evaluationGroupId },
       data: { results },
       // TODO this is inefficient, but it avoids having to manage model state right now
-      include: { evaluationQuestions: true },
+      include: {
+        evaluationQuestions: true,
+        dataSource: { select: { name: true } },
+      },
     })
   }
 
@@ -153,7 +164,7 @@ function useLoading() {
 export default function EvaluationGroupView() {
   const evaluationQuestionGroup = useLoaderData<
     typeof loader
-  >() as unknown as EvaluationQuestionGroupWithQuestions
+  >() as unknown as EvaluationQuestionGroupWithQuestionsAndDataSource
 
   const dataColumns: DataTableColumn<
     (typeof evaluationQuestionGroup.evaluationQuestions)[0]
@@ -173,7 +184,10 @@ export default function EvaluationGroupView() {
   return (
     <>
       <Grid.Col span={3}>
-        <Text>TODO Datasource/User display</Text>
+        <Text mb={15}>
+          {evaluationQuestionGroup.dataSource.name} #
+          {evaluationQuestionGroup.dataSourceId}
+        </Text>
         <DataTable<(typeof evaluationQuestionGroup.evaluationQuestions)[0]>
           striped
           records={evaluationQuestionGroup.evaluationQuestions}
@@ -204,5 +218,16 @@ export default function EvaluationGroupView() {
         </Stack>
       </Grid.Col>
     </>
+  )
+}
+
+export function ErrorBoundary({ error }: { error: Error }) {
+  return (
+    <div>
+      <h1>Error Loading Question Group</h1>
+      <p>{error.message}</p>
+      <p>The stack trace is:</p>
+      <pre>{error.stack}</pre>
+    </div>
   )
 }

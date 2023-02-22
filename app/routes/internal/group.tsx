@@ -15,7 +15,10 @@ import {
 import { Box, Button, Grid } from "@mantine/core"
 import { getHotkeyHandler, useHotkeys } from "@mantine/hooks"
 
-import type { EvaluationQuestionGroup } from "@prisma/client"
+import type {
+  EvaluationQuestion,
+  EvaluationQuestionGroup,
+} from "@prisma/client"
 import { EvaluationStatus } from "@prisma/client"
 
 import { prisma } from "~/db.server"
@@ -77,9 +80,14 @@ export default function EvaluationGroupSelection({
 }: {
   data: EvaluationQuestionGroup[]
 }) {
+  type EvaluationQuestionGroupWithQuestions = EvaluationQuestionGroup & {
+    evaluationQuestions: EvaluationQuestion[]
+  }
+
   const evaluationGroupList = useLoaderData<
     typeof loader
-  >() as unknown as EvaluationQuestionGroup[]
+    // TODO this is worse than most; waiting on a remix bug to fix
+  >() as unknown as EvaluationQuestionGroupWithQuestions[]
 
   const fetcher = useFetcher()
   const hotKeyConfig: any = [
@@ -99,12 +107,20 @@ export default function EvaluationGroupSelection({
     navigate(record.id.toString(), { replace: true })
   }
 
-  const dataColumns: DataTableColumn<EvaluationQuestionGroup>[] = [
+  const dataColumns: DataTableColumn<(typeof evaluationGroupList)[0]>[] = [
     // TODO add summary of questions in the group column
     {
       accessor: "id",
       title: "Evaluation Groups",
       textAlignment: "right",
+      render: (record) => {
+        const questionString = record.evaluationQuestions
+          .map((q) => q.question)
+          .slice(0, 3)
+          .join(", ")
+
+        return isEmpty(questionString) ? <i>No questions</i> : questionString
+      },
     },
   ]
 
