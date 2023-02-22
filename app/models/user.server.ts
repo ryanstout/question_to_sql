@@ -1,5 +1,6 @@
-import type { Password, User } from "@prisma/client"
 import bcrypt from "bcryptjs"
+
+import type { Password, User } from "@prisma/client"
 
 import { prisma } from "~/db.server"
 
@@ -11,7 +12,13 @@ export async function getUserById(id: User["id"]) {
     include: {
       business: {
         include: {
-          dataSources: true,
+          dataSources: {
+            select: {
+              // do NOT include credentials! This could be accidentally exposed to a loader
+              name: true,
+              id: true,
+            },
+          },
         },
       },
     },
