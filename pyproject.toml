@@ -4,7 +4,7 @@ version = "0.1.0"
 description = ""
 authors = ["Ryan Stout <ryanstout@gmail.com>"]
 readme = "README.md"
-# for cli tool
+# for the `nlp` cli tool, this includes the `python` folder
 packages = [{ include = "python" }]
 
 # TODO update to 3.11 when pytorch supports it https://github.com/pytorch/pytorch/issues/86566
@@ -16,6 +16,7 @@ packages = [{ include = "python" }]
 # secondary = true
 
 [tool.poetry.dependencies]
+# https://github.com/python-poetry/poetry/issues/732
 pip = "^23.0.1"
 # TODO torch does not support 3.10 yet!
 python = "~3.10"
@@ -35,6 +36,7 @@ backoff = "^2.2.1"
 flask = "^2.2.3"
 tqdm = "^4.64.1"
 
+# TODO in the future we *should* be able to just specify an extra or a wheel source and this is done automatically...
 # import platform; platform.machine()
 # https://download.pytorch.org/whl/torch_stable.html
 # https://github.com/KumaTea/pytorch-aarch64

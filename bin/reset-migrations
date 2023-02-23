@@ -1,0 +1,13 @@
+#!/usr/bin/env zsh
+# Yes, this is a terrible idea, but while it doesn't matter I like the migrations being clean.
+# As long as we can continue to `db push` this makes life a little easier
+
+rm -rf prisma/migrations
+
+# make sure the prisma versions are correct! `prisma-client-py --version`
+DATABASE_URL=$TEST_DATABASE_URL poetry run npx prisma migrate dev -n initial
+
+# push changes to prod
+poetry run npx prisma db push
+
+git add prisma/migrations

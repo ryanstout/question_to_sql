@@ -45,7 +45,7 @@ npm run build
 echo "`npm run dev` to start the server"
 
 # helpful packages for ipython
-poetry run pip install ipython ipdb pdbr ipython-autoimport rich docrepr colorama ipython-suggestions
+poetry run pip install ipython ipdb pdbr ipython-autoimport rich docrepr colorama ipython-suggestions pyfzf
 
 # you need python installed properly to generate the prisma bindings
 # for now, we are nuking the entire DB, will need to change this in the future
@@ -58,7 +58,8 @@ psql --command="DROP DATABASE nlpquery" && \
 
 # TODO add test database migration creation
 
-psql --command="DROP DATABASE nlpquery_test"
+psql --command="DROP DATABASE nlpquery_test" && \
+    DATABASE_URL=$TEST_DATABASE_URL poetry run npx prisma migrate dev
 
 # the prisma bindings are generated when you run `migrate dev`. Should look like:
 #   ✔ Generated Prisma Client Python (v0.8.0) to ./../../.asdf/installs/python/3.9.9/lib/python3.9/site-packages/prisma in 132ms

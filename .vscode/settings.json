@@ -32,7 +32,8 @@
     "openai",
     "davinci",
     "chatgpt",
-    "retryable"
+    "retryable",
+    "openapi"
   ],
   "[python]": {
     // https://discuss.python.org/t/autopep8-isort-how-do-i-sort-using-autoformatting-absolute-imports-for-user-defined-modules-in-vs-code/20973

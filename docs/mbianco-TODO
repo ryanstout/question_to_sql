@@ -58,6 +58,7 @@
 
 # Github actions
 
+- [ ] auto merge node updates https://docs.github.com/en/code-security/dependabot/working-with-dependabot/automating-dependabot-with-github-actions#fetch-metadata-about-a-pull-request
 - [ ] integrate code coverage into CI, use c8's formatting to do this
 - [ ] https://github.com/actions/setup-node/issues/531 looks like we could use corepack to setup specific versions
 - [ ] how do the PR annotations work? Can we get pylint working like tsc? https://github.com/marketplace/actions/pylint-pr-annotator
@@ -67,6 +68,12 @@
 
 - [ ] https://resend.com/secret?utm_source=waitlist_valid
 
+# AI
+
+- https://cohere.ai/generate
+- Cohere, Anthropic & OneA
+- https://twitter.com/ompemi/status/1628077623183126532
+
 # Python Lang
 
 - [ ] explicitly version pip
@@ -75,6 +82,7 @@
 - [ ] another runtime type checking option https://docs.pydantic.dev
 - [ ] typeguard for runtime type checking https://github.com/agronholm/typeguard
 - [ ] automatically remove unused imports https://github.com/PyCQA/isort/issues/1105
+- [ ] yeah agreed that pickle is fine, just confused as to why JSON didn't handle it correctly if it's all getting sent to the FE as JSON in the end :thinking_face: I'm guessing flask has a better default encoder? I have it on my personal TODO to investigate.
 
 # Python Testing
 
