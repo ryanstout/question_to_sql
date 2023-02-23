@@ -16,6 +16,7 @@ packages = [{ include = "python" }]
 # secondary = true
 
 [tool.poetry.dependencies]
+pip = "^23.0.1"
 # TODO torch does not support 3.10 yet!
 python = "~3.10"
 sqlglot = "^10.4.3"
