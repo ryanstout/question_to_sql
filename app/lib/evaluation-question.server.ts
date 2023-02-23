@@ -4,6 +4,22 @@ import { prisma } from "~/db.server"
 import { log } from "~/lib/logging"
 import { runQuery } from "~/lib/python.server"
 
+export async function createBlankEvaluationQuestionGroup(dataSourceId: number) {
+  const questionGroup = await prisma.evaluationQuestionGroup.create({
+    data: {
+      status: EvaluationStatus.UNREAD,
+      dataSourceId: dataSourceId,
+    },
+  })
+
+  // TODO is this not thrown automatically if there's a schema failure?
+  if (!questionGroup) {
+    throw new Error("Failed to create question group")
+  }
+
+  return questionGroup
+}
+
 export async function createEvaluationQuestionGroup(questionIdList: number[]) {
   log.info("creating question group", { questionIdList })
 
@@ -101,4 +117,21 @@ export async function markCorrect(
   })
 }
 
-export default { updateQuestion, createQuestion, markCorrect }
+export async function deleteQuestionGroup(
+  evaluationQuestionGroupId: number
+): Promise<void> {
+  log.debug("deleteQuestionGroup", { evaluationQuestionGroupId })
+
+  await prisma.evaluationQuestionGroup.delete({
+    where: { id: evaluationQuestionGroupId },
+  })
+}
+
+// TODO is there a way to just auto-export all exports in the file?
+export default {
+  updateQuestion,
+  createQuestion,
+  markCorrect,
+  deleteQuestionGroup,
+  createBlankEvaluationQuestionGroup,
+}

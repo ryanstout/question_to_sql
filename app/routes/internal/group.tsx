@@ -24,6 +24,7 @@ import type {
 import { EvaluationStatus } from "@prisma/client"
 
 import { prisma } from "~/db.server"
+import evaluationQuestion from "~/lib/evaluation-question.server"
 import { requireUser } from "~/session.server"
 import { isEmpty } from "~/utils"
 
@@ -61,18 +62,8 @@ export async function loader({ request, params }: LoaderArgs) {
 export async function action({ request }: ActionArgs) {
   const user = await requireUser(request)
   const dataSource = user.business!.dataSources[0]
-
-  const questionGroup = await prisma.evaluationQuestionGroup.create({
-    data: {
-      status: EvaluationStatus.UNREAD,
-      dataSourceId: dataSource.id,
-    },
-  })
-
-  // TODO is this not thrown automatically if there's a schema failure?
-  if (!questionGroup) {
-    throw new Error("Failed to create question group")
-  }
+  const questionGroup =
+    await evaluationQuestion.createBlankEvaluationQuestionGroup(dataSource.id)
 
   // TODO since this is a redirect, we need to use a flash cookie
   return redirect(

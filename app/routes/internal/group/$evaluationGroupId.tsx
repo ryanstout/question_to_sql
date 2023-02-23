@@ -1,5 +1,6 @@
 import type { DataTableColumn } from "mantine-datatable"
 import { DataTable } from "mantine-datatable"
+import { $path } from "remix-routes"
 import { z } from "zod"
 import { zx } from "zodix"
 
@@ -141,7 +142,12 @@ export async function action({ request, params }: ActionArgs) {
 
     await evaluationQuestion.markCorrect(evaluationGroupId, notes)
 
-    return redirect(`/internal/group`)
+    return redirect($path("/internal/group", {}))
+  }
+
+  if (actionName === QuestionActions.DELETE) {
+    await evaluationQuestion.deleteQuestionGroup(evaluationGroupId)
+    return redirect($path("/internal/group", {}))
   }
 
   throw new Error("Invalid action")
@@ -213,6 +219,12 @@ export default function EvaluationGroupView() {
               <Text fw="bold">Notes</Text>
               <Textarea name="notes" />
             </Stack>
+          </Form>
+          <Form method="post">
+            <FormActionName actionName={QuestionActions.DELETE} />
+            <Button color="red" type="submit">
+              Delete Evaluation Group
+            </Button>
           </Form>
           <DataDisplay data={evaluationQuestionGroup.results} />
         </Stack>

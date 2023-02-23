@@ -38,6 +38,7 @@ export enum QuestionActions {
   CREATE = "create",
   UPDATE = "update",
   FEEDBACK = "feedback",
+  DELETE = "delete",
 }
 
 export async function action({ request }: ActionArgs) {
