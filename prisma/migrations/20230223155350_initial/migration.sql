@@ -50,6 +50,7 @@ CREATE TABLE "EvaluationQuestionGroup" (
     "dataSourceId" INTEGER NOT NULL,
     "correctSql" TEXT,
     "results" JSONB,
+    "assertionColumns" JSONB,
     "resultOperator" "EvaluationOperators" NOT NULL DEFAULT 'EQUALS',
     "notes" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,

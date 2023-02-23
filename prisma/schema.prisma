@@ -94,8 +94,10 @@ model EvaluationQuestionGroup {
   dataSourceId Int
   dataSource   DataSource @relation(fields: [dataSourceId], references: [id])
 
-  correctSql String?
-  results    Json?
+  correctSql       String?
+  results          Json?
+  assertionColumns Json?
+
   // TODO need a list of result column assertions
 
   // some examples may contain a partial result set we want to assert against
