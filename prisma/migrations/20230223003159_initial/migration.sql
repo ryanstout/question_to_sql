@@ -49,8 +49,9 @@ CREATE TABLE "EvaluationQuestionGroup" (
     "status" "EvaluationStatus" NOT NULL DEFAULT 'UNREAD',
     "dataSourceId" INTEGER NOT NULL,
     "correctSql" TEXT,
-    "result" JSONB,
+    "results" JSONB,
     "resultOperator" "EvaluationOperators" NOT NULL DEFAULT 'EQUALS',
+    "notes" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -66,7 +67,6 @@ CREATE TABLE "EvaluationQuestion" (
     "generatedPrompt" TEXT,
     "question" TEXT NOT NULL,
     "codexSql" TEXT,
-    "notes" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -175,7 +175,7 @@ ALTER TABLE "Question" ADD CONSTRAINT "Question_userId_fkey" FOREIGN KEY ("userI
 ALTER TABLE "EvaluationQuestionGroup" ADD CONSTRAINT "EvaluationQuestionGroup_dataSourceId_fkey" FOREIGN KEY ("dataSourceId") REFERENCES "DataSource"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "EvaluationQuestion" ADD CONSTRAINT "EvaluationQuestion_evaluationQuestionGroupId_fkey" FOREIGN KEY ("evaluationQuestionGroupId") REFERENCES "EvaluationQuestionGroup"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "EvaluationQuestion" ADD CONSTRAINT "EvaluationQuestion_evaluationQuestionGroupId_fkey" FOREIGN KEY ("evaluationQuestionGroupId") REFERENCES "EvaluationQuestionGroup"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "EvaluationQuestion" ADD CONSTRAINT "EvaluationQuestion_fromQuestionId_fkey" FOREIGN KEY ("fromQuestionId") REFERENCES "Question"("id") ON DELETE SET NULL ON UPDATE CASCADE;

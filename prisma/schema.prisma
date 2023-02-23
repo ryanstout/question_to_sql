@@ -96,6 +96,7 @@ model EvaluationQuestionGroup {
 
   correctSql String?
   results    Json?
+  // TODO need a list of result column assertions
 
   // some examples may contain a partial result set we want to assert against
   resultOperator EvaluationOperators @default(EQUALS)
@@ -110,7 +111,7 @@ model EvaluationQuestion {
   id Int @id @default(autoincrement())
 
   evaluationQuestionGroupId Int
-  evaluationQuestionGroup   EvaluationQuestionGroup @relation(fields: [evaluationQuestionGroupId], references: [id])
+  evaluationQuestionGroup   EvaluationQuestionGroup @relation(fields: [evaluationQuestionGroupId], references: [id], onDelete: Cascade)
 
   // not all training questions have a source question, we could add questions directly
   fromQuestionId Int?
