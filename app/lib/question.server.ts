@@ -67,7 +67,11 @@ export async function getResultsFromQuestion({
       retrievedQuestionRecord.userSql || retrievedQuestionRecord.sql
 
     // this avoids making an additional request to openai
-    const data = await runQuery(retrievedQuestionRecord.dataSourceId, targetSql)
+    const data = await runQuery(
+      retrievedQuestionRecord.dataSourceId,
+      targetSql,
+      false
+    )
 
     return {
       question: retrievedQuestionRecord,
@@ -115,7 +119,7 @@ export async function updateQuestion(
   })
 
   log.debug("sending updated query to snowflake")
-  const results = await runQuery(question.dataSourceId, userSql)
+  const results = await runQuery(question.dataSourceId, userSql, false)
 
   return {
     question: updateUser,
@@ -170,7 +174,7 @@ export async function questionToSql(
     })
   }
 
-  const response = await pythonRequest("question", {
+  const response = await pythonRequest("/question", {
     data_source_id: dataSourceId,
     question: naturalQuestion,
   })
