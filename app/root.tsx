@@ -18,6 +18,7 @@ import KnolbeFooter from "./components/dashboard/footer"
 import HeaderMenu from "./components/dashboard/headerMenu"
 import { getUser } from "./session.server"
 import { theme } from "./theme"
+import { withSentry } from "@sentry/remix"
 
 export const meta: MetaFunction = () => ({
   charset: "utf-8",
@@ -43,7 +44,7 @@ createEmotionCache({ key: "mantine" })
 
 // TODO add error & catch boundaries here
 
-export default function App() {
+function App() {
   const data = useLoaderData()
 
   return (
@@ -88,3 +89,5 @@ export default function App() {
     </MantineProvider>
   )
 }
+
+export default withSentry(App)
