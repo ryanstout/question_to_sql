@@ -127,11 +127,23 @@ export async function deleteQuestionGroup(
   })
 }
 
+export async function deleteQuestion(
+  evaluationQuestionId: number
+): Promise<void> {
+  log.debug("deleteQuestion", { evaluationQuestionId })
+
+  await prisma.evaluationQuestion.delete({
+    where: { id: evaluationQuestionId },
+  })
+}
+
 // TODO is there a way to just auto-export all exports in the file?
+// TODO maybe this is an antipattern? I don't like importing a ton of methods without context of where they are from
 export default {
   updateQuestion,
   createQuestion,
   markCorrect,
   deleteQuestionGroup,
+  deleteQuestion,
   createBlankEvaluationQuestionGroup,
 }

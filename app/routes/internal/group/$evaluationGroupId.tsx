@@ -13,7 +13,7 @@ import {
   useTransition,
 } from "@remix-run/react"
 
-import { Button, Grid, Stack, Text, Textarea } from "@mantine/core"
+import { ActionIcon, Button, Grid, Stack, Text, Textarea } from "@mantine/core"
 
 import type {
   EvaluationQuestion,
@@ -28,8 +28,9 @@ import evaluationQuestion from "~/lib/evaluation-question.server"
 import { log } from "~/lib/logging"
 import { runQuery } from "~/lib/python.server"
 import { questionToSql } from "~/lib/question.server"
-import { QuestionActions } from "~/routes/question/($questionId)"
 import { isBlank, isEmpty } from "~/utils"
+
+import { IconTrash } from "@tabler/icons-react"
 
 type EvaluationQuestionGroupWithQuestionsAndDataSource =
   EvaluationQuestionGroup & {
@@ -102,15 +103,23 @@ async function parseActionName(request: Request) {
   return actionName
 }
 
+enum EvaluationGroupActions {
+  CREATE = "group_create",
+  UPDATE = "group_update",
+  FEEDBACK = "group_feedback",
+  DELETE = "group_delete",
+  DELETE_QUESTION = "group_delete_question",
+}
+
 export async function action({ request, params }: ActionArgs) {
   const actionName = await parseActionName(request)
-  let { evaluationGroupId } = zx.parseParams(params, {
+  const { evaluationGroupId } = zx.parseParams(params, {
     evaluationGroupId: zx.NumAsString,
   })
 
   // TODO I don't know if using the same action enum here is best, but it will get this done faster
 
-  if (actionName === QuestionActions.CREATE) {
+  if (actionName === EvaluationGroupActions.CREATE) {
     const { questionText } = await zx.parseForm(request, {
       questionText: z.string(),
     })
@@ -122,7 +131,7 @@ export async function action({ request, params }: ActionArgs) {
   }
 
   // update the sql for a question
-  if (actionName == QuestionActions.UPDATE) {
+  if (actionName == EvaluationGroupActions.UPDATE) {
     log.info("updating sql of evaluation question")
     // TODO var names are weird since this is tied to the original UI, should refactor
     const { userSql: sql } = await zx.parseForm(request, {
@@ -135,7 +144,7 @@ export async function action({ request, params }: ActionArgs) {
     return redirect(".")
   }
 
-  if (actionName === QuestionActions.FEEDBACK) {
+  if (actionName === EvaluationGroupActions.FEEDBACK) {
     const { notes } = await zx.parseForm(request, {
       notes: z.string().optional(),
     })
@@ -145,9 +154,19 @@ export async function action({ request, params }: ActionArgs) {
     return redirect($path("/internal/group", {}))
   }
 
-  if (actionName === QuestionActions.DELETE) {
+  if (actionName === EvaluationGroupActions.DELETE) {
     await evaluationQuestion.deleteQuestionGroup(evaluationGroupId)
     return redirect($path("/internal/group", {}))
+  }
+
+  // delete an individual question on a group
+  if (actionName === EvaluationGroupActions.DELETE_QUESTION) {
+    const { evaluationQuestionId } = await zx.parseForm(request, {
+      evaluationQuestionId: zx.NumAsString,
+    })
+
+    await evaluationQuestion.deleteQuestion(evaluationQuestionId)
+    return redirect(".")
   }
 
   throw new Error("Invalid action")
@@ -180,11 +199,30 @@ export default function EvaluationGroupView() {
       title: "Questions in Group",
       textAlignment: "right",
     },
-    // { accessor: "question" },
+    {
+      accessor: "actions",
+      title: "",
+      textAlignment: "right",
+      render: (question) => (
+        <Form method="post">
+          <FormActionName actionName={EvaluationGroupActions.DELETE_QUESTION} />
+          <input
+            type="hidden"
+            name="evaluationQuestionId"
+            value={question.id}
+          />
+          <ActionIcon color="red" type="submit">
+            <IconTrash size={16} />
+          </ActionIcon>
+        </Form>
+      ),
+    },
   ]
 
   const lastQuestion =
     evaluationQuestionGroup.evaluationQuestions.at(-1) ?? null
+  type lastQuestionType = NonNullable<typeof lastQuestion>
+
   const isLoading = useLoading()
 
   return (
@@ -194,7 +232,7 @@ export default function EvaluationGroupView() {
           {evaluationQuestionGroup.dataSource.name} #
           {evaluationQuestionGroup.dataSourceId}
         </Text>
-        <DataTable<(typeof evaluationQuestionGroup.evaluationQuestions)[0]>
+        <DataTable<lastQuestionType>
           striped
           records={evaluationQuestionGroup.evaluationQuestions}
           columns={dataColumns}
@@ -212,8 +250,8 @@ export default function EvaluationGroupView() {
             sqlText={evaluationQuestionGroup.correctSql}
           />
           <Form method="post">
-            <FormActionName actionName={QuestionActions.FEEDBACK} />
-            {/* TODO can we hint to the form that it shouldn't break the stack? */}
+            <FormActionName actionName={EvaluationGroupActions.FEEDBACK} />
+            {/* TODO can we hint to the form that it shouldn't break the <stack/>? */}
             <Stack>
               <Button type="submit">Mark Correct ctrl+c</Button>
               <Text fw="bold">Notes</Text>
@@ -221,7 +259,7 @@ export default function EvaluationGroupView() {
             </Stack>
           </Form>
           <Form method="post">
-            <FormActionName actionName={QuestionActions.DELETE} />
+            <FormActionName actionName={EvaluationGroupActions.DELETE} />
             <Button color="red" type="submit">
               Delete Evaluation Group
             </Button>
