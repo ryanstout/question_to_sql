@@ -16,3 +16,4 @@ __pycache__
 /.devcontainer
 /.github
 /.vscode
+/coverage
