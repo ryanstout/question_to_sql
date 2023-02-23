@@ -5,7 +5,7 @@ description = ""
 authors = ["Ryan Stout <ryanstout@gmail.com>"]
 readme = "README.md"
 # for the `nlp` cli tool, this includes the `python` folder
-packages = [{ include = "python" }]
+# packages = [{ include = "python" }]
 
 # TODO update to 3.11 when pytorch supports it https://github.com/pytorch/pytorch/issues/86566
 # TODO extract to internal notes before removing
