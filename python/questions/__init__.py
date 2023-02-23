@@ -26,11 +26,7 @@ def question_with_data_source_to_sql(data_source_id: int, question: str, engine:
 
     log.debug("convert question and schema to sql")
     with log_execution_time("schema to sql"):
-        log.debug("Convert Question to SQL")
-
-        # TODO: this could be cached on datasource or something
         simple_schema = SimpleSchemaBuilder().build(db, data_source_id)
-
         sql = question_with_schema_to_sql(simple_schema, table_schema_limited_by_token_size, question)
 
     log.debug("sql post transform", sql=sql)

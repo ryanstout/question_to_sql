@@ -43,8 +43,9 @@ def query():
 
     sql = json_data["sql"]
     data_source_id = json_data["data_source_id"]
+    allow_cached_queries = json_data["allow_cached_queries"]
 
-    results = run_query(data_source_id, sql)
+    results = run_query(data_source_id, sql, allow_cached_queries=allow_cached_queries)
 
     return jsonify({"sql": sql, "results": results})
 
