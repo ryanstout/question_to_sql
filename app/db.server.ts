@@ -106,6 +106,12 @@ if (isProduction()) {
     dsn: process.env.SENTRY_DSN,
     tracesSampleRate: 0.1,
     integrations: [new Sentry.Integrations.Prisma({ client: prisma })],
+    beforeSendTransaction(event) {
+      if (event.transaction === "/healthcheck") {
+        return null
+      }
+      return event
+    },
   })
 }
 
