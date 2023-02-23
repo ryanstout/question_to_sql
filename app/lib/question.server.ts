@@ -9,7 +9,7 @@ import { log } from "~/lib/logging"
 import { pythonRequest, runQuery } from "~/lib/python.server"
 import type { ResponseError } from "~/models/responseError.server"
 
-import * as Sentry from "@sentry/remix"
+import Sentry from "@sentry/remix"
 
 export interface QuestionResult {
   question: Question
