@@ -15,8 +15,8 @@ import { showNotification } from "@mantine/notifications"
 import type { Question } from "@prisma/client"
 
 import { prisma } from "~/db.server"
+import f from "~/functional"
 import { createEvaluationQuestionGroup } from "~/lib/evaluation-question.server"
-import { arrayWrap } from "~/utils"
 
 export async function loader() {
   const questions = await prisma.question.findMany({
@@ -60,10 +60,11 @@ function RecordView({
 
 export async function action({ request }: ActionArgs) {
   let { questions: questionIdList } = await zx.parseForm(request, {
+    // TODO extract this out into a blog post + form helper
     questions: z.preprocess(
       // the list can come in as a string if there is only one item selected
       // https://stackoverflow.com/questions/74100894/how-to-transform-object-to-array-before-parsing-in-zod
-      (v) => arrayWrap(v),
+      (v) => f.arrayWrap(v),
       zx.NumAsString.array().nonempty()
     ),
   })

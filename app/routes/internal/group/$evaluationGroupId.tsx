@@ -1,34 +1,39 @@
 import type { DataTableColumn } from "mantine-datatable"
 import { DataTable } from "mantine-datatable"
 import { $path } from "remix-routes"
+import invariant from "tiny-invariant"
 import { z } from "zod"
 import { zx } from "zodix"
 
 import type { ActionArgs, LoaderArgs } from "@remix-run/node"
 import { json, redirect } from "@remix-run/node"
-import {
-  Form,
-  useLoaderData,
-  useNavigation,
-  useTransition,
-} from "@remix-run/react"
+import { Form, useLoaderData } from "@remix-run/react"
 
-import { ActionIcon, Button, Grid, Stack, Text, Textarea } from "@mantine/core"
+import {
+  ActionIcon,
+  Button,
+  Checkbox,
+  Grid,
+  Stack,
+  Text,
+  Textarea,
+} from "@mantine/core"
 
 import type {
   EvaluationQuestion,
   EvaluationQuestionGroup,
+  Prisma,
 } from "@prisma/client"
 
 import DataDisplay from "~/components/dashboard/data-display"
 import QuestionBox from "~/components/dashboard/question-box"
 import SQLDisplay from "~/components/dashboard/sql-display"
-import { prisma } from "~/db.server"
-import evaluationQuestion from "~/lib/evaluation-question.server"
+import { FormActionName, useIsLoading } from "~/components/forms"
+import f from "~/functional"
+import evaluationQuestion, {
+  loadEvaluationQuestionGroup,
+} from "~/lib/evaluation-question.server"
 import { log } from "~/lib/logging"
-import { runQuery } from "~/lib/python.server"
-import { questionToSql } from "~/lib/question.server"
-import { isBlank, isEmpty } from "~/utils"
 
 import { IconTrash } from "@tabler/icons-react"
 
@@ -43,54 +48,7 @@ export async function loader({ params }: LoaderArgs) {
     evaluationGroupId: zx.NumAsString,
   })
 
-  let evaluationGroup = await prisma.evaluationQuestionGroup.findUniqueOrThrow({
-    where: { id: evaluationGroupId },
-    include: {
-      evaluationQuestions: true,
-      dataSource: { select: { name: true } },
-    },
-  })
-
-  const lastQuestion = evaluationGroup.evaluationQuestions.at(-1)
-
-  // if no correctSql exists, generate it
-  if (lastQuestion && isBlank(evaluationGroup.correctSql)) {
-    log.info("generating sql for evaluation question group")
-
-    const generatedSql = await questionToSql(
-      evaluationGroup.dataSourceId,
-      lastQuestion.question
-    )
-
-    evaluationGroup = await prisma.evaluationQuestionGroup.update({
-      where: { id: evaluationGroupId },
-      data: { correctSql: generatedSql },
-      // TODO this is inefficient, but it avoids having to manage model state right now
-      include: {
-        evaluationQuestions: true,
-        dataSource: { select: { name: true } },
-      },
-    })
-  }
-
-  if (evaluationGroup.correctSql && isEmpty(evaluationGroup.results)) {
-    log.info("result cache empty, generating")
-
-    const results = await runQuery(
-      evaluationGroup.dataSourceId,
-      evaluationGroup.correctSql
-    )
-
-    evaluationGroup = await prisma.evaluationQuestionGroup.update({
-      where: { id: evaluationGroupId },
-      data: { results },
-      // TODO this is inefficient, but it avoids having to manage model state right now
-      include: {
-        evaluationQuestions: true,
-        dataSource: { select: { name: true } },
-      },
-    })
-  }
+  const evaluationGroup = await loadEvaluationQuestionGroup(evaluationGroupId)
 
   return json(evaluationGroup)
 }
@@ -133,6 +91,7 @@ export async function action({ request, params }: ActionArgs) {
   // update the sql for a question
   if (actionName == EvaluationGroupActions.UPDATE) {
     log.info("updating sql of evaluation question")
+
     // TODO var names are weird since this is tied to the original UI, should refactor
     const { userSql: sql } = await zx.parseForm(request, {
       // TODO can we somehow validate against QUESTION_INPUT_NAME?
@@ -145,11 +104,21 @@ export async function action({ request, params }: ActionArgs) {
   }
 
   if (actionName === EvaluationGroupActions.FEEDBACK) {
-    const { notes } = await zx.parseForm(request, {
+    const { notes, assertionColumns } = await zx.parseForm(request, {
       notes: z.string().optional(),
+      assertionColumns: z.preprocess(
+        // the list can come in as a string if there is only one item selected
+        // https://stackoverflow.com/questions/74100894/how-to-transform-object-to-array-before-parsing-in-zod
+        (v) => f.arrayWrap(v),
+        z.string().array()
+      ),
     })
 
-    await evaluationQuestion.markCorrect(evaluationGroupId, notes)
+    await evaluationQuestion.markCorrect(
+      evaluationGroupId,
+      notes,
+      assertionColumns
+    )
 
     return redirect($path("/internal/group", {}))
   }
@@ -169,21 +138,56 @@ export async function action({ request, params }: ActionArgs) {
     return redirect(".")
   }
 
-  throw new Error("Invalid action")
+  throw new Error(`Invalid action ${actionName}`)
 }
 
-// TODO extract out and use anywhere we use the `actionName` pattern
-export function FormActionName({ actionName }: { actionName: string }) {
-  return <input type="hidden" name="actionName" value={actionName} />
-}
+// display a list of columns in the JSON for
+function ColumnSelectionDisplay({ results }: { results: Prisma.JsonValue }) {
+  function columnNamesFromResults(results: any[]) {
+    if (f.isEmpty(results)) {
+      return []
+    }
 
-// TODO is this a good pattern? not sure. It definitely needs a different name
-function useLoading() {
-  const transition = useTransition()
-  const navigation = useNavigation()
-  const isLoading =
-    navigation.state == "submitting" || transition.state != "idle"
-  return isLoading
+    const row = results[0]
+    return Object.keys(row)
+  }
+
+  if (f.isNil(results)) {
+    return <Text italic={true}>No results data</Text>
+  }
+
+  invariant(results instanceof Array, "results should always be an array")
+
+  const columnNames = columnNamesFromResults(results)
+
+  if (f.isEmpty(columnNames)) {
+    return <Text italic={true}>No columns found</Text>
+  }
+
+  if (columnNames.length == 1) {
+    return (
+      <Text italic={true}>
+        Only one column found, asserting against all columns by default
+      </Text>
+    )
+  }
+
+  return (
+    <>
+      <Text fw="bold">Columns</Text>
+      {columnNames.map((row) => {
+        return (
+          <Checkbox
+            name="assertionColumns"
+            defaultChecked={true}
+            value={row}
+            label={row}
+            key={row}
+          />
+        )
+      })}
+    </>
+  )
 }
 
 export default function EvaluationGroupView() {
@@ -223,7 +227,7 @@ export default function EvaluationGroupView() {
     evaluationQuestionGroup.evaluationQuestions.at(-1) ?? null
   type lastQuestionType = NonNullable<typeof lastQuestion>
 
-  const isLoading = useLoading()
+  const isLoading = useIsLoading()
 
   return (
     <>
@@ -244,6 +248,7 @@ export default function EvaluationGroupView() {
             isLoading={isLoading}
             showPreviousQuestionDisplay={false}
             questionRecord={lastQuestion}
+            actionName={EvaluationGroupActions.CREATE}
           />
           <SQLDisplay
             isLoading={isLoading}
@@ -253,6 +258,9 @@ export default function EvaluationGroupView() {
             <FormActionName actionName={EvaluationGroupActions.FEEDBACK} />
             {/* TODO can we hint to the form that it shouldn't break the <stack/>? */}
             <Stack>
+              <ColumnSelectionDisplay
+                results={evaluationQuestionGroup.results}
+              />
               <Button type="submit">Mark Correct ctrl+c</Button>
               <Text fw="bold">Notes</Text>
               <Textarea name="notes" />
@@ -271,6 +279,7 @@ export default function EvaluationGroupView() {
   )
 }
 
+// TODO need to understand the difference between this and CatchBoundary
 export function ErrorBoundary({ error }: { error: Error }) {
   return (
     <div>

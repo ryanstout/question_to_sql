@@ -1,8 +1,67 @@
 import { EvaluationStatus } from "@prisma/client"
 
 import { prisma } from "~/db.server"
+import f from "~/functional"
 import { log } from "~/lib/logging"
 import { runQuery } from "~/lib/python.server"
+import { questionToSql } from "~/lib/question.server"
+
+export async function loadEvaluationQuestionGroup(evaluationGroupId: number) {
+  const dataSourceInclude = { dataSource: { select: { name: true } } }
+
+  let evaluationGroup = await prisma.evaluationQuestionGroup.findUniqueOrThrow({
+    where: { id: evaluationGroupId },
+    include: {
+      evaluationQuestions: true,
+      ...dataSourceInclude,
+    },
+  })
+
+  const lastQuestion = evaluationGroup.evaluationQuestions.at(-1)
+
+  // if no correctSql exists, generate it
+  if (lastQuestion && f.isBlank(evaluationGroup.correctSql)) {
+    log.info("generating sql for evaluation question group")
+
+    const generatedSql = await questionToSql(
+      evaluationGroup.dataSourceId,
+      lastQuestion.question
+    )
+
+    evaluationGroup = await prisma.evaluationQuestionGroup.update({
+      where: { id: evaluationGroupId },
+      data: { correctSql: generatedSql },
+      // TODO this is inefficient, but it avoids having to manage model state right now
+      include: {
+        evaluationQuestions: true,
+        ...dataSourceInclude,
+      },
+    })
+  }
+
+  if (evaluationGroup.correctSql && f.isEmpty(evaluationGroup.results)) {
+    log.info("result cache empty, generating")
+
+    const results = await runQuery(
+      evaluationGroup.dataSourceId,
+      evaluationGroup.correctSql,
+      // allow cached queries on training system, but not user side (yet)
+      true
+    )
+
+    evaluationGroup = await prisma.evaluationQuestionGroup.update({
+      where: { id: evaluationGroupId },
+      data: { results },
+      // TODO this is inefficient, but it avoids having to manage model state right now
+      include: {
+        evaluationQuestions: true,
+        ...dataSourceInclude,
+      },
+    })
+  }
+
+  return evaluationGroup
+}
 
 export async function createBlankEvaluationQuestionGroup(dataSourceId: number) {
   const questionGroup = await prisma.evaluationQuestionGroup.create({
@@ -71,7 +130,12 @@ export async function updateQuestion(
     })
 
   // TODO should probably use a purpose-built method here so we can have python update the generatedSchema & prompt
-  const results = await runQuery(evaluationQuestionGroup.dataSourceId, sql)
+  const results = await runQuery(
+    evaluationQuestionGroup.dataSourceId,
+    sql,
+    // allow caching on training system, but not user side (yet)
+    true
+  )
 
   // update result & correctSql on evaluation group
   await prisma.evaluationQuestionGroup.update({
@@ -109,11 +173,12 @@ export async function createQuestion(
 
 export async function markCorrect(
   evaluationQuestionGroupId: number,
-  notes?: string
+  notes?: string,
+  assertionColumns?: string[]
 ): Promise<void> {
   await prisma.evaluationQuestionGroup.update({
     where: { id: evaluationQuestionGroupId },
-    data: { notes, status: EvaluationStatus.CORRECT },
+    data: { notes, status: EvaluationStatus.CORRECT, assertionColumns },
   })
 }
 
@@ -138,7 +203,7 @@ export async function deleteQuestion(
 }
 
 // TODO is there a way to just auto-export all exports in the file?
-// TODO maybe this is an antipattern? I don't like importing a ton of methods without context of where they are from
+// TODO maybe this is an anti-pattern? I don't like importing a ton of methods without context of where they are from
 export default {
   updateQuestion,
   createQuestion,
