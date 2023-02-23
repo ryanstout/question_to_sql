@@ -46,10 +46,12 @@ export default function SQLDisplay({
   isLoading,
   sqlText,
   additionalFields,
+  actionName,
 }: {
   isLoading: boolean
   sqlText: string | null
   additionalFields?: React.ReactNode
+  actionName?: string
 }) {
   const submit = useSubmit()
 
@@ -73,11 +75,13 @@ export default function SQLDisplay({
 
   return (
     <Form ref={formRef} method="post">
-      <FormActionName actionName={QuestionActions.UPDATE} />
+      {/* TODO */}
+      <FormActionName actionName={actionName ?? QuestionActions.UPDATE} />
       <input type="hidden" name="userSql" value={userSQL} />
       {additionalFields}
       <CodeMirror
-        height="275px"
+        height="100%"
+        minHeight="275px"
         className={classes.sqlViewer}
         value={userSQL}
         extensions={[sql({}), EditorView.lineWrapping]}

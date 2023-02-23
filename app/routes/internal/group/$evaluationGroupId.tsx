@@ -253,6 +253,7 @@ export default function EvaluationGroupView() {
           <SQLDisplay
             isLoading={isLoading}
             sqlText={evaluationQuestionGroup.correctSql}
+            actionName={EvaluationGroupActions.UPDATE}
           />
           <Form method="post">
             <FormActionName actionName={EvaluationGroupActions.FEEDBACK} />

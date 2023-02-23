@@ -4,7 +4,7 @@ import invariant from "tiny-invariant"
 import { isMockedPythonServer } from "~/lib/environment"
 import { log } from "~/lib/logging"
 
-import Sentry from "@sentry/remix"
+import * as Sentry from "@sentry/remix"
 
 // runs SQL and gets a result, lower-level function which should not be run directly
 export async function runQuery(
