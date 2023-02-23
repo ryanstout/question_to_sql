@@ -7,7 +7,7 @@ import { Box, Button, Center, Flex, Grid, Text } from "@mantine/core"
 import type { Question } from "@prisma/client"
 import { FeedbackState } from "@prisma/client"
 
-import { FormActionName } from "~/routes/internal/group/$evaluationGroupId"
+import { FormActionName } from "~/components/forms"
 import { QuestionActions } from "~/routes/question/($questionId)"
 
 import { IconCheck, IconFlag } from "@tabler/icons-react"

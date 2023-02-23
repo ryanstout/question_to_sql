@@ -15,6 +15,7 @@ import type { EvaluationQuestion, Question } from "@prisma/client"
 
 import { QuestionActions } from "~/routes/question/($questionId)"
 
+import { FormActionName } from "../forms"
 import { IconSearch } from "@tabler/icons-react"
 
 const useStyles = createStyles((theme) => ({
@@ -32,11 +33,13 @@ export default function QuestionBox({
   questionRecord,
   isLoading,
   showPreviousQuestionDisplay = true,
+  actionName,
 }: {
   // TODO should really just create a supertype with just the question field
   questionRecord: Question | EvaluationQuestion | null
   isLoading: boolean
   showPreviousQuestionDisplay?: boolean
+  actionName?: string
 }) {
   const [newQuestionText, setNewQuestionText] = useState(
     questionRecord?.question ?? ""
@@ -66,7 +69,7 @@ export default function QuestionBox({
   return (
     <>
       <Form method="post">
-        <input type="hidden" name="actionName" value={QuestionActions.CREATE} />
+        <FormActionName actionName={actionName ?? QuestionActions.CREATE} />
         <TextInput
           autoFocus
           autoComplete="off"

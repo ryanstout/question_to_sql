@@ -5,7 +5,7 @@ import { Form, useSubmit } from "@remix-run/react"
 import { Box, Text, createStyles } from "@mantine/core"
 import { getHotkeyHandler } from "@mantine/hooks"
 
-import { FormActionName } from "~/routes/internal/group/$evaluationGroupId"
+import { FormActionName } from "~/components/forms"
 import { QuestionActions } from "~/routes/question/($questionId)"
 
 import { sql } from "@codemirror/lang-sql"
