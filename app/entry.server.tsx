@@ -30,3 +30,5 @@ export default function handleRequest(
     headers: responseHeaders,
   })
 }
+
+// NOTE server side sentry is setup in db config

@@ -104,7 +104,7 @@ if (isProduction()) {
 
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
-    tracesSampleRate: 1,
+    tracesSampleRate: 0.1,
     integrations: [new Sentry.Integrations.Prisma({ client: prisma })],
   })
 }

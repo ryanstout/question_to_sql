@@ -25,7 +25,7 @@ if (isProduction()) {
 
   Sentry.init({
     dsn: SENTRY_DSN,
-    tracesSampleRate: 1,
+    tracesSampleRate: 0.1,
     integrations: [
       new Sentry.BrowserTracing({
         routingInstrumentation: Sentry.remixRouterInstrumentation(
