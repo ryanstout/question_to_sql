@@ -24,14 +24,14 @@ import type {
 import { EvaluationStatus } from "@prisma/client"
 
 import { prisma } from "~/db.server"
+import f from "~/functional"
 import evaluationQuestion from "~/lib/evaluation-question.server"
 import { requireUser } from "~/session.server"
-import { isEmpty } from "~/utils"
 
 const QUESTION_PREVIEW_LIMIT = 3
 
 export async function loader({ request, params }: LoaderArgs) {
-  const user = await requireUser(request) // eslint-disable-line
+  const _user = await requireUser(request) // eslint-disable-line
 
   const evaluationGroups = await prisma.evaluationQuestionGroup.findMany({
     include: {
@@ -46,14 +46,22 @@ export async function loader({ request, params }: LoaderArgs) {
     evaluationGroupId: zx.NumAsString.optional(),
   })
 
+  const firstUnansweredEvaluationGroupWithQuestions = evaluationGroups.find(
+    (group) =>
+      group.status !== EvaluationStatus.CORRECT &&
+      !f.isEmpty(group.evaluationQuestions)
+  )
   // TODO would be better to find the first group with questions, but this should be an edge case
-  if (
-    !evaluationGroupId &&
-    evaluationGroups[0] &&
-    !isEmpty(evaluationGroups[0].evaluationQuestions)
-  ) {
-    // TODO route helpers?!
-    return redirect("/internal/group/" + evaluationGroups[0].id)
+  if (!evaluationGroupId && firstUnansweredEvaluationGroupWithQuestions) {
+    return redirect(
+      $path(
+        "/internal/group/:evaluationGroupId",
+        {
+          evaluationGroupId: firstUnansweredEvaluationGroupWithQuestions.id,
+        },
+        {}
+      )
+    )
   }
 
   return json(evaluationGroups)
@@ -62,6 +70,7 @@ export async function loader({ request, params }: LoaderArgs) {
 export async function action({ request }: ActionArgs) {
   const user = await requireUser(request)
   const dataSource = user.business!.dataSources[0]
+
   const questionGroup =
     await evaluationQuestion.createBlankEvaluationQuestionGroup(dataSource.id)
 
@@ -128,7 +137,7 @@ export default function EvaluationGroupSelection() {
           .slice(0, QUESTION_PREVIEW_LIMIT)
           .join(", ")
 
-        return isEmpty(questionString) ? <i>No questions</i> : questionString
+        return f.isEmpty(questionString) ? <i>No questions</i> : questionString
       },
     },
   ]
