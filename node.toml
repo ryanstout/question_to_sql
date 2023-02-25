@@ -6,47 +6,51 @@ kill_timeout = 5
 processes = []
 
 [env]
-  METRICS_PORT = "8081"
-  PORT = "8080"
+METRICS_PORT = "8081"
+PORT = "8080"
 
 [build]
-  dockerfile = "Dockerfile.node"
+dockerfile = "Dockerfile.node"
+
+[deploy]
+# if this command fails, the deploy is rolled back
+release_command = "docker/node-release.sh"
 
 [experimental]
-  allowed_public_ports = []
-  auto_rollback = true
+allowed_public_ports = []
+auto_rollback = true
 
 [[services]]
-  internal_port = 8080
-  processes = ["app"]
-  protocol = "tcp"
-  script_checks = []
-  [services.concurrency]
-    hard_limit = 25
-    soft_limit = 20
-    type = "connections"
+internal_port = 8080
+processes = ["app"]
+protocol = "tcp"
+script_checks = []
+[services.concurrency]
+hard_limit = 25
+soft_limit = 20
+type = "connections"
 
-  [[services.http_checks]]
-    grace_period = "5s"
-    interval = "10s"
-    method = "get"
-    path = "/healthcheck"
-    protocol = "http"
-    timeout = "2s"
-    tls_skip_verify = false
-    [services.http_checks.headers]
+[[services.http_checks]]
+grace_period = "5s"
+interval = "10s"
+method = "get"
+path = "/healthcheck"
+protocol = "http"
+timeout = "2s"
+tls_skip_verify = false
+[services.http_checks.headers]
 
-  [[services.ports]]
-    force_https = true
-    handlers = ["http"]
-    port = 80
+[[services.ports]]
+force_https = true
+handlers = ["http"]
+port = 80
 
-  [[services.ports]]
-    handlers = ["tls", "http"]
-    port = 443
+[[services.ports]]
+handlers = ["tls", "http"]
+port = 443
 
-  [[services.tcp_checks]]
-    grace_period = "1s"
-    interval = "15s"
-    restart_limit = 0
-    timeout = "2s"
+[[services.tcp_checks]]
+grace_period = "1s"
+interval = "15s"
+restart_limit = 0
+timeout = "2s"

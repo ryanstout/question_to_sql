@@ -7,7 +7,7 @@
     "package-tree": "npm list --omit dev --omit optional --depth 2",
     "clean-build": "rm -rf build public/build",
     "node-reset": "rm -rf node_modules && npm i",
-    "build": "remix build",
+    "build": "remix build --sourcemap",
     "dev": "run-p dev:*",
     "dev:routes": "remix-routes -w",
     "dev:build": "remix dev --debug",
