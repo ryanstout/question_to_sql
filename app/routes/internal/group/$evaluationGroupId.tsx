@@ -7,7 +7,7 @@ import { zx } from "zodix"
 
 import type { ActionArgs, LoaderArgs } from "@remix-run/node"
 import { json, redirect } from "@remix-run/node"
-import { Form, useLoaderData } from "@remix-run/react"
+import { Form, useFetcher, useLoaderData } from "@remix-run/react"
 
 import {
   ActionIcon,
@@ -18,6 +18,7 @@ import {
   Text,
   Textarea,
 } from "@mantine/core"
+import { useInputState } from "@mantine/hooks"
 
 import type {
   EvaluationQuestion,
@@ -30,6 +31,7 @@ import DataDisplay from "~/components/dashboard/data-display"
 import QuestionBox from "~/components/dashboard/question-box"
 import SQLDisplay from "~/components/dashboard/sql-display"
 import {
+  ACTION_NAME_LABEL,
   FormActionName,
   parseActionName,
   parseQuestionText,
@@ -61,6 +63,7 @@ export async function loader({ params }: LoaderArgs) {
 enum EvaluationGroupActions {
   CREATE = "group_create",
   UPDATE = "group_update",
+  UPDATE_NOTES = "group_update_notes",
   FEEDBACK = "group_feedback",
   DELETE = "group_delete",
   DELETE_QUESTION = "group_delete_question",
@@ -135,6 +138,16 @@ export async function action({ request, params }: ActionArgs) {
       evaluationQuestionId,
       evaluationGroupId
     )
+    return redirect(".")
+  }
+
+  if (actionName === EvaluationGroupActions.UPDATE_NOTES) {
+    const { notes } = await zx.parseForm(request, {
+      notes: z.string(),
+    })
+
+    await evaluationQuestion.updateNotes(evaluationGroupId, notes)
+
     return redirect(".")
   }
 
@@ -228,6 +241,20 @@ export default function EvaluationGroupView() {
   ]
 
   const isLoading = useIsLoading()
+  const [notes, setNotes] = useInputState(evaluationQuestionGroup.notes ?? "")
+
+  const notesFetcher = useFetcher()
+  function updateNotes(event: React.ChangeEvent<HTMLTextAreaElement>) {
+    notesFetcher.submit(
+      {
+        [ACTION_NAME_LABEL]: EvaluationGroupActions.UPDATE_NOTES,
+        notes,
+      },
+      {
+        method: "post",
+      }
+    )
+  }
 
   return (
     <>
@@ -264,7 +291,12 @@ export default function EvaluationGroupView() {
               />
               <Button type="submit">Mark Correct ctrl+c</Button>
               <Text fw="bold">Notes</Text>
-              <Textarea name="notes" />
+              <Textarea
+                onBlur={updateNotes}
+                value={notes}
+                onChange={setNotes}
+                name="notes"
+              />
             </Stack>
           </Form>
           <Form method="post">

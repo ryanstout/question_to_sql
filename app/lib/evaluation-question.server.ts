@@ -206,6 +206,16 @@ async function clearEvaluationQuestionGroupCache(
   })
 }
 
+export async function updateNotes(
+  evaluationQuestionGroupId: number,
+  notes: string
+) {
+  await prisma.evaluationQuestionGroup.update({
+    where: { id: evaluationQuestionGroupId },
+    data: { notes },
+  })
+}
+
 export async function markCorrect(
   evaluationQuestionGroupId: number,
   notes?: string,
@@ -247,7 +257,7 @@ export async function deleteQuestion(
     lastQuestion,
     "last question should exist if we are deleting a question"
   )
-  debugger
+
   const isDeletingLastQuestion = lastQuestion.id === evaluationQuestionId
   const isCorrectSqlMachineGenerated =
     isDeletingLastQuestion &&

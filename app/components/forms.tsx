@@ -3,8 +3,10 @@ import { zx } from "zodix"
 
 import { useNavigation, useTransition } from "@remix-run/react"
 
+export const ACTION_NAME_LABEL = "actionName"
+
 export function FormActionName({ actionName }: { actionName: string }) {
-  return <input type="hidden" name="actionName" value={actionName} />
+  return <input type="hidden" name={ACTION_NAME_LABEL} value={actionName} />
 }
 
 // TODO is this a good pattern? not sure. It definitely needs a different name

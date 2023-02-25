@@ -152,7 +152,7 @@ export default function EvaluationGroupSelection() {
       <Grid.Col span={2}>
         <Form method="post">
           <Button type="submit" mb={15}>
-            New Group ctrl+g
+            New Group cmd+enter
           </Button>
         </Form>
         <Checkbox
