@@ -1,6 +1,6 @@
 import { Link } from "@remix-run/react"
 
-import { Box, Button, Divider, Grid, Menu } from "@mantine/core"
+import { Box, Button, Grid, Menu } from "@mantine/core"
 import { useClipboard } from "@mantine/hooks"
 
 import processDownload from "~/lib/downloader.client"
@@ -24,7 +24,7 @@ export default function QuestionActionHeader({
 }) {
   //TODO Create other share options (e.g. Slack, Teams, etc)
   //TODO Create other export options (e.g. Google Sheets, etc)
-
+  // TODO should disable actions when loading
   return (
     <Box>
       <Grid>
@@ -36,15 +36,16 @@ export default function QuestionActionHeader({
           </Link>
         </Grid.Col>
         <Grid.Col span={9}></Grid.Col>
+
         <Grid.Col span={1}>
-          <Button.Group>
-            <QuestionActionDownloadMenu questionResult={questionResult} />
-            <QuestionActionShareMenu />
-          </Button.Group>
+          {!questionResult ? null : (
+            <Button.Group>
+              <QuestionActionDownloadMenu questionResult={questionResult} />
+              <QuestionActionShareMenu />
+            </Button.Group>
+          )}
         </Grid.Col>
       </Grid>
-
-      <Divider my="sm" variant="dotted" />
     </Box>
   )
 }

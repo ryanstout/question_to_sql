@@ -225,20 +225,28 @@ export default function QuestionView() {
               isLoading={isLoading}
               questionRecord={questionRecord}
             />
-            <SQLResultComponent
-              isLoading={isLoading}
-              questionRecord={questionRecord}
-            />
-            <QuestionFeedback questionRecord={questionRecord} />
+            {!questionRecord ? null : (
+              <>
+                <SQLResultComponent
+                  isLoading={isLoading}
+                  questionRecord={questionRecord}
+                />
+                <QuestionFeedback questionRecord={questionRecord} />
+              </>
+            )}
           </Stack>
         </Grid.Col>
       </Grid>
-      <Divider my="md" variant="dotted" />
-      <Grid>
-        <Grid.Col span={10} offset={1}>
-          <DataDisplay data={questionResult?.data ?? null} />
-        </Grid.Col>
-      </Grid>
+      {!questionRecord ? null : (
+        <>
+          <Divider my="md" variant="dotted" />
+          <Grid>
+            <Grid.Col span={10} offset={1}>
+              <DataDisplay data={questionResult?.data ?? null} />
+            </Grid.Col>
+          </Grid>
+        </>
+      )}
     </>
   )
 }

@@ -99,7 +99,9 @@ export default function QuestionBox({
           my="xs"
           className={classes.lastQuestionDisplay}
         >
-          <Text>{statefulQuestionRecord.question}</Text>
+          <Text>
+            Last question: <i>{statefulQuestionRecord.question}</i>
+          </Text>
         </Paper>
       )}
     </>
