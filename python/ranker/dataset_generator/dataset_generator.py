@@ -6,7 +6,10 @@ The train, test, validation split happens at the EvaluationQuestionGroup level s
 correctSql don't overlap)
 """
 
+import os
 from typing import List
+
+from decouple import config
 
 from python.ranker.dataset_generator.columns import create_column_training_examples
 from python.ranker.dataset_generator.tables import create_table_training_examples
@@ -20,6 +23,8 @@ from python.utils.logging import log
 
 from prisma.models import EvaluationQuestion, EvaluationQuestionGroup
 
+datasets_path = config("DATASETS_PATH")
+
 db = application_database_connection()
 
 
@@ -28,7 +33,15 @@ class DatasetGenerator:
     touch_points: list[DbElementIds]
     dataset_name: str
 
+    # :param dataset_name: The name of the dataset to write to (e.g. "train", "test", "validation")
+    # :param mod_by: The mod by value to use to split the dataset
+    # :param set_indexes: When any index matches the mod, we include it in this dataset split
     def run(self, dataset_name: str, mod_by: int, set_indexes: List[int]):
+        if not isinstance(datasets_path, str):
+            raise ValueError("DATASETS_PATH must be set")
+
+        os.makedirs(f"{datasets_path}/ranker", exist_ok=True)
+
         self.dataset_name = dataset_name
         set_indexes_in_clause = ",".join([str(idx) for idx in set_indexes])
 
@@ -46,7 +59,7 @@ class DatasetGenerator:
                 self.process_question(question_group, question)
 
     def process_question(self, question_group: EvaluationQuestionGroup, question: EvaluationQuestion):
-        log.info("Process question: ", id=question.id, question=question.question)
+        log.info("process question", id=question.id, question=question.question)
         rankings = TrainingRanker(question_group.dataSourceId).rank(question.question)
 
         # Split rankings out for each table, column, and value

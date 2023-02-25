@@ -201,6 +201,7 @@ class EmbeddingBuilder:
                 log.debug("value is only number", value=value_str)
                 continue
 
+            # For strings shorter than 20, it's probably not a big hex string, it might be an actual word (eg.. dead beef)
             if len(value_str) >= 20 and self.is_hexadecimal(value_str):
                 # Big hex only values we should just skip
                 log.debug("value is only number", value=value_str)
@@ -230,7 +231,6 @@ class EmbeddingBuilder:
             column_values.append(value_str)
 
             # Add both a string with `TABLE_NAME COLUMN_NAME value` and just one with the value
-            log.debug(f"add to tcv: {unqualified_table_name_val} {column.name} {value_str}")
             self.idx_table_column_and_value.add(
                 # TODO should join vs format string
                 f"{unqualified_table_name_val} {column.name} {value_str}",

@@ -19,13 +19,18 @@ from python import utils
 db = utils.db.application_database_connection()
 
 
+from decouple import config
+
+datasets_path = config("DATASETS_PATH")
+
+
 class RankerDataset(Dataset):
     def __init__(self, dataset_element_type: str, dataset_partition: str, device: str | None = None):
         # :param dataset_element_type: "table" | "column" | "value"
         # :param dataset_partition: "train" | "test" | "validation"
 
         # Currently we can fit all training in ram, so bring it into a single numpy array
-        numpy_files = glob.glob(f"tmp/datasets/ranker/{dataset_element_type}/{dataset_partition}_*.npz")
+        numpy_files = glob.glob(f"{datasets_path}/ranker/{dataset_element_type}/{dataset_partition}_*.npz")
 
         xs = []
         ys = []

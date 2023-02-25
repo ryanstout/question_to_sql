@@ -1,9 +1,12 @@
 import pytorch_lightning as pl
 import torch
+from decouple import config
 from torch import nn
 from torch.nn import functional as F
 
 from python.ranker.ranker_datamodule import RankerDataModule
+
+models_path = config("MODEL_DATA_PATH")
 
 
 class ColumnRankerModel(pl.LightningModule):
@@ -60,7 +63,7 @@ class ColumnRankerModel(pl.LightningModule):
 
         # training
         trainer = pl.Trainer(
-            default_root_dir="tmp/models/column_ranker", max_epochs=1000
+            default_root_dir=f"{models_path}/column_ranker", max_epochs=1000
         )  # gpus=4, num_nodes=8, precision=16, limit_train_batches=0.5)
         trainer.fit(model, datamodule=ranker_data)
 

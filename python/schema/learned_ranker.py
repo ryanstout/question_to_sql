@@ -3,6 +3,7 @@ import os
 import time
 
 import torch
+from decouple import config
 
 from python.embeddings.openai_embedder import OpenAIEmbedder
 from python.ranker.column_ranker_model import ColumnRankerModel
@@ -17,7 +18,10 @@ from python.ranker.values_ranker_model import ValuesRankerModel
 from python.schema.ranker import SCHEMA_RANKING_TYPE, ElementRank
 from python.sql.types import DbElementIds, ElementIdsAndScores
 from python.sql.utils.touch_points import convert_db_element_ids_to_db_element
+from python.utils.batteries import log_execution_time
 from python.utils.logging import log
+
+models_path = config("MODEL_DATA_PATH")
 
 
 class LearnedRanker:
@@ -37,15 +41,7 @@ class LearnedRanker:
         self.values_ranker_model.eval()
 
     def get_latest_checkpoint(self, model_name: str) -> str:
-        # checkpoint_versions = os.listdir(f"tmp/models/{model_name}_ranker/lightning_logs")
-        # checkpoint_versions = list(map(lambda x: int(x.split("_")[1]), checkpoint_versions))
-        # checkpoint_versions.sort()
-
-        # os.listdir()
-        #     f"tmp/models/{model_name}_ranker/lightning_logs/version_{checkpoint_versions[-1]}/checkpoints/epoch=0.ckpt"
-        # )
-
-        logs_dir = f"tmp/models/{model_name}_ranker/lightning_logs"
+        logs_dir = f"{models_path}/{model_name}_ranker/lightning_logs"
         checkpoints = glob.glob(os.path.join(logs_dir, "version_*", "checkpoints", "epoch=*.ckpt"))
         if not checkpoints:
             raise ValueError(f"No checkpoints found in {logs_dir}")
@@ -62,31 +58,28 @@ class LearnedRanker:
         value_weights=None,
     ) -> SCHEMA_RANKING_TYPE:
 
-        t1 = time.time()
-        # Run the query through the training ranker, get back a merged list of table, column, and value matches
-        table_scores, column_scores, value_scores = self.training_ranker.rank(
-            query, embedder=embedder, cache_results=True
-        )
+        with log_execution_time("Ranking fetch"):
+            # Run the query through the training ranker, get back a merged list of table, column, and value matches
+            table_scores, column_scores, value_scores = self.training_ranker.rank(
+                query, embedder=embedder, cache_results=True
+            )
 
-        table_ranks = self.get_element_ranks_via_models(table_scores, "tables")
-        column_ranks = self.get_element_ranks_via_models(column_scores, "columns")
-        values_ranks = self.get_element_ranks_via_models(value_scores, "values")
+            table_ranks = self.get_element_ranks_via_models(table_scores, "tables")
+            column_ranks = self.get_element_ranks_via_models(column_scores, "columns")
+            values_ranks = self.get_element_ranks_via_models(value_scores, "values")
 
-        rankings: list[ElementRank] = [*table_ranks, *column_ranks, *values_ranks]
+            rankings: list[ElementRank] = [*table_ranks, *column_ranks, *values_ranks]
 
-        # Sort rankings by score
-        rankings.sort(key=lambda x: x["score"], reverse=True)
+            # Sort rankings by score
+            rankings.sort(key=lambda x: x["score"], reverse=True)
 
-        # Print with table and column names
-        if os.getenv("DEBUG_RANKER"):
-            for ranking in rankings:
-                db_element = convert_db_element_ids_to_db_element(
-                    DbElementIds(ranking["table_id"], ranking["column_id"], ranking["value_hint"])
-                )
-                log.debug("rank", score=ranking["score"], element=db_element)
-
-        t2 = time.time()
-        log.debug("Ranking fetch: ", time=t2 - t1)
+            # Print with table and column names
+            if os.getenv("DEBUG_RANKER"):
+                for ranking in rankings:
+                    db_element = convert_db_element_ids_to_db_element(
+                        DbElementIds(ranking["table_id"], ranking["column_id"], ranking["value_hint"])
+                    )
+                    log.debug("rank", score=ranking["score"], element=db_element)
 
         return rankings
 

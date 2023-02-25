@@ -2,10 +2,13 @@ import os
 from random import sample
 
 import numpy as np
+from decouple import config
 
 from python.ranker.dataset_generator.scores_to_numpy import values_scores_to_numpy
 from python.sql.types import DbElementIds, ElementScores
 from python.utils.logging import log
+
+datasets_path = config("DATASETS_PATH")
 
 
 def find_matching_db_element_case_insensitive(
@@ -76,5 +79,5 @@ def create_value_training_examples(
     y = np.array(ys, dtype=np.float32)
 
     if x.shape[0] > 0:
-        os.makedirs("tmp/datasets/ranker/values", exist_ok=True)
-        np.savez_compressed(f"tmp/datasets/ranker/values/{dataset_name}_{question_id}.npz", x=x, y=y)
+        os.makedirs(f"{datasets_path}/ranker/values", exist_ok=True)
+        np.savez_compressed(f"{datasets_path}/ranker/values/{dataset_name}_{question_id}.npz", x=x, y=y)

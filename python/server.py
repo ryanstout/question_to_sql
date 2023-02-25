@@ -8,6 +8,7 @@ from python.utils.environments import is_production
 from python.utils.logging import log
 
 application = Flask(__name__)
+from decouple import config
 
 
 @application.route("/healthcheck", methods=["GET"])
@@ -34,7 +35,7 @@ def question():
     data_source_id = json_data["data_source_id"]
 
     engine = "code-davinci-002"
-    if os.getenv("CHATGPT"):
+    if config("USE_CHATGPT_MODEL", default=False, cast=bool):
         # NOTE: Doesn't work atm
         engine = "text-chat-davinci-002-20230126"
 

@@ -8,6 +8,8 @@ from multiprocessing.pool import ThreadPool
 from threading import Lock
 from typing import Tuple
 
+from decouple import config
+
 import python.questions as questions
 from python import utils
 from python.query_runner.snowflake import run_snowflake_query
@@ -33,10 +35,14 @@ class Validator:
         self.scores = {}
         self.failed_questions = []
 
-        self.log_records_path = "tmp/validation"
+        log_records_path = config("VALIDATION_PATH")
+        if not isinstance(log_records_path, str):
+            raise ValueError("VALIDATION_PATH must be set")
+
+        self.log_records_path = log_records_path
 
     def run(self):
-        shutil.rmtree(self.log_records_path)
+        shutil.rmtree(self.log_records_path, ignore_errors=True)
         os.makedirs(f"{self.log_records_path}/correct", exist_ok=True)
         os.makedirs(f"{self.log_records_path}/incorrect", exist_ok=True)
 
@@ -74,10 +80,10 @@ class Validator:
 
         percent_match = sum(self.scores.values()) / score_length
 
-        log.info("Scores: ", scores=self.scores)
+        log.info("scores", scores=self.scores)
         # for failed_question in self.failed_questions:
-        #     log.info("Failed question: ", q=failed_question)
-        log.info("Percent match: ", percent_match=percent_match)
+        #     log.info("failed question", q=failed_question)
+        log.info("percent match", percent_match=percent_match)
 
     def process_correct_question(self, idx_and_evaluation_group: Tuple[int, EvaluationQuestionGroup]) -> None:
         idx = idx_and_evaluation_group[0]
@@ -116,7 +122,7 @@ class Validator:
                 new_results = None
                 new_sql = ""
                 try:
-                    log.info(f"[{idx}] Send to openai")
+                    log.info(f"[{idx}] send to openai")
                     new_sql = questions.question_with_data_source_to_sql(data_source.id, question.question)
                     log.debug("new sql", new_sql=new_sql)
                     new_results = run_snowflake_query(data_source, new_sql)
@@ -128,11 +134,11 @@ class Validator:
                         continue
 
                     if check_match(old_results, new_results):
-                        log.info(f"[{idx}] Results match", question_id=question.id)
+                        log.info(f"[{idx}] results match", question_id=question.id)
                         self.set_scores(question.id, 1, question.question)
                         correct = True
                     else:
-                        log.info(f"[{idx}] Results don't match", question_id=question.id)
+                        log.info(f"[{idx}] results don't match", question_id=question.id)
                         self.set_scores(question.id, 0, question.question)
 
                 except Exception as e:
@@ -183,7 +189,7 @@ def check_match(old_results, new_results):
         # with the same values, so pull the values without the keys (column
         # names), then sort so the ordering is the same
         if idx >= len(new_results):
-            log.info("Old results had more results")
+            log.info("old results had more results")
             return False
 
         # Grab the same row

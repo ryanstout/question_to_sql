@@ -50,7 +50,7 @@ poetry run python python/server.py
 To run the server with the learned ranker, run:
 
 ```shell
-LEARNED=1 poetry run python python/server.py
+ENABLE_LEARNED_RANKER=1 poetry run python python/server.py
 ```
 
 Ask a question:

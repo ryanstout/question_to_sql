@@ -7,7 +7,11 @@ from python.ranker.dataset_generator.scores_to_numpy import column_scores_to_num
 
 np.set_printoptions(edgeitems=10, linewidth=180)
 
+from decouple import config
+
 from python.sql.types import DbElementIds, ElementScores
+
+datasets_path = config("DATASETS_PATH")
 
 
 def create_column_training_examples(
@@ -50,5 +54,5 @@ def create_column_training_examples(
     print(np.concatenate((x, y_exp), axis=1))
 
     if x.shape[0] > 0:
-        os.makedirs("tmp/datasets/ranker/columns", exist_ok=True)
-        np.savez_compressed(f"tmp/datasets/ranker/columns/{dataset_name}_{question_id}.npz", x=x, y=y)
+        os.makedirs(f"{datasets_path}/ranker/columns", exist_ok=True)
+        np.savez_compressed(f"{datasets_path}/ranker/columns/{dataset_name}_{question_id}.npz", x=x, y=y)
