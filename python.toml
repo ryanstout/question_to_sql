@@ -9,55 +9,51 @@ processes = []
 #   release_command = "npx prisma migrate deploy"
 
 [build]
-  dockerfile = "Dockerfile.python"
+# TODO can we pass the python version as a buildarg from tool-versions?
+dockerfile = "Dockerfile.python"
 
 [env]
-  METRICS_PORT = "8081"
-  PORT = "8080"
+PORT = "8080"
 
 [experimental]
-  allowed_public_ports = []
-  auto_rollback = true
+allowed_public_ports = []
+auto_rollback = true
 
 [mounts]
-  source="face_index"
-  destination="/face_index"
-
-# [metrics]
-#   path = "/metrics"
-#   port = 8081
+source = "face_index"
+destination = "/persisted-data"
 
 [[services]]
-  internal_port = 8080
-  processes = ["app"]
-  protocol = "tcp"
-  script_checks = []
-  [services.concurrency]
-    hard_limit = 25
-    soft_limit = 20
-    type = "connections"
+internal_port = 8080
+processes = ["app"]
+protocol = "tcp"
+script_checks = []
+[services.concurrency]
+hard_limit = 25
+soft_limit = 20
+type = "connections"
 
-  [[services.http_checks]]
-    grace_period = "5s"
-    interval = "10s"
-    method = "get"
-    path = "/healthcheck"
-    protocol = "http"
-    timeout = "2s"
-    tls_skip_verify = false
-    [services.http_checks.headers]
+[[services.http_checks]]
+grace_period = "5s"
+interval = "10s"
+method = "get"
+path = "/healthcheck"
+protocol = "http"
+timeout = "2s"
+tls_skip_verify = false
+[services.http_checks.headers]
 
-  [[services.ports]]
-    force_https = true
-    handlers = ["http"]
-    port = 80
+[[services.ports]]
+force_https = true
+handlers = ["http"]
+port = 80
 
-  [[services.ports]]
-    handlers = ["tls", "http"]
-    port = 443
+[[services.ports]]
+handlers = ["tls", "http"]
+port = 443
 
-  [[services.tcp_checks]]
-    grace_period = "1s"
-    interval = "15s"
-    restart_limit = 0
-    timeout = "2s"
+[[services.tcp_checks]]
+grace_period = "1s"
+interval = "15s"
+restart_limit = 0
+timeout = "2s"
