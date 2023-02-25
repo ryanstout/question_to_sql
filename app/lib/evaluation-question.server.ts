@@ -1,4 +1,6 @@
-import { EvaluationStatus } from "@prisma/client"
+import invariant from "tiny-invariant"
+
+import { EvaluationStatus, Prisma } from "@prisma/client"
 
 import { prisma } from "~/db.server"
 import f from "~/functional"
@@ -6,17 +8,25 @@ import { log } from "~/lib/logging"
 import { runQuery } from "~/lib/python.server"
 import { questionToSql } from "~/lib/question.server"
 
+const evaluationQuestionsInclude = {
+  evaluationQuestions: {
+    // ordering is important for knowing when to clear results cache (i.e. when last question is deleted)
+    orderBy: {
+      // TODO weird, I cannot use a string here! Some weird nested TS issue
+      createdAt: Prisma.SortOrder.asc,
+    },
+  },
+}
+
 export async function loadEvaluationQuestionGroup(evaluationGroupId: number) {
-  const dataSourceInclude = { dataSource: { select: { name: true } } }
+  const dataSourceInclude = {
+    dataSource: { select: { name: true } },
+  }
 
   let evaluationGroup = await prisma.evaluationQuestionGroup.findUniqueOrThrow({
     where: { id: evaluationGroupId },
     include: {
-      evaluationQuestions: {
-        orderBy: {
-          id: "asc",
-        },
-      },
+      ...evaluationQuestionsInclude,
       ...dataSourceInclude,
     },
   })
@@ -27,26 +37,36 @@ export async function loadEvaluationQuestionGroup(evaluationGroupId: number) {
   if (lastQuestion && f.isBlank(evaluationGroup.correctSql)) {
     log.info("generating sql for evaluation question group")
 
-    const generatedSql = await questionToSql(
-      evaluationGroup.dataSourceId,
-      lastQuestion.question
-    )
+    const generatedSql =
+      lastQuestion.codexSql ??
+      (await questionToSql(evaluationGroup.dataSourceId, lastQuestion.question))
+
+    // cache generated SQL on the question
+    if (!lastQuestion.codexSql) {
+      await prisma.evaluationQuestion.update({
+        where: { id: lastQuestion.id },
+        data: { codexSql: generatedSql },
+      })
+    }
 
     evaluationGroup = await prisma.evaluationQuestionGroup.update({
       where: { id: evaluationGroupId },
       data: { correctSql: generatedSql },
-      // TODO this is inefficient, but it avoids having to manage model state right now
+      // TODO this is inefficient to include these objects on each update
+      //      but it avoids having to manage model state right now
       include: {
-        evaluationQuestions: true,
+        ...evaluationQuestionsInclude,
         ...dataSourceInclude,
       },
     })
   }
 
   if (evaluationGroup.correctSql && f.isEmpty(evaluationGroup.results)) {
-    log.info("result cache empty, generating")
+    log.info("result cache empty, pulling results from data source")
 
     const results = await runQuery(
+      // TODO this is inefficient to include these objects on each update
+      //      but it avoids having to manage model state right now
       evaluationGroup.dataSourceId,
       evaluationGroup.correctSql,
       // allow cached queries on training system, but not user side (yet)
@@ -56,9 +76,10 @@ export async function loadEvaluationQuestionGroup(evaluationGroupId: number) {
     evaluationGroup = await prisma.evaluationQuestionGroup.update({
       where: { id: evaluationGroupId },
       data: { results },
-      // TODO this is inefficient, but it avoids having to manage model state right now
+      // TODO this is inefficient to include these objects on each update
+      //      but it avoids having to manage model state right now
       include: {
-        evaluationQuestions: true,
+        ...evaluationQuestionsInclude,
         ...dataSourceInclude,
       },
     })
@@ -83,7 +104,9 @@ export async function createBlankEvaluationQuestionGroup(dataSourceId: number) {
   return questionGroup
 }
 
-export async function createEvaluationQuestionGroup(questionIdList: number[]) {
+export async function createEvaluationQuestionGroup(
+  questionIdList: number[]
+): Promise<void> {
   log.info("creating question group", { questionIdList })
 
   // create a new evaluation group
@@ -166,13 +189,21 @@ export async function createQuestion(
     },
   })
 
-  // clear the cached data on the evaluation group
-  await prisma.evaluationQuestionGroup.update({
-    where: { id: evaluationGroup.id },
-    data: { results: [], correctSql: null },
-  })
+  await clearEvaluationQuestionGroupCache(evaluationGroup.id)
 
   return question
+}
+
+// clear the cached results and sql on the evaluation group
+// there shouldn't be a case where you would want to clear one, and not the other
+async function clearEvaluationQuestionGroupCache(
+  evaluationGroupId: number
+): Promise<void> {
+  await prisma.evaluationQuestionGroup.update({
+    where: { id: evaluationGroupId },
+    // TODO cannot use null https://github.com/prisma/prisma/issues/13969
+    data: { results: Prisma.DbNull, correctSql: undefined },
+  })
 }
 
 export async function markCorrect(
@@ -197,22 +228,53 @@ export async function deleteQuestionGroup(
 }
 
 export async function deleteQuestion(
-  evaluationQuestionId: number
+  evaluationQuestionId: number,
+  // we could pull this from the question record, but it's easier to just pass it in
+  evaluationQuestionGroupId: number
 ): Promise<void> {
   log.debug("deleteQuestion", { evaluationQuestionId })
+
+  const evaluationQuestionGroup =
+    await prisma.evaluationQuestionGroup.findUniqueOrThrow({
+      where: { id: evaluationQuestionGroupId },
+      include: {
+        ...evaluationQuestionsInclude,
+      },
+    })
+
+  const lastQuestion = evaluationQuestionGroup.evaluationQuestions.at(-1)
+  invariant(
+    lastQuestion,
+    "last question should exist if we are deleting a question"
+  )
+  debugger
+  const isDeletingLastQuestion = lastQuestion.id === evaluationQuestionId
+  const isCorrectSqlMachineGenerated =
+    isDeletingLastQuestion &&
+    evaluationQuestionGroup.correctSql === lastQuestion.codexSql
+
+  if (isCorrectSqlMachineGenerated) {
+    log.debug("sql is machine generated, deleting cache")
+    await clearEvaluationQuestionGroupCache(evaluationQuestionGroupId)
+  }
+
+  // if the question being deleted is the last question in the group, then we should clear results and generated SQL
+  // iff the correctSql is not machine generated
 
   await prisma.evaluationQuestion.delete({
     where: { id: evaluationQuestionId },
   })
 }
 
+// TODO this also makes it harder to navigate in VS code, this is treated as a separate definition
 // TODO is there a way to just auto-export all exports in the file?
 // TODO maybe this is an anti-pattern? I don't like importing a ton of methods without context of where they are from
-export default {
-  updateQuestion,
-  createQuestion,
-  markCorrect,
-  deleteQuestionGroup,
-  deleteQuestion,
-  createBlankEvaluationQuestionGroup,
-}
+// export default *;
+// export default {
+//   updateQuestion,
+//   createQuestion,
+//   markCorrect,
+//   deleteQuestionGroup,
+//   deleteQuestion,
+//   createBlankEvaluationQuestionGroup,
+// }

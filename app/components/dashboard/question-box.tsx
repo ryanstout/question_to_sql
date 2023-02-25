@@ -33,7 +33,7 @@ export default function QuestionBox({
   questionRecord,
   isLoading,
   showPreviousQuestionDisplay = true,
-  actionName,
+  actionName = QuestionActions.CREATE,
 }: {
   // TODO should really just create a supertype with just the question field
   questionRecord: Question | EvaluationQuestion | null
@@ -69,8 +69,9 @@ export default function QuestionBox({
   return (
     <>
       <Form method="post">
-        <FormActionName actionName={actionName ?? QuestionActions.CREATE} />
+        <FormActionName actionName={actionName} />
         <TextInput
+          // users should be dropped directly in this box on load
           autoFocus
           autoComplete="off"
           size="lg"
