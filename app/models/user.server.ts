@@ -1,8 +1,12 @@
 import bcrypt from "bcryptjs"
 
+import { redirect } from "@remix-run/node"
+
 import type { Password, User } from "@prisma/client"
 
 import { prisma } from "~/db.server"
+import { getUser } from "~/session.server"
+import { isAdmin } from "~/utils"
 
 export type { User } from "@prisma/client"
 
@@ -77,4 +81,14 @@ export async function verifyLogin(
   const { password: _password, ...userWithoutPassword } = userWithPassword
 
   return userWithoutPassword
+}
+
+export async function requireAdmin(request: Request) {
+  const user = await getUser(request)
+
+  if (!user || !isAdmin(user)) {
+    throw redirect(`/login`)
+  }
+
+  return user
 }

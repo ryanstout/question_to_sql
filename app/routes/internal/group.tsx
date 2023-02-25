@@ -23,15 +23,16 @@ import type {
 } from "@prisma/client"
 import { EvaluationStatus } from "@prisma/client"
 
+import * as evaluationQuestion from "~/lib/evaluation-question.server"
 import { prisma } from "~/db.server"
 import f from "~/functional"
-import evaluationQuestion from "~/lib/evaluation-question.server"
+import { requireAdmin } from "~/models/user.server"
 import { requireUser } from "~/session.server"
 
 const QUESTION_PREVIEW_LIMIT = 3
 
 export async function loader({ request, params }: LoaderArgs) {
-  const _user = await requireUser(request) // eslint-disable-line
+  const _user = await requireAdmin(request) // eslint-disable-line
 
   const evaluationGroups = await prisma.evaluationQuestionGroup.findMany({
     include: {

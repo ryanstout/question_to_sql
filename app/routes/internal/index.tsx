@@ -17,8 +17,11 @@ import type { Question } from "@prisma/client"
 import { prisma } from "~/db.server"
 import f from "~/functional"
 import { createEvaluationQuestionGroup } from "~/lib/evaluation-question.server"
+import { requireAdmin } from "~/models/user.server"
 
-export async function loader() {
+export async function loader({ request }: ActionArgs) {
+  const _user = await requireAdmin(request) // eslint-disable-line
+
   const questions = await prisma.question.findMany({
     distinct: ["question"],
     where: {

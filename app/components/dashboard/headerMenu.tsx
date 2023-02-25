@@ -4,16 +4,10 @@ import { Form } from "@remix-run/react"
 
 import { Button, Group, Header, Image } from "@mantine/core"
 
-import type { User } from "@prisma/client"
-
 import Logo from "~/assets/images/LogoHorizontal.svg"
-import { useOptionalUser } from "~/utils"
+import { isAdmin, useOptionalUser } from "~/utils"
 
 import { IconLogout } from "@tabler/icons-react"
-
-function isAdmin(user: User) {
-  return user.email.endsWith("@knolbe.com")
-}
 
 export default function HeaderMenu() {
   const user = useOptionalUser()
@@ -28,6 +22,8 @@ export default function HeaderMenu() {
     </Form>
   )
 
+  // TODO this is tricky: will render BOTH client and server side, but we want to conditionally
+  //      render based on role logic which we do not want to expose to the user
   const adminMenu =
     user && isAdmin(user) ? (
       <>

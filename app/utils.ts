@@ -70,3 +70,9 @@ export function useUser(): User {
 export function validateEmail(email: unknown): email is string {
   return typeof email === "string" && email.length > 3 && email.includes("@")
 }
+
+// TODO this should not be a client-available library, but I'm not sure how to do client-side role-dependent rendering yet
+// TODO we need to switch to a real auth solution, someone could technically signup w/this email
+export function isAdmin(user: User) {
+  return user.email.endsWith("@knolbe.com")
+}
