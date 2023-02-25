@@ -59,24 +59,23 @@ Goal: EOD Tuesday
   - [x] Dynamic datasource backend
 - [x] Snowflake connection for Spectora
   - [x] Run import script and fix new bugs
-- [ ] [kailash] UI improvements
-  - [ ] Forced mark correct/incorrect
-  - [ ] Set feedback state to invalid if SQL compilation fails
-  - [ ] Snappier loading, either upgrading remix w/defer or fixing loading state
-  - [ ] Lock SQL + editing when the system is loading
+- [x] UI improvements
+  - [x] Set feedback state to invalid if SQL compilation fails
+  - [x] Snappier loading, either upgrading remix w/defer or fixing loading state
+  - [x] Lock SQL + editing when the system is loading
 
 # What do we need so JP can run a query and it doesn't break most of the time?
 
 If most of the queries break, they will distrust the queries very quickly. We want to push the errors down to openai.
 
-- [x] openai backoff
+- [x] [mbianco] openai backoff
 - [ ] error handling help to rerun and validate our changes against the queries that have already come in
-  - [ ] handle snowflake failures, mark the state as invalid
-  - [ ] handle openai failures, mark the questions in some state that we can query
-  - [ ] retry another openai query if the first one doesn't work
+  - [x] handle snowflake failures, mark the state as invalid
+  - [x] handle openai failures, mark the questions in some state that we can query
+  - [ ] [ryan] retry another openai query if the first one doesn't work
 - [ ] [mbianco] training ui improvements
   - [ ] other minor improvements https://github.com/ryanstout/nlpquery/issues/29
-  - [ ] remove bad questions https://github.com/ryanstout/nlpquery/issues/20
+  - [x] remove bad questions https://github.com/ryanstout/nlpquery/issues/20
 - [ ] [ryan] The ranking system is not pulling in the correct columns, train a new model to improve column selection
   - [ ] [ryan] neural net
   - [ ] [all] training data
@@ -86,16 +85,15 @@ If most of the queries break, they will distrust the queries very quickly. We wa
   - [ ] determine which errors in the DB are triggering this, sometimes it's just a bad model output
   - [ ] write test cases for failures
 
+# What are additional UI improvements?
+
+- [ ] Forced mark correct/incorrect
+- [x] R+W SQL Editor [ryan]
+- [ ] Visualize answers
+- [x] Look at history
+- [ ] Fancy URL structure .com/USER/12345-mike-wants-money
+
 ---
-
-# How to train the system?
-
-- [ ] UI improvements
-  - [ ] R+W SQL Editor [ryan]
-  - [ ] Visualize answers
-  - [ ] Look at history
-  - [ ] Fancy URL structure .com/USER/12345-mike-wants-money
-  - [ ] Group question
 
 # What do we need to improve the query creator?
 

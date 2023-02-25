@@ -18,6 +18,7 @@
 
 # Docker
 
+- [ ] add git sha to build env https://artsy.github.io/blog/2018/09/10/Dockerhub-Stamping-Commits/
 - [ ] we should not have to add prop-type to the package, but without it nivo is failing
 - [ ] can we only deploy the git version, not the local?
 - [ ] should add sentry versioning https://docs.sentry.io/platforms/javascript/guides/remix/sourcemaps/
@@ -91,6 +92,10 @@
 # Python VS Code
 
 - Why isn't pylint working on all files in vs code?
+
+# Node VS Code
+
+- [ ]
 
 # Snowflake
 
