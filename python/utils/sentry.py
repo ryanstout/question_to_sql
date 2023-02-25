@@ -12,8 +12,8 @@ def configure_sentry():
         return
 
     # TODO no docs for this, post somewhere + document
-    def filter_transactions(event, hint):
-        from urllib.parse import urlparse
+    def filter_transactions(event, _hint):
+        from urllib.parse import urlparse  # pylint: disable=import-outside-toplevel
 
         url_string = event["request"]["url"]
         parsed_url = urlparse(url_string)

@@ -30,20 +30,20 @@ class SqlResolveAndFix:
         return sql
 
     def cast_divides_to_float(self, node):
-        # print(type(node))
-        if isinstance(node, exp.Div):
-            # code.InteractiveConsole(locals=locals()).interact()
-            # Need to cast one side on div's to float for postgres
-            # Useful for "what percent" questions
-            expr = node.args["this"]
+        if not isinstance(node, exp.Div):
+            return node
 
-            if isinstance(node, exp.TableAlias):
-                # Transform the contents of the AS node
-                # code.InteractiveConsole(locals=locals()).interact()
-                return node
-            else:
-                node.args["this"] = parse_one(f"{str(expr)}::float")
-                return node
+        # code.InteractiveConsole(locals=locals()).interact()
+        # Need to cast one side on div's to float for postgres
+        # Useful for "what percent" questions
+        expr = node.args["this"]
+
+        if isinstance(node, exp.TableAlias):
+            # Transform the contents of the AS node
+            # code.InteractiveConsole(locals=locals()).interact()
+            return node
+
+        node.args["this"] = parse_one(f"{str(expr)}::float")
         return node
 
     def quote_if_keyword(self, name: str):

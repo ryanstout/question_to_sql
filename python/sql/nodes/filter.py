@@ -13,5 +13,5 @@ class Filter(Base):
         """
         if state["dialect"] == "snowflake":
             raise FilterNotSupportedError()
-        else:
-            super().__init__(state)
+
+        super().__init__(state)

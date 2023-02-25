@@ -32,6 +32,8 @@ def _retrieved_cached_embedding(content_hash: str) -> np.ndarray | None:
         # `x` is user defined below in `savez_compressed`
         return np.load(emb_load, allow_pickle=True)["x"]
 
+    return None
+
 
 # create multiple embeddings vector via openai and store to disk.
 # docs/prompt_embeddings.md for more information

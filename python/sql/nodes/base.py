@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import List, Tuple
 
 from deepmerge import always_merger as deep
 
@@ -27,7 +26,6 @@ class Base:
         Stub method, called before this node is added to the tree, but after
         children are added.
         """
-        pass
 
     def tables(self) -> TablesType:
         """
@@ -48,7 +46,7 @@ class Base:
         # Return a dict going from alias (or full name) to a list of columns
         return merge_columns(self.all_children())
 
-    def all_children(self) -> List["Base"]:
+    def all_children(self) -> list["Base"]:
         """
         Returns a list of all children, in the order of the Dict first, then
         any lists
@@ -93,7 +91,7 @@ class Base:
     #     output += f"{indent_spaces}>\n"
 
 
-def merge_columns(nodes: List[Base]) -> ColumnsType:
+def merge_columns(nodes: list[Base]) -> ColumnsType:
     """
     Merges the columns from a list of nodes into a single ColumnsType dict
     """
