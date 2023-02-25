@@ -25,14 +25,17 @@ import type {
   Prisma,
 } from "@prisma/client"
 
+import * as evaluationQuestion from "~/lib/evaluation-question.server"
 import DataDisplay from "~/components/dashboard/data-display"
 import QuestionBox from "~/components/dashboard/question-box"
 import SQLDisplay from "~/components/dashboard/sql-display"
-import { FormActionName, useIsLoading } from "~/components/forms"
+import {
+  FormActionName,
+  parseActionName,
+  parseQuestionText,
+  useIsLoading,
+} from "~/components/forms"
 import f from "~/functional"
-import evaluationQuestion, {
-  loadEvaluationQuestionGroup,
-} from "~/lib/evaluation-question.server"
 import { log } from "~/lib/logging"
 
 import { IconTrash } from "@tabler/icons-react"
@@ -48,17 +51,11 @@ export async function loader({ params }: LoaderArgs) {
     evaluationGroupId: zx.NumAsString,
   })
 
-  const evaluationGroup = await loadEvaluationQuestionGroup(evaluationGroupId)
+  const evaluationGroup = await evaluationQuestion.loadEvaluationQuestionGroup(
+    evaluationGroupId
+  )
 
   return json(evaluationGroup)
-}
-
-async function parseActionName(request: Request) {
-  const { actionName } = await zx.parseForm(request, {
-    actionName: z.string(),
-  })
-
-  return actionName
 }
 
 enum EvaluationGroupActions {
@@ -71,6 +68,7 @@ enum EvaluationGroupActions {
 
 export async function action({ request, params }: ActionArgs) {
   const actionName = await parseActionName(request)
+
   const { evaluationGroupId } = zx.parseParams(params, {
     evaluationGroupId: zx.NumAsString,
   })
@@ -78,10 +76,7 @@ export async function action({ request, params }: ActionArgs) {
   // TODO I don't know if using the same action enum here is best, but it will get this done faster
 
   if (actionName === EvaluationGroupActions.CREATE) {
-    const { questionText } = await zx.parseForm(request, {
-      questionText: z.string(),
-    })
-
+    const questionText = await parseQuestionText(request)
     await evaluationQuestion.createQuestion(evaluationGroupId, questionText)
 
     // at this point, a new question is asked, so we want to reload the current group UI
@@ -136,14 +131,17 @@ export async function action({ request, params }: ActionArgs) {
       evaluationQuestionId: zx.NumAsString,
     })
 
-    await evaluationQuestion.deleteQuestion(evaluationQuestionId)
+    await evaluationQuestion.deleteQuestion(
+      evaluationQuestionId,
+      evaluationGroupId
+    )
     return redirect(".")
   }
 
   throw new Error(`Invalid action ${actionName}`)
 }
 
-// display a list of columns in the JSON for
+// display a list of columns in the JSON to select which ones are significant
 function ColumnSelectionDisplay({ results }: { results: Prisma.JsonValue }) {
   function columnNamesFromResults(results: any[]) {
     if (f.isEmpty(results)) {
@@ -193,13 +191,16 @@ function ColumnSelectionDisplay({ results }: { results: Prisma.JsonValue }) {
 }
 
 export default function EvaluationGroupView() {
+  // TODO https://github.com/remix-run/remix/issues/3931
   const evaluationQuestionGroup = useLoaderData<
     typeof loader
   >() as unknown as EvaluationQuestionGroupWithQuestionsAndDataSource
 
-  const dataColumns: DataTableColumn<
-    (typeof evaluationQuestionGroup.evaluationQuestions)[0]
-  >[] = [
+  const lastQuestion =
+    evaluationQuestionGroup.evaluationQuestions.at(-1) ?? null
+  type lastQuestionType = NonNullable<typeof lastQuestion>
+
+  const dataColumns: DataTableColumn<lastQuestionType>[] = [
     {
       accessor: "question",
       title: "Questions in Group",
@@ -214,6 +215,7 @@ export default function EvaluationGroupView() {
           <FormActionName actionName={EvaluationGroupActions.DELETE_QUESTION} />
           <input
             type="hidden"
+            // TODO using strings for this feels weird, there's got to be a better way to type this
             name="evaluationQuestionId"
             value={question.id}
           />
@@ -224,10 +226,6 @@ export default function EvaluationGroupView() {
       ),
     },
   ]
-
-  const lastQuestion =
-    evaluationQuestionGroup.evaluationQuestions.at(-1) ?? null
-  type lastQuestionType = NonNullable<typeof lastQuestion>
 
   const isLoading = useIsLoading()
 

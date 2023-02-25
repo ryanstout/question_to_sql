@@ -1,15 +1,11 @@
+import { $path } from "remix-routes"
 import invariant from "tiny-invariant"
 import { z } from "zod"
 import { zx } from "zodix"
 
 import type { ActionArgs, LoaderArgs } from "@remix-run/node"
 import { json, redirect } from "@remix-run/node"
-import {
-  useCatch,
-  useLoaderData,
-  useNavigation,
-  useTransition,
-} from "@remix-run/react"
+import { useCatch, useLoaderData } from "@remix-run/react"
 
 import { Accordion, Divider, Grid, Stack } from "@mantine/core"
 
@@ -22,6 +18,11 @@ import QuestionActionHeader from "~/components/dashboard/question-action-header"
 import QuestionBox from "~/components/dashboard/question-box"
 import QuestionFeedback from "~/components/dashboard/question-feedback"
 import SQLDisplay from "~/components/dashboard/sql-display"
+import {
+  parseActionName,
+  parseQuestionText,
+  useIsLoading,
+} from "~/components/forms"
 import { prisma } from "~/db.server"
 import type { QuestionResult } from "~/lib/question.server"
 import {
@@ -43,25 +44,15 @@ export enum QuestionActions {
 
 export async function action({ request }: ActionArgs) {
   const user = await requireUser(request)
-
-  invariant(
-    user.business?.dataSources.length == 1,
-    "Only one data source supported"
-  )
-
   const dataSource = user.business!.dataSources[0]
 
   // create the query, attempt to load the generated sql if it doesn't exist,
   // then redirect to the query page
-  // NOTE: q may get put in the url also, but needs to come from the form first
-  const { actionName } = await zx.parseForm(request, {
-    actionName: z.nativeEnum(QuestionActions),
-  })
+
+  const actionName = await parseActionName(request)
 
   if (actionName === QuestionActions.CREATE) {
-    const { questionText } = await zx.parseForm(request, {
-      questionText: z.string(),
-    })
+    const questionText = await parseQuestionText(request)
 
     // this does not run the query on snowflake, this will happen on redirect
     const questionRecord = await createQuestion(
@@ -71,14 +62,22 @@ export async function action({ request }: ActionArgs) {
     )
 
     // TODO shouldn't there be helpers for the route strings? Did we forget everything we learned from rails?
-    return redirect(`/question/${questionRecord.question.id}`)
+    return redirect(
+      $path(
+        "/question/:questionId?",
+        {
+          questionId: questionRecord.question.id,
+        },
+        {}
+      )
+    )
   }
 
   // updating the usersql, updating the question text results in a new question
   if (actionName === QuestionActions.UPDATE) {
     const { questionId, userSql } = await zx.parseForm(request, {
       questionId: zx.NumAsString,
-      userSql: z.string(),
+      userSql: z.string().trim(),
     })
 
     // TODO: figure out why multiple fields in where clauses on update
@@ -210,13 +209,9 @@ export default function QuestionView() {
   >() as unknown as QuestionResult | null
 
   const questionRecord = questionResult?.question ?? null
+  const isLoading = useIsLoading()
 
-  // TODO I have a helper for this elsewhere that we should use instead
-  const transition = useTransition()
-  const navigation = useNavigation()
-  const isLoading =
-    navigation.state == "submitting" || transition.state != "idle"
-
+  // TODO I don't get why we are using a grid here, a simple stack should work fine?
   return (
     <>
       <Grid>
