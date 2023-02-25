@@ -7,6 +7,7 @@ from decouple import config
 
 from python.query_runner.snowflake import get_snowflake_cursor
 from python.utils.db import application_database_connection
+from python.utils.redis import application_redis_connection
 
 from prisma.enums import DataSourceType
 from prisma.types import DataSourceCreateInput
@@ -41,5 +42,6 @@ def test_snowflake_connection(data_source_id: int):
 
 
 db = application_database_connection()
+redis = application_redis_connection()
 
 IPython.start_ipython(user_ns=locals())

@@ -1,18 +1,14 @@
-import python.setup  # pyright: ignore
-
 import click
 from importer import Importer
-from query_runner.snowflake import get_query_results, get_snowflake_cursor
-from utils.db import application_database_connection
 
 from python.questions import question_with_data_source_to_sql
 
 
-def table_output_with_format(array_of_dicts, tableFormat="md"):
+def table_output_with_format(array_of_dicts, table_format="md"):
     if not array_of_dicts:
         return None
 
-    if tableFormat == "md":
+    if table_format == "md":
         return markdown_table_output(array_of_dicts)
     else:
         return csv_table_output(array_of_dicts)
@@ -146,10 +142,10 @@ def import_datasource(**kwargs):
 @cli.command(help="convert a natural language question to sql")
 @click.option("--data-source-id", type=int, required=True)
 @click.option("--question", type=str, required=True)
-def question(data_source_id, question):
-    sql = question_with_data_source_to_sql(data_source_id, question)
-    print(sql)
+def question(data_source_id, questionText):
+    sql = question_with_data_source_to_sql(data_source_id, questionText)
+    click.echo(sql)
 
 
 if __name__ == "__main__":
-    cli()
+    cli()  # pylint: disable=no-value-for-parameter

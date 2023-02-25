@@ -11,7 +11,7 @@ def configure_sentry():
     if not is_production():
         return
 
-    # TODO no docs for this, post somewhere + document
+    # TODO https://github.com/getsentry/sentry-docs/pull/6364/files
     def filter_transactions(event, _hint):
         from urllib.parse import urlparse  # pylint: disable=import-outside-toplevel
 

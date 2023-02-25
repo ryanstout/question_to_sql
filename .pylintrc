@@ -432,7 +432,9 @@ disable=raw-checker-failed,
         fixme,
         missing-class-docstring,
         missing-module-docstring,
-        expression-not-assigned
+        expression-not-assigned,
+        ungrouped-imports,
+        line-too-long
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
