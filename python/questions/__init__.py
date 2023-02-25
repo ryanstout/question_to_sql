@@ -175,7 +175,10 @@ def create_prompt(
             f"{comments}{rule_prefix()}When matching a string, use LOWER unless it matches a listed possible value",
             # f"{comments}{rule_prefix()}Calculate lifetime of a customer by taking the duration between the first and most recent order for a customer. ",
             f"{comments}{rule_prefix()}If we're returning a day, always also return the month and year",
-            # f"{comments}{rule_prefix()}Add ORDER BY to every SELECT",  # makes things deterministic
+            f"{comments}{rule_prefix()}Add ORDER BY to every SELECT",  # makes things deterministic
+            # In snowflake, Count(*), etc.. are not allowed directly in a ORDER BY or HAVING, they have to be in the
+            # SELECT expression first, then accessed by alias.
+            f"{comments}{rule_prefix()}COUNT's used in ORDER BY or HAVING should appear in the SELECT first.",
             f"{comments}{rule_prefix()}Any columns used must be in the Schema",
             f"{comments}{rule_prefix()}Assume the current date is {current_date}",
             f"{comments}{rule_prefix()}use NOW() instead of dates",
