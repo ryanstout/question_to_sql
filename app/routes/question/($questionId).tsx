@@ -243,38 +243,30 @@ export default function QuestionView() {
   )
 }
 
+// TODO do we know if errors are sent to sentry if this hit these boundaries? Need to investigate how they work further
+
 export function CatchBoundary() {
   const caught = useCatch()
+  const errorProps = {
+    returnLink: "/question",
+    returnLinkText: "New Question",
+    userMessage:
+      "We encountered an unexpected error. Please try a new question!",
+  }
 
   if (caught.status === 500) {
-    return (
-      <ErrorDisplay
-        returnLink="/question"
-        returnLinkText="New Question"
-        userMessage="Mea Culpa! There was an error retrieving your results. Our team will investigate and reach out when we have your answer!"
-      />
-    )
-  }
-  if (caught.status === 404) {
-    return (
-      <ErrorDisplay
-        returnLink="/question"
-        returnLinkText="New Question"
-        userMessage="We couldn't find a question with this id. Please ask a new question instead!"
-      />
-    )
+    errorProps.userMessage =
+      "Mea Culpa! There was an error retrieving your results. Our team will investigate and reach out when we have your answer!"
   }
 
-  return (
-    <ErrorDisplay
-      returnLink="/question"
-      returnLinkText="New Question"
-      userMessage="We encountered an unexpected error. Please try a new question!"
-    />
-  )
+  if (caught.status === 404) {
+    errorProps.userMessage =
+      "We couldn't find this question. Please ask a new question instead!"
+  }
+
+  return <ErrorDisplay {...errorProps} />
 }
 
 export function ErrorBoundary({ error }: { error: Error }) {
-  console.error(error)
   return <div>An error ocurred.</div>
 }
