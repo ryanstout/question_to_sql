@@ -202,7 +202,7 @@ async function clearEvaluationQuestionGroupCache(
   await prisma.evaluationQuestionGroup.update({
     where: { id: evaluationGroupId },
     // TODO cannot use null https://github.com/prisma/prisma/issues/13969
-    data: { results: Prisma.DbNull, correctSql: undefined },
+    data: { results: Prisma.DbNull, correctSql: null },
   })
 }
 

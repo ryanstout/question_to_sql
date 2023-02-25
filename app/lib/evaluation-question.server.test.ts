@@ -92,4 +92,5 @@ it("clears evaluation question group cache when the last question is deleted", a
   expect(await prisma.evaluationQuestionGroup.count()).toBe(1)
 
   expect(questionGroupWithoutCache.results).toBeNull()
+  expect(questionGroupWithoutCache.correctSql).toBeNull()
 })
