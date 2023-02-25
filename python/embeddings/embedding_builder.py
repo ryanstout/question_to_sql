@@ -183,6 +183,7 @@ class EmbeddingBuilder:
             LIMIT {column_value_limit}
             """,
             disable_query_protections=True,
+            allow_cached_queries=True,
         )
 
         column_values = []

@@ -66,7 +66,8 @@ SnowflakeColumnDescription = t.TypedDict(
     },
 )
 
-# TODO right now we are married to snowflake, but we'll need to be flexible with the type definitions from other systems in the future
+# TODO right now we are married to snowflake, but we'll need to be flexible with
+# type definitions from other systems in the future
 class SnowflakeTableDescription(t.TypedDict):
     automatic_clustering: str
     bytes: int
@@ -124,8 +125,8 @@ class Importer:
         table_list = query_runner.run_query(
             data_source_id=data_source.id,
             sql=f"SHOW TABLES LIMIT {self.limits['table']}",
-            # sql=f"SHOW TABLES LIKE 'CUSTOMER'",
             disable_query_protections=True,
+            allow_cached_queries=True,
         )
 
         # TODO so terrible, refact when we settled on a functional lib
@@ -187,6 +188,7 @@ class Importer:
             DESCRIBE TABLE {sql.normalize_fqn_quoting(table_description.fullyQualifiedName)}
             """,
             disable_query_protections=True,
+            allow_cached_queries=True,
         )
 
         log.info(
@@ -216,9 +218,7 @@ class Importer:
         """
 
         counts = query_runner.run_query(
-            data_source.id,
-            raw_sql,
-            disable_query_protections=True,
+            data_source.id, raw_sql, disable_query_protections=True, allow_cached_queries=True
         )
 
         # TODO this will throw an error if there's an upstream issue, which is what we want for now
@@ -291,7 +291,8 @@ class Importer:
     def get_unique_row_count(
         self, data_source: DataSource, table_description: DataSourceTableDescription, column_name: str
     ):
-        # TODO I imagine this has to do a full table scan as well, we should try to figure ouw how much these queries cost
+        # TODO I imagine this has to do a full table scan as well
+        #      we should try to figure ouw how much these queries cost
         raw_sql = f"""
         SELECT COUNT(DISTINCT({sql.normalize_fqn_quoting(table_description.fullyQualifiedName)}.{sql.normalize_fqn_quoting(column_name)})) as count
         FROM {sql.normalize_fqn_quoting(table_description.fullyQualifiedName)}
@@ -299,9 +300,7 @@ class Importer:
 
         # Gets the distinct rows for the column and the total rows
         counts = query_runner.run_query(
-            data_source.id,
-            raw_sql,
-            disable_query_protections=True,
+            data_source.id, raw_sql, disable_query_protections=True, allow_cached_queries=True
         )
 
         # TODO this will break if the upstream breaks, this is intentional for now
