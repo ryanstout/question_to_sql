@@ -6,7 +6,6 @@ import {
   getResultsFromQuestion,
   updateQuestion,
 } from "~/lib/question.server"
-import { promisifyStaticValue } from "~/utils"
 
 import {
   MOCKED_DATASOURCE_RESULTS,
@@ -117,7 +116,7 @@ test("marks the query as invalid if it fails to execute", async () => {
   const pythonRequestSpy = vi
     .spyOn(pythonBackend, "pythonRequest")
     // generate SQL properly, then throw an exception when the SQL is executed
-    .mockReturnValueOnce(promisifyStaticValue({ sql: MOCKED_SQL_RESULT }))
+    .mockReturnValueOnce(Promise.resolve({ sql: MOCKED_SQL_RESULT }))
     // TODO should add more refined errors here when we've figured them out
     .mockRejectedValueOnce(new Error("snowflake compilation error"))
 

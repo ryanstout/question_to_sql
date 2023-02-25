@@ -1,5 +1,4 @@
 import * as pythonBackend from "~/lib/python.server"
-import { promisifyStaticValue } from "~/utils"
 
 // TODO the below mocking stuff needs to be extracted out as soon as it is needed elsewhere
 
@@ -9,11 +8,11 @@ export const MOCKED_SQL_RESULT = "SELECT * FROM ORDER LIMIT 10"
 export function mockPythonServer() {
   const runQuerySpy = vi
     .spyOn(pythonBackend, "runQuery")
-    .mockReturnValue(promisifyStaticValue(MOCKED_DATASOURCE_RESULTS))
+    .mockReturnValue(Promise.resolve(MOCKED_DATASOURCE_RESULTS))
 
   const pythonRequestSpy = vi
     .spyOn(pythonBackend, "pythonRequest")
-    .mockReturnValue(promisifyStaticValue({ sql: MOCKED_SQL_RESULT }))
+    .mockReturnValue(Promise.resolve({ sql: MOCKED_SQL_RESULT }))
 
   return { runQuerySpy, pythonRequestSpy }
 

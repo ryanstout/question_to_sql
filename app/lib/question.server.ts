@@ -8,7 +8,6 @@ import { isMockedPythonServer } from "~/lib/environment"
 import { log } from "~/lib/logging"
 import { pythonRequest, runQuery } from "~/lib/python.server"
 import type { ResponseError } from "~/models/responseError.server"
-import { promisifyStaticValue } from "~/utils"
 
 import * as Sentry from "@sentry/remix"
 
@@ -174,7 +173,7 @@ export async function questionToSql(
 ): Promise<string> {
   // TODO remove me! Use mock server once we have a python API
   if (isMockedPythonServer()) {
-    return promisifyStaticValue("SELECT * FROM ORDER LIMIT 10")
+    return Promise.resolve("SELECT * FROM ORDER LIMIT 10")
   }
 
   const response = await pythonRequest("/question", {
