@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask, jsonify, request
 
 from python.query_runner import run_query
@@ -31,7 +33,12 @@ def question():
     question_text = json_data["question"]
     data_source_id = json_data["data_source_id"]
 
-    sql = question_with_data_source_to_sql(data_source_id, question_text)
+    engine = "code-davinci-002"
+    if os.getenv("CHATGPT"):
+        # NOTE: Doesn't work atm
+        engine = "text-chat-davinci-002-20230126"
+
+    sql = question_with_data_source_to_sql(data_source_id, question_text, engine=engine)
 
     return jsonify({"question": question_text, "data_source_id": data_source_id, "sql": sql})
 

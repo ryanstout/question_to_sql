@@ -17,13 +17,12 @@ db: Prisma = application_database_connection()
 
 # ann = approximate nearest neighbor
 class AnnIndex:
-    def __init__(self, index_number: int, path: str):
+    def __init__(self, path: str):
         self.index_offset = 0
         self.embeddings = []
         self.lock = Lock()
 
         self.path = path
-        self.index_number = index_number
         self.embedding_link_index = EmbeddingLinkIndex(path)
 
     def add(
@@ -33,7 +32,7 @@ class AnnIndex:
         column_id: Union[int, None],
         value: Union[str, None],
     ):
-        log.debug("generating embedding for ", content=content)
+        log.debug("generating embedding for ", content=content, table=table_id, column=column_id, value=value)
         embedding = generate_embedding(content, embedder=OpenAIEmbedder)
 
         # Needs the mutex to prevent parallel columns from adding to it at the
@@ -60,5 +59,11 @@ class AnnIndex:
 
         self.embedding_link_index.save()
 
-        log.info("build faiss index", dtype=data.dtype, size=data.shape, index=self.index_number, embed_size=embed_size)
+        log.info(
+            "build faiss index",
+            dtype=data.dtype,
+            size=data.shape,
+            embed_size=embed_size,
+            path=self.path,
+        )
         AnnFaiss().build_and_save(data, self.path)

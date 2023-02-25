@@ -93,3 +93,40 @@ WHERE
         ("order", "created_at", None): 1,
         ("order", "billing_address_province", None): 1,
     }
+
+
+def test_which_do_we_sell_more_of():
+    query = """SELECT
+  COUNT(*) AS orders_per_product,
+  product.title
+FROM "ORDER"
+JOIN order_line
+  ON order_line.order_id = "ORDER".id
+JOIN product_variant
+  ON product_variant.id = order_line.variant_id
+JOIN product
+  ON product.id = product_variant.product_id
+WHERE
+  product.title = 'Parker Premier Fountain Pen'
+  OR product.title = 'Cross Edge Pen Red'
+GROUP BY
+  product.title
+ORDER BY
+  orders_per_product DESC NULLS FIRST"""
+
+    inspector = SqlInspector(query, pens_schema)
+    assert inspector.touches() == {
+        ("ORDER", None, None): 1,
+        ("order_line", None, None): 1,
+        ("order_line", "order_id", None): 1,
+        ("ORDER", "id", None): 1,
+        ("product_variant", None, None): 1,
+        ("product_variant", "id", None): 1,
+        ("order_line", "variant_id", None): 1,
+        ("product", None, None): 1,
+        ("product", "id", None): 1,
+        ("product_variant", "product_id", None): 1,
+        ("product", "title", None): 4,
+        ("product", "title", "Parker Premier Fountain Pen"): 1,
+        ("product", "title", "Cross Edge Pen Red"): 1,
+    }

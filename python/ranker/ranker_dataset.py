@@ -6,8 +6,12 @@ We split on the question group not the individual question to prevent leakage be
 Takes in a set id and number of sets and splits using a mod on the id
 """
 
+import glob
 from typing import Tuple
 
+import numpy as np
+import torch
+from torch import Tensor
 from torch.utils.data import Dataset
 
 from python import utils
@@ -16,54 +20,35 @@ db = utils.db.application_database_connection()
 
 
 class RankerDataset(Dataset):
-    set_indexes: range
-    mod_by: int
+    def __init__(self, dataset_element_type: str, dataset_partition: str, device: str | None = None):
+        # :param dataset_element_type: "table" | "column" | "value"
+        # :param dataset_partition: "train" | "test" | "validation"
 
-    def __init__(self, set_indexes: range, mod_by: int):
-        self.set_indexes = set_indexes
-        self.mod_by = mod_by
+        # Currently we can fit all training in ram, so bring it into a single numpy array
+        numpy_files = glob.glob(f"tmp/datasets/ranker/{dataset_element_type}/{dataset_partition}_*.npz")
 
-        set_indexes_in_clause = ",".join([str(idx) for idx in set_indexes])
-        question_group_ids = db.query_raw(
-            f'SELECT id FROM "EvaluationQuestionGroup" WHERE (id % {mod_by}) IN ({set_indexes_in_clause});'
-        )
+        xs = []
+        ys = []
+        for numpy_file in numpy_files:
+            data = np.load(numpy_file)
+            xs.append(data["x"])
+            ys.append(data["y"])
 
-        self.ids = []
-        # pylint can't detect question_group_ids is iterable: https://github.com/PyCQA/pylint/issues/3105
-        for question_group in question_group_ids:  # pylint: disable=not-an-iterable
-            # Select the id's of each child question
-            # Can't select yet: https://github.com/RobertCraigie/prisma-client-py/issues/19
-            questions = db.evaluationquestion.find_many(where={"evaluationQuestionGroupId": question_group["id"]})
-            for question in questions:
-                self.ids.append(question.id)
+        self.xs = torch.from_numpy(np.concatenate(xs, axis=0))
+        self.ys = torch.from_numpy(np.concatenate(ys, axis=0))
 
-    def __getitem__(self, index) -> Tuple[str, str]:
-        print("GET INDEX: ", index, len(self.ids))
-        question = db.evaluationquestion.find_first(
-            where={"id": self.ids[index]}, include={"evaluationQuestionGroup": True}
-        )
+        if device:
+            self.xs.to(device)
+            self.ys.to(device)
 
-        if question is None:
-            raise ValueError(f"Question with id {self.ids[index]} not found")
+    def __getitem__(self, index):
+        x = self.xs[index, :]
+        y = self.ys[index]
 
-        if question.evaluationQuestionGroup is None:
-            raise ValueError(f"Question group for question {self.ids[index]} not found")
-
-        x = question.question
-        y = question.evaluationQuestionGroup.correctSql
-
-        if y is None:
-            raise ValueError(f"Correct SQL for question group {question.evaluationQuestionGroup.id} not found")
-
-        print(x, y)
-
-        # Training example for the column dataset
-        #
-        # [{match on column name}, {match on column name+column values}, {30 histogram values of all child value faiss matches}] => [1 if it should be included, 0 if not]
-
-        # [3,4,5,6,3] => [1]
+        if torch.isnan(x).any() or np.isnan(y).any():
+            raise ValueError(f"Found nan in x: {x} or y: {y}")
 
         return x, y
 
     def __len__(self) -> int:
-        return len(self.ids)
+        return self.xs.shape[0]

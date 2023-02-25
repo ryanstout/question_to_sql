@@ -124,6 +124,7 @@ class Importer:
         table_list = query_runner.run_query(
             data_source_id=data_source.id,
             sql=f"SHOW TABLES LIMIT {self.limits['table']}",
+            # sql=f"SHOW TABLES LIKE 'CUSTOMER'",
             disable_query_protections=True,
         )
 

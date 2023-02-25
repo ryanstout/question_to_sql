@@ -74,12 +74,18 @@ DbTouchPointCounts: TypeAlias = Dict[DbElement, int]
 @dataclass
 class ElementScores:
     # Scores for each of the indexes
-    table_names_score: float | None = field(default=None)
-    column_names_score: float | None = field(default=None)
-    table_and_column_names_score: float | None = field(default=None)
-    column_name_and_all_column_values_score: float | None = field(default=None)
+    table_name_score: float | None = field(default=None)
+    table_and_all_column_names_score: float | None = field(default=None)
+    table_and_all_column_names_and_all_values_score: float | None = field(default=None)
+    column_name_score: float | None = field(default=None)
+    table_and_column_name_score: float | None = field(default=None)
+    column_name_and_all_values_score: float | None = field(default=None)
+    table_and_column_name_and_all_values_score: float | None = field(default=None)
+    value_score: float | None = field(default=None)
     table_column_and_value_score: float | None = field(default=None)
-    values_score: float | None = field(default=None)
+
+
+ElementIdsAndScores: TypeAlias = dict[DbElementIds, ElementScores]
 
 
 class SqlState(TypedDict):

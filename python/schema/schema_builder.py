@@ -63,8 +63,8 @@ class SchemaBuilder:
     def cache_columns_and_tables(self, data_source_id: int) -> None:
         tables = self.db.datasourcetabledescription.find_many(where={"dataSourceId": data_source_id})
 
-        if len(tables):
-            log.warn("no tables found for data source, cannot cache")
+        if len(tables) == 0:
+            log.warn("no tables found for data source, cannot cache", data_source_id=data_source_id)
 
         for table in tables:
             self.cached_tables[table.id] = table
@@ -275,7 +275,7 @@ if __name__ == "__main__":
     datasource = _db.datasource.find_first(where={"id": 2})
 
     if datasource:
-        ranks = Ranker(_db, 2).rank("What product sells best in Montana?")
+        ranks = Ranker(2).rank("What product sells best in Montana?")
 
         # generate via: `poetry run python -m python.schema.ranker "What product sells best in Montana?"`
 

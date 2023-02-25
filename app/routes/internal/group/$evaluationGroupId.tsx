@@ -106,12 +106,14 @@ export async function action({ request, params }: ActionArgs) {
   if (actionName === EvaluationGroupActions.FEEDBACK) {
     const { notes, assertionColumns } = await zx.parseForm(request, {
       notes: z.string().optional(),
-      assertionColumns: z.preprocess(
-        // the list can come in as a string if there is only one item selected
-        // https://stackoverflow.com/questions/74100894/how-to-transform-object-to-array-before-parsing-in-zod
-        (v) => f.arrayWrap(v),
-        z.string().array()
-      ),
+      assertionColumns: z
+        .preprocess(
+          // the list can come in as a string if there is only one item selected
+          // https://stackoverflow.com/questions/74100894/how-to-transform-object-to-array-before-parsing-in-zod
+          (v) => f.arrayWrap(v),
+          z.string().array()
+        )
+        .optional(),
     })
 
     await evaluationQuestion.markCorrect(

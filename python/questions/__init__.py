@@ -1,12 +1,12 @@
 import datetime
-import time
+import os
 
 import python.utils.db
+from python.schema.learned_ranker import LearnedRanker
 from python.schema.ranker import Ranker
 from python.schema.schema_builder import SchemaBuilder
 from python.schema.simple_schema_builder import SimpleSchemaBuilder
 from python.sql.exceptions import SqlInspectError
-from python.sql.sql_inspector import SqlInspector
 from python.sql.sql_parser import SqlParser
 from python.sql.sql_resolve_and_fix import SqlResolveAndFix
 from python.sql.types import SimpleSchema
@@ -18,7 +18,10 @@ db = python.utils.db.application_database_connection()
 
 
 def question_with_data_source_to_sql(data_source_id: int, question: str, engine: str = "code-davinci-002") -> str:
-    ranked_structure = Ranker(db, data_source_id).rank(question)
+    if os.getenv("LEARNED"):
+        ranked_structure = LearnedRanker(data_source_id).rank(question)
+    else:
+        ranked_structure = Ranker(data_source_id).rank(question)
     log.debug("building schema")
 
     with log_execution_time("schema build"):
@@ -27,7 +30,7 @@ def question_with_data_source_to_sql(data_source_id: int, question: str, engine:
     log.debug("convert question and schema to sql")
     with log_execution_time("schema to sql"):
         simple_schema = SimpleSchemaBuilder().build(db, data_source_id)
-        sql = question_with_schema_to_sql(simple_schema, table_schema_limited_by_token_size, question)
+        sql = question_with_schema_to_sql(simple_schema, table_schema_limited_by_token_size, question, engine)
 
     log.debug("sql post transform", sql=sql)
 
@@ -44,6 +47,7 @@ def question_with_schema_to_sql(
     stops = [";", "\n\n"]
     if engine == "text-chat-davinci-002-20230126":
         stops.append("<|im_end|>")  # chatgpt message end token
+        log.debug("using chatgpt model")
 
     run_count = 0
     temperature = 0.0
@@ -117,10 +121,22 @@ def fixup_sql(simple_schema: SimpleSchema, ai_sql: str) -> str | None:
             return None
 
 
-def create_prompt(schema: str, question: str) -> str:
+def create_prompt(
+    schema: str,
+    question: str,
+    use_global_instruct: bool = True,
+    use_rules: bool = True,
+    use_few_shot: bool = True,
+    use_comments: bool = True,
+    use_backticks: bool = False,
+) -> str:
     """
     Takes in the schema and question and returns the prompt string
     """
+
+    # The tripple backtick wrapper can be useful in some cases
+    backticks = "```" if use_backticks else ""
+    comments = "-- " if use_comments else ""
 
     def generate_date_suffix(n):
         if 10 <= n % 100 < 20:
@@ -135,15 +151,55 @@ def create_prompt(schema: str, question: str) -> str:
     # the date format here is picked in a very specific fashion
     current_date = datetime.datetime.now().strftime(f"%B %-d{suffix}, %Y")
 
-    prompt_parts = [
-        f"-- {SqlParser.in_dialect.capitalize()} SQL schema",
-        schema,
-        "",
-        "-- How many orders are there per month?",
-        'SELECT\n  COUNT(*) AS orders_per_month,\n  EXTRACT(MONTH FROM created_at) AS month\nFROM "order"\nGROUP BY\n  month\nORDER BY\n  month NULLS LAST;',
-        "",
-        "-- Which product sells the best?",
-        """SELECT
+    schema_parts = [f"{comments}{SqlParser.in_dialect.capitalize()} SQL schema", f"{backticks}{schema}{backticks}", ""]
+
+    if use_rules:
+        rule_num: int = 0
+
+        def rule_prefix():
+            nonlocal rule_num
+            rule_num += 1
+            return f"{rule_num}. "
+
+        rules = [
+            "",
+            f"{backticks}",
+            # f"{comments}Rules for building SQL queries: ",
+            f"{comments}Rules: ",
+            f"{comments}{rule_prefix()}Return `SELECT 'unsure'` if we don't know how to answer the question",
+            # f"{comments}{rule_prefix()}Do case insensitive matches using LOWER unless the case matters or it matches a possible value",
+            f"{comments}{rule_prefix()}When matching a string, use LOWER unless it matches a listed possible value",
+            # f"{comments}{rule_prefix()}Calculate lifetime of a customer by taking the duration between the first and most recent order for a customer. ",
+            f"{comments}{rule_prefix()}If we're returning a day, always also return the month and year",
+            # f"{comments}{rule_prefix()}Add ORDER BY to every SELECT",  # makes things deterministic
+            f"{comments}{rule_prefix()}Any columns used must be in the Schema",
+            f"{comments}{rule_prefix()}Assume the current date is {current_date}",
+            f"{comments}{rule_prefix()}use NOW() instead of dates",
+            f"{backticks}",
+            "",
+        ]
+    else:
+        rules = []
+
+    if use_global_instruct:
+        question_prefix = "Question: "
+    else:
+        question_prefix = ""
+
+    if use_few_shot:
+        few_shot = [
+            f"{comments}{question_prefix}How many orders are there per month?",
+            f"""{backticks}SELECT
+  COUNT(*) AS orders_per_month,
+  EXTRACT(MONTH FROM "order".created_at) AS month
+FROM "order"
+GROUP BY
+  month
+ORDER BY
+  month;{backticks}""",
+            "",
+            f"{comments}{question_prefix}Question: Which product sells the best?",
+            f"""{backticks}SELECT
     COUNT(*) AS orders_per_product,
     product.title
 FROM "order"
@@ -154,23 +210,61 @@ JOIN product_variant
 JOIN product
     ON product.id = product_variant.product_id
 GROUP BY
+    product.id,
     product.title
 ORDER BY
-orders_per_product DESC NULLS FIRST;
-        """,
-        "",
-        "-- A few rules for building SQL queries: ",
-        "-- Return `SELECT 'unsure'` if we don't know how to answer the question",
-        # "-- 1. Do case insensitive matches using LOWER unless the case matters",
-        # "-- Calculate lifetime of a customer by taking the duration between the first and most recent order for a customer. ",
-        # "-- If we're returning a day, always also return the month and year"
-        # f"-- Assuming the current date is {current_date}",
-        # "-- using NOW() instead of dates\n\n",
-        "",
-        "",
-        f"-- {question}",
-        "SELECT ",
+orders_per_product DESC;{backticks}
+            """,
+            "",
+            f"{comments}{question_prefix}Are sales of the cross atx fountain pen - matte chrome increasing or decreasing?",
+            f"""{backticks}SELECT
+    COUNT(*) AS orders_per_month,
+    EXTRACT(MONTH FROM "ORDER".created_at) AS month
+FROM "order"
+JOIN order_line
+    ON order_line.order_id = "order".id
+JOIN product_variant
+    ON product_variant.id = order_line.variant_id
+JOIN product
+    ON product.id = product_variant.product_id
+WHERE
+    product.title = 'Cross ATX Fountain Pen - Matte Chrome'
+GROUP BY
+    month
+ORDER BY
+    month;{backticks}""",
+            "",
+            "",
+            f"""{comments}{question_prefix}What products are pen and pencil sets""",
+            f"""{backticks}SELECT DISTINCT
+  product.title
+FROM product
+JOIN product_tag
+  ON product_tag.product_id = product.id
+WHERE
+  product_tag.value = 'Collection_Pen and Pencil Set'
+ORDER BY
+  product.title;{backticks}""",
+        ]
+    else:
+        few_shot = []
+
+    select_prefix = [
+        f"{comments}{question_prefix}{question}",
+        f"{backticks}SELECT ",
     ]
+
+    prompt_parts: list[str] = []
+
+    if use_global_instruct:
+        prompt_parts += [
+            f"{comments}Given a Schema, and a Question, generate a correct SQL query that answers the question using the Schema. The SQL query must follow the Rules provided.",
+            "",
+        ]
+    prompt_parts += schema_parts
+    prompt_parts += few_shot
+    prompt_parts += rules
+    prompt_parts += select_prefix
 
     prompt = "\n".join(prompt_parts)
     return prompt

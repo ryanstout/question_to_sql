@@ -63,7 +63,14 @@ def test_complex_string_concat():
         },
     )
 
-    assert inspector.touches() == {}
+    assert inspector.touches() == {
+        ("order", None, None): 1,
+        ("customer", None, None): 1,
+        ("customer", "id", None): 1,
+        ("order", "customer_id", None): 1,
+        ("customer", "first_name", None): 3,
+        ("customer", "last_name", None): 3,
+    }
 
 
 def test_sum_propagation():

@@ -1,8 +1,7 @@
 from dataclasses import dataclass
-from pprint import pprint
 
 from python.sql.nodes.base import Base
-from python.sql.nodes.count_star import CountStar
+from python.sql.refs import ColumnRef
 from python.sql.types import ColumnsType, SqlState
 
 
@@ -39,20 +38,17 @@ class ColumnAlias(Base):
         if not self._columns:
             child_columns = super().columns()
 
-            if len(child_columns) == 0:
-                # this can happen if the alias is for a literal string expression
-                return {}
-
-            if len(child_columns) > 1:
-                raise ValueError(
-                    f"ColumnAlias should only have one column in children:\n{self.state['node']!r}\n\n{self}"
-                )
-            child_column = next(iter(child_columns.values()))
-
-            key = (self.table_qualifier, self.alias)
             self._columns = {}
 
-            self._columns.update({key: child_column})
-            self._columns.update({(None, self.alias): child_column})
+            # Get all child column refs into a single list
+            child_col_refs: list[ColumnRef] = []
+
+            for child_column in child_columns.values():
+                child_col_refs += child_column
+
+            key = (self.table_qualifier, self.alias)
+
+            self._columns.update({key: child_col_refs})
+            self._columns.update({(None, self.alias): child_col_refs})
 
         return self._columns

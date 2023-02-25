@@ -12,7 +12,11 @@ export async function loadEvaluationQuestionGroup(evaluationGroupId: number) {
   let evaluationGroup = await prisma.evaluationQuestionGroup.findUniqueOrThrow({
     where: { id: evaluationGroupId },
     include: {
-      evaluationQuestions: true,
+      evaluationQuestions: {
+        orderBy: {
+          id: "asc",
+        },
+      },
       ...dataSourceInclude,
     },
   })

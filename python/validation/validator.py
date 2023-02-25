@@ -1,6 +1,9 @@
 # Run all of the questions marked correct or incorrect and output a confusion
 # matrix and accracy
 
+import json
+import os
+import shutil
 from multiprocessing.pool import ThreadPool
 from threading import Lock
 from typing import Tuple
@@ -30,12 +33,18 @@ class Validator:
         self.scores = {}
         self.failed_questions = []
 
+        self.log_records_path = "tmp/validation"
+
     def run(self):
+        shutil.rmtree(self.log_records_path)
+        os.makedirs(f"{self.log_records_path}/correct", exist_ok=True)
+        os.makedirs(f"{self.log_records_path}/incorrect", exist_ok=True)
+
         # Run through each marked question
         db_questions = db.evaluationquestiongroup.find_many(
             where={"status": EvaluationStatus.CORRECT},
             include={"evaluationQuestions": True, "dataSource": True},
-            take=5,
+            order={"id": "asc"},
         )
 
         # Load each question in the group, and assume the question
@@ -103,6 +112,9 @@ class Validator:
                 return None
 
             for question in evaluation_questions:
+                correct = False
+                new_results = None
+                new_sql = ""
                 try:
                     log.info(f"[{idx}] Send to openai")
                     new_sql = questions.question_with_data_source_to_sql(data_source.id, question.question)
@@ -115,16 +127,31 @@ class Validator:
                         self.set_scores(question.id, 0, question.question)
                         continue
 
-                    if self.check_match(old_results, new_results):
-                        log.info(f"[{idx}] Results match")
+                    if check_match(old_results, new_results):
+                        log.info(f"[{idx}] Results match", question_id=question.id)
                         self.set_scores(question.id, 1, question.question)
+                        correct = True
                     else:
-                        log.info(f"[{idx}] Results don't match")
+                        log.info(f"[{idx}] Results don't match", question_id=question.id)
                         self.set_scores(question.id, 0, question.question)
+
                 except Exception as e:
                     # Some exception happened when generating or running the query, log it and fail the group
                     log.debug("Error running question", question=question.question, e=e)
                     self.set_scores(evaluation_group.id, 0, None)
+
+                correct_folder = "correct" if correct else "incorrect"
+                base_path = f"{self.log_records_path}/{correct_folder}/{question.id}"
+                # Log out the generated sql and results
+                self._log(f"{base_path}_question.txt", question.question)
+
+                self._log(f"{base_path}_old.sql", correct_sql)
+                self._log(f"{base_path}_new.sql", new_sql)
+
+                self._log(f"{base_path}_old.json", json.dumps(old_results, indent=2))
+                self._log(f"{base_path}_new.json", json.dumps(new_results, indent=2))
+
+                os.system(f"diff {base_path}_old.json {base_path}_new.json > {base_path}.json.diff")
 
         except Exception as e:
             # Some exception happened when generating or running the query, log it and fail the group
@@ -140,32 +167,41 @@ class Validator:
             self.failed_questions.append(question)
         self.lock.release()
 
-    def check_match(self, old_results, new_results):
-        # Because the column names may differ each run, we match based on output
-        # columns.
-        # log.info("old vs new all", old=old_results, new=new_results)
+    def _log(self, path: str, text: str):
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(text)
 
-        # Loop through each column in both and make sure the key/values match
-        for idx, old_result in enumerate(old_results):
-            # The column names may differ, we really just care if we get columns
-            # with the same values, so pull the values without the keys (column
-            # names), then sort so the ordering is the same
-            if idx >= len(new_results):
-                log.info("Old results had more results")
-                return False
-            new_result = new_results[idx]
-            new_result_vals = list([str(v) for v in new_result.values()])
-            old_result_vals = list([str(v) for v in old_result.values()])
 
-            new_result_vals.sort()
-            old_result_vals.sort()
+def check_match(old_results, new_results):
+    # Because the column names may differ each run, we match based on output
+    # columns.
+    # log.info("old vs new all", old=old_results, new=new_results)
 
-            if new_result_vals != old_result_vals:
-                log.error("Results don't match", old=old_result, new=new_result)
+    # Loop through each column in both and make sure the key/values match
+    for idx, old_result in enumerate(old_results):
+        # The column names may differ, we really just care if we get columns
+        # with the same values, so pull the values without the keys (column
+        # names), then sort so the ordering is the same
+        if idx >= len(new_results):
+            log.info("Old results had more results")
+            return False
 
-                return False
+        # Grab the same row
+        new_result = new_results[idx]
 
-        return True
+        # Sort the column values so column order doesn't matter
+        new_result_vals = list([str(v) for v in new_result.values()])
+        old_result_vals = list([str(v) for v in old_result.values()])
+
+        new_result_vals.sort()
+        old_result_vals.sort()
+
+        if new_result_vals != old_result_vals:
+            log.error("Results don't match", old=old_result, new=new_result)
+
+            return False
+
+    return True
 
 
 if __name__ == "__main__":

@@ -147,3 +147,55 @@ def test_count_star():
     assert inspector.touches() == {
         ("table1", None, None): 1,
     }
+
+
+def test_in_statement():
+    inspector = SqlInspector(
+        """
+        SELECT id FROM table1 WHERE col1 IN ("one", "two", "three");
+        """,
+        {
+            "table1": {
+                "name": "table1",
+                "columns": {"id": {"name": "id"}, "col1": {"name": "col1"}, "col2": {"name": "col2"}},
+            }
+        },
+    )
+    assert inspector.touches() == {
+        ("table1", None, None): 1,
+        ("table1", "col1", None): 1,
+        ("table1", "col1", "one"): 1,
+        ("table1", "col1", "two"): 1,
+        ("table1", "col1", "three"): 1,
+        ("table1", "id", None): 1,
+    }
+    inspector = SqlInspector(
+        """
+        SELECT * FROM table1 WHERE col1 IN (1,2,3);
+        """,
+        {"table1": {"name": "table1", "columns": {"col1": {"name": "col1"}, "col2": {"name": "col2"}}}},
+    )
+    assert inspector.touches() == {
+        ("table1", None, None): 1,
+        ("table1", "col1", None): 2,
+        ("table1", "col2", None): 1,
+    }
+
+
+def test_concat():
+    inspector = SqlInspector(
+        """
+        SELECT col1 || col2 FROM table1;
+        """,
+        {
+            "table1": {
+                "name": "table1",
+                "columns": {"id": {"name": "id"}, "col1": {"name": "col1"}, "col2": {"name": "col2"}},
+            }
+        },
+    )
+    assert inspector.touches() == {
+        ("table1", None, None): 1,
+        ("table1", "col1", None): 1,
+        ("table1", "col2", None): 1,
+    }

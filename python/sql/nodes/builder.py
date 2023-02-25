@@ -8,6 +8,7 @@ from python.sql.nodes.column_alias import ColumnAlias
 from python.sql.nodes.count_star import CountStar
 from python.sql.nodes.eq import EQ
 from python.sql.nodes.filter import Filter
+from python.sql.nodes.in_node import InNode
 from python.sql.nodes.join import Join
 from python.sql.nodes.over import Over
 from python.sql.nodes.select import Select
@@ -140,6 +141,16 @@ def add_child(state: SqlState, add_to: List["Base"], start_node: exp.Expression)
             # the OVER/PARTITION BY clauses end up as a exp.Window
             node = Over(state)
             add_children(state, node, over_exp.args)
+
+        case exp.In(args={"this": exp.Expression() as column_exp, **rest}) as in_node:
+            in_exprs = in_node.args.get("expressions")
+            if in_exprs:
+                del rest["expressions"]
+            else:
+                in_exprs = []
+            node = InNode(state, in_exprs)
+            add_children(state, node, {"column": column_exp})
+            add_children(state, node, rest)
 
         case exp.Expression() as expression:
             # Handle all other nodes, this combines the returned tables and

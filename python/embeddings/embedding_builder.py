@@ -45,22 +45,28 @@ class EmbeddingBuilder:
         indexes_path = config("FAISS_INDEXES_PATH")
 
         # TODO eliminate magic nubmers and use a enum
-        # Table indexes
-        self.idx_table_names = AnnIndex(0, f"{indexes_path}/{self.data_source.id}/table_names")
-        self.idx_column_names = AnnIndex(1, f"{indexes_path}/{self.data_source.id}/column_names")
-        self.idx_table_and_column_names = AnnIndex(3, f"{indexes_path}/{self.data_source.id}/table_and_column_names")
-
-        # Table and Columns indexes
-        self.idx_table_and_column_names_and_values = AnnIndex(
-            4, f"{indexes_path}/{self.data_source.id}/table_and_column_names_and_values"
+        # Table indexes (indexes that point to a table)
+        self.idx_table_name = AnnIndex(f"{indexes_path}/{self.data_source.id}/table_name")
+        self.idx_table_and_all_column_names = AnnIndex(
+            f"{indexes_path}/{self.data_source.id}/table_and_all_column_names"
         )
-        self.idx_column_name_and_all_column_values = AnnIndex(
-            5, f"{indexes_path}/{self.data_source.id}/column_name_and_all_column_values"
+        self.idx_table_and_all_column_names_and_all_values = AnnIndex(
+            f"{indexes_path}/{self.data_source.id}/table_and_all_column_names_and_all_values"
         )
 
-        # Cell Values
-        self.idx_values = AnnIndex(2, f"{indexes_path}/{self.data_source.id}/values")
-        self.idx_table_column_and_value = AnnIndex(6, f"{indexes_path}/{self.data_source.id}/table_column_and_value")
+        # Column indexes (indexes that point to a column)
+        self.idx_column_name = AnnIndex(f"{indexes_path}/{self.data_source.id}/column_name")
+        self.idx_table_and_column_name = AnnIndex(f"{indexes_path}/{self.data_source.id}/table_and_column_name")
+        self.idx_column_name_and_all_values = AnnIndex(
+            f"{indexes_path}/{self.data_source.id}/column_name_and_all_values"
+        )
+        self.idx_table_and_column_name_and_all_values = AnnIndex(
+            f"{indexes_path}/{self.data_source.id}/table_and_column_name_and_all_values"
+        )
+
+        # Cell Values (index that point to a table+column+value)
+        self.idx_value = AnnIndex(f"{indexes_path}/{self.data_source.id}/value")
+        self.idx_table_column_and_value = AnnIndex(f"{indexes_path}/{self.data_source.id}/table_column_and_value")
 
         # Temp store for all short string values in a table
         # TODO: this will blow up on huge tables
@@ -80,7 +86,7 @@ class EmbeddingBuilder:
 
         # TODO we should be doing upsert instead
 
-        self.idx_table_names.add(unqualified_name, table.id, None, None)
+        self.idx_table_name.add(unqualified_name, table.id, None, None)
 
         all_columns = db.datasourcetablecolumn.find_many(where={"dataSourceTableDescriptionId": table.id})
 
@@ -106,13 +112,16 @@ class EmbeddingBuilder:
 
             column_names.append(column.name)
             # Add individual column names
-            self.idx_column_names.add(f"{unqualified_name} {column.name}", table.id, column.id, None)
+            self.idx_column_name.add(f"{column.name}", table.id, column.id, None)
+            self.idx_table_and_column_name.add(f"{unqualified_name} {column.name}", table.id, column.id, None)
 
             # TODO here we are deciding which columns should be put into the vector index,
             #      right now, we are just using the distict count of the column to decide
             #      but long term, we'd want a more complex heuristic
             # Add cell values (requires a full scan of each table)
-            if column.distinctRows < column_value_limit:
+            # NOTE: Currently disabled, limiting this kept out some fields we wanted in. The limit is still in place
+            # on the actual number of value examples we pull.
+            if True or column.distinctRows < column_value_limit:
                 column_add_results.append(
                     column_add_pool.apply_async(
                         self.add_table_column_values, (unqualified_name, table, column, column_value_limit)
@@ -141,12 +150,12 @@ class EmbeddingBuilder:
         )
 
         # Add table and column names as a single string (for table lookup)
-        self.idx_table_and_column_names.add(unqualified_name + " " + " ".join(column_names), table.id, None, None)
+        self.idx_table_and_all_column_names.add(unqualified_name + " " + " ".join(column_names), table.id, None, None)
 
         # Add for table + column names + all values
         for table_value_group in in_groups_of("\n".join(self.table_values), MAX_EMBEDDING_TOKENS):
             full_table_str = unqualified_name + "\n" + "\n".join(column_names) + "\n" + table_value_group
-            self.idx_column_name_and_all_column_values.add(full_table_str, table.id, None, None)
+            self.idx_table_and_all_column_names_and_all_values.add(full_table_str, table.id, None, None)
 
     def add_table_column_values(
         self,
@@ -173,6 +182,7 @@ class EmbeddingBuilder:
             ORDER BY COUNT DESC
             LIMIT {column_value_limit}
             """,
+            disable_query_protections=True,
         )
 
         column_values = []
@@ -180,6 +190,21 @@ class EmbeddingBuilder:
         # Add each value to the index
         for value in values:
             value_str = value["VALUE"]
+
+            if not value_str:
+                log.debug("no value, skipping")
+                continue
+
+            if self.is_only_number(value_str):
+                # OpenAI indexes are a little weird when values are only numbers and we probably don't need to be
+                # matching against it in most cases anyway.
+                log.debug("value is only number", value=value_str)
+                continue
+
+            if len(value_str) >= 20 and self.is_hexadecimal(value_str):
+                # Big hex only values we should just skip
+                log.debug("value is only number", value=value_str)
+                continue
 
             # TODO we could break the input into chunks and generate embedding for each chunk
             if not value_str or len(value_str) >= MAX_VALUE_LENGTH:
@@ -197,13 +222,15 @@ class EmbeddingBuilder:
 
             # We have 5 different indexes we are building (tables, columns, column values, etc)
             # For larger indexes, we track shorter column values. Check out `docs/prompt_embeddings.md` for more
-            if len(value_str) < MAX_FOR_SMALL_VALUE:
+            if len(value_str) > MAX_FOR_SMALL_VALUE:
                 log.debug("skipping embedding, too long for small value")
+                continue
 
-                self.table_values.append(value_str)
-                column_values.append(value_str)
+            self.table_values.append(value_str)
+            column_values.append(value_str)
 
             # Add both a string with `TABLE_NAME COLUMN_NAME value` and just one with the value
+            log.debug(f"add to tcv: {unqualified_table_name_val} {column.name} {value_str}")
             self.idx_table_column_and_value.add(
                 # TODO should join vs format string
                 f"{unqualified_table_name_val} {column.name} {value_str}",
@@ -211,20 +238,36 @@ class EmbeddingBuilder:
                 column.id,
                 value_str,
             )
-            self.idx_values.add(f"{value_str}", table.id, column.id, value_str)
+            self.idx_value.add(f"{value_str}", table.id, column.id, value_str)
 
         # TODO this logic is confusing, break apart and clean up
         # Add for column name + all column values (keeping below max embedding)
         for col_value_group in in_groups_of("\n".join(column_values), MAX_EMBEDDING_TOKENS):
             full_column_str = column.name + "\n" + col_value_group
-            self.idx_column_name_and_all_column_values.add(full_column_str, table.id, column.id, None)
+            self.idx_column_name_and_all_values.add(full_column_str, table.id, column.id, None)
+
+            self.idx_table_and_column_name_and_all_values.add(
+                f"{unqualified_table_name_val} {full_column_str}", table.id, column.id, None
+            )
 
     # this is an expensive operation, do this as minimally as we can!
     def write_indexes_to_disk(self):
-        self.idx_table_names.save()
-        self.idx_column_names.save()
-        self.idx_table_and_column_names.save()
-        self.idx_table_and_column_names_and_values.save()
-        self.idx_column_name_and_all_column_values.save()
-        self.idx_values.save()
+        self.idx_table_name.save()
+        self.idx_table_and_all_column_names.save()
+        self.idx_table_and_all_column_names_and_all_values.save()
+        self.idx_column_name.save()
+        self.idx_table_and_column_name.save()
+        self.idx_column_name_and_all_values.save()
+        self.idx_table_and_column_name_and_all_values.save()
+        self.idx_value.save()
         self.idx_table_column_and_value.save()
+
+    def is_only_number(self, string_val: str) -> bool:
+        # Regular expression to match a float or int (negative or positive)
+        pattern = r"^[-+]?(\d+\.\d*|\d*\.\d+|\d+)$"
+
+        # Check if the input string matches the pattern
+        return bool(re.match(pattern, string_val))
+
+    def is_hexadecimal(self, s: str) -> bool:
+        return bool(re.match(r"^[#0-9a-fA-F]+$", s))

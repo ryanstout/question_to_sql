@@ -68,7 +68,6 @@ class AnnFaiss:
 
         # Set how many lists to look for NN in
         self.index.nprobe = nprobe
-        self.nprobe = nprobe
         # index_ivf = faiss.extract_index_ivf(self.index)
         # index_ivf.nprobe = 6
 

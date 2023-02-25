@@ -602,6 +602,9 @@ mixin-class-rgx=.*[Mm]ixin
 # List of decorators that change the signature of a decorated function.
 signature-mutators=
 
+# https://github.com/pytorch/pytorch/issues/701
+generated-members=numpy.*,torch.*
+
 
 [VARIABLES]
 

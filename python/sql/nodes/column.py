@@ -1,11 +1,10 @@
 import os
 from dataclasses import dataclass, field
 
-from sql.utils.snowflake_keywords import SNOWFLAKE_KEYWORDS
-
 from python.sql.exceptions import ColumnNotFoundError
 from python.sql.nodes.base import Base
 from python.sql.types import ChildrenType, ColumnsType, SqlState
+from python.sql.utils.snowflake_keywords import SNOWFLAKE_KEYWORDS
 
 
 @dataclass(init=False)
