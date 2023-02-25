@@ -59,7 +59,14 @@ export async function requireUser(request: Request) {
   const userId = await requireUserId(request)
 
   const user = await getUserById(userId)
-  if (user) return user
+  if (user) {
+    invariant(
+      user.business?.dataSources.length == 1,
+      "Only one data source supported"
+    )
+
+    return user
+  }
 
   throw await logout(request)
 }

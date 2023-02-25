@@ -76,3 +76,10 @@ export function validateEmail(email: unknown): email is string {
 export function isAdmin(user: User) {
   return user.email.endsWith("@knolbe.com")
 }
+
+// TODO this has got to be in some stdlib somewhere, right?
+export function promisifyStaticValue<T>(value: T): Promise<T> {
+  return new Promise((resolve, reject) => {
+    resolve(value)
+  })
+}

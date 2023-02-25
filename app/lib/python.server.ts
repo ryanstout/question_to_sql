@@ -3,6 +3,7 @@ import invariant from "tiny-invariant"
 
 import { isMockedPythonServer } from "~/lib/environment"
 import { log } from "~/lib/logging"
+import { promisifyStaticValue } from "~/utils"
 
 import * as Sentry from "@sentry/remix"
 
@@ -13,9 +14,7 @@ export async function runQuery(
   allow_cached_queries: boolean
 ) {
   if (isMockedPythonServer()) {
-    return new Promise((resolve, _reject) => {
-      resolve([{ count: 100 }])
-    })
+    return promisifyStaticValue([{ count: 100 }])
   }
 
   const response = await pythonRequest("/query", {

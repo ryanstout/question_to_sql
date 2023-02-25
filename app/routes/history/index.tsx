@@ -1,5 +1,4 @@
 import { DataTable } from "mantine-datatable"
-import invariant from "tiny-invariant"
 
 import type { LoaderArgs } from "@remix-run/node"
 import { json } from "@remix-run/node"
@@ -14,12 +13,7 @@ import { requireUser } from "~/session.server"
 import { IconExternalLink } from "@tabler/icons-react"
 
 export async function loader({ request }: LoaderArgs) {
-  const user = await requireUser(request) // eslint-disable-line
-
-  invariant(
-    user.business?.dataSources.length == 1,
-    "Only one data source supported"
-  )
+  const user = await requireUser(request)
 
   const dataSource = user.business!.dataSources[0]
   const questionHistory = await getUserQuestionHistory(user.id, dataSource.id)
@@ -91,6 +85,7 @@ const HistoryDisplayComponent = ({
 }
 
 export default function HistoryIndexView() {
+  // TODO https://github.com/remix-run/remix/issues/3931
   const questionHistoryData = useLoaderData<
     typeof loader
   >() as unknown as HistoryResult

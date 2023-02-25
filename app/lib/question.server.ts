@@ -8,6 +8,7 @@ import { isMockedPythonServer } from "~/lib/environment"
 import { log } from "~/lib/logging"
 import { pythonRequest, runQuery } from "~/lib/python.server"
 import type { ResponseError } from "~/models/responseError.server"
+import { promisifyStaticValue } from "~/utils"
 
 import * as Sentry from "@sentry/remix"
 
@@ -37,6 +38,7 @@ export async function getQuestionRecord(
   })
 }
 
+// TODO we should probably just allow a questionn record to be passed
 // if you have a question, and just want the results from the warehouse
 export async function getResultsFromQuestion({
   questionRecord,
@@ -79,6 +81,7 @@ export async function getResultsFromQuestion({
       data: data,
     }
   } catch (e: any) {
+    // TODO add error refinement here
     Sentry.captureException(e)
 
     // if snowflake is not responding properly, SQL is malformed and it's an invalid query
@@ -111,6 +114,7 @@ export async function updateQuestion(
 
   const updateUser = await prisma.question.update({
     where: {
+      // TODO should filter by user ID
       id: question.id,
     },
     data: {
@@ -143,13 +147,14 @@ export async function createQuestion(
     },
   })
 
-  // TODO handle open AI failure here
+  // TODO handle open AI failure here, although this is low pri since if `sql` is null, we can identify when openai fails
   const sql = await questionToSql(dataSourceId, question)
   log.debug("sql from python", { sql })
 
   questionRecord = await prisma.question.update({
     where: {
       id: questionRecord.id,
+      // TODO should add user filter here
     },
     data: {
       sql: sql,
@@ -169,9 +174,7 @@ export async function questionToSql(
 ): Promise<string> {
   // TODO remove me! Use mock server once we have a python API
   if (isMockedPythonServer()) {
-    return new Promise((resolve, reject) => {
-      resolve("SELECT * FROM ORDER LIMIT 10")
-    })
+    return promisifyStaticValue("SELECT * FROM ORDER LIMIT 10")
   }
 
   const response = await pythonRequest("/question", {
