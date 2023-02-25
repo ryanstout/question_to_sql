@@ -14,7 +14,7 @@ export default function HeaderMenu() {
 
   // TODO second empty param in $path is required, wait before rolling this out https://github.com/yesmeck/remix-routes/issues/43 */
   const loginMenu = !user ? null : (
-    <Form action={$path("/logout", {})} method="post">
+    <Form action={$path("/logout")} method="post">
       <Button variant="outline" type="submit">
         Logout&nbsp;
         <IconLogout />
@@ -27,10 +27,10 @@ export default function HeaderMenu() {
   const adminMenu =
     user && isAdmin(user) ? (
       <>
-        <Button component="a" href={$path("/internal", {})}>
+        <Button component="a" href={$path("/internal")}>
           Group Questions
         </Button>
-        <Button component="a" href={$path("/internal/group", {})}>
+        <Button component="a" href={$path("/internal/group")}>
           Evaluation Groups
         </Button>
       </>

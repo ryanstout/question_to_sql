@@ -55,13 +55,9 @@ export async function loader({ request, params }: LoaderArgs) {
   // TODO would be better to find the first group with questions, but this should be an edge case
   if (!evaluationGroupId && firstUnansweredEvaluationGroupWithQuestions) {
     return redirect(
-      $path(
-        "/internal/group/:evaluationGroupId",
-        {
-          evaluationGroupId: firstUnansweredEvaluationGroupWithQuestions.id,
-        },
-        {}
-      )
+      $path("/internal/group/:evaluationGroupId", {
+        evaluationGroupId: firstUnansweredEvaluationGroupWithQuestions.id,
+      })
     )
   }
 
@@ -78,11 +74,9 @@ export async function action({ request }: ActionArgs) {
   // TODO since this is a redirect, we need to use a flash cookie
   return redirect(
     // TODO 3rd arg is annoying this needs to be fixed when the underlying library is fixed
-    $path(
-      "/internal/group/:evaluationGroupId",
-      { evaluationGroupId: questionGroup.id },
-      {}
-    )
+    $path("/internal/group/:evaluationGroupId", {
+      evaluationGroupId: questionGroup.id,
+    })
   )
 }
 

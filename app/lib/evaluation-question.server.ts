@@ -275,16 +275,3 @@ export async function deleteQuestion(
     where: { id: evaluationQuestionId },
   })
 }
-
-// TODO this also makes it harder to navigate in VS code, this is treated as a separate definition
-// TODO is there a way to just auto-export all exports in the file?
-// TODO maybe this is an anti-pattern? I don't like importing a ton of methods without context of where they are from
-// export default *;
-// export default {
-//   updateQuestion,
-//   createQuestion,
-//   markCorrect,
-//   deleteQuestionGroup,
-//   deleteQuestion,
-//   createBlankEvaluationQuestionGroup,
-// }

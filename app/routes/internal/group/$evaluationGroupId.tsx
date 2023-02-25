@@ -120,12 +120,12 @@ export async function action({ request, params }: ActionArgs) {
       assertionColumns
     )
 
-    return redirect($path("/internal/group", {}))
+    return redirect($path("/internal/group"))
   }
 
   if (actionName === EvaluationGroupActions.DELETE) {
     await evaluationQuestion.deleteQuestionGroup(evaluationGroupId)
-    return redirect($path("/internal/group", {}))
+    return redirect($path("/internal/group"))
   }
 
   // delete an individual question on a group

@@ -63,13 +63,9 @@ export async function action({ request }: ActionArgs) {
 
     // TODO shouldn't there be helpers for the route strings? Did we forget everything we learned from rails?
     return redirect(
-      $path(
-        "/question/:questionId?",
-        {
-          questionId: questionRecord.question.id,
-        },
-        {}
-      )
+      $path("/question/:questionId?", {
+        questionId: questionRecord.question.id,
+      })
     )
   }
 
