@@ -10,6 +10,7 @@ permissions:
   actions: write
   contents: read
 
+# TODO most of these should be versioned in .env.test and loaded, for another day
 env:
   PYTHONPATH: ${{ github.workspace }}
   # for depreciated sklearn package, hopefully we can remove in the future
@@ -22,6 +23,11 @@ env:
   OPENAI_KEY: sk-ca4240cf-ca50-4b16-8eaa-742a68473ff8
 
   FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+  FAISS_INDEXES_PATH: tmp/indexes
+  MODEL_DATA_PATH: tmp/models
+  DATASETS_PATH: tmp/datasets
+  VALIDATION_PATH: tmp/validation
 
 jobs:
   # TODO why can't we define runs-on this for the entire workflow?

@@ -18,7 +18,7 @@ from python.utils.openai_rate_throttled import openai_throttled
 
 db = python.utils.db.application_database_connection()
 
-use_learned_ranker = config("ENABLE_LEARNED_RANKER", default=False, cast=bool)
+use_learned_ranker = config("ENABLE_LEARNED_RANKER", default=True, cast=bool)
 
 
 def question_with_data_source_to_sql(data_source_id: int, question: str, engine: str = "code-davinci-002") -> str:
