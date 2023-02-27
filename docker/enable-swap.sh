@@ -4,7 +4,7 @@
 set -eux
 
 # https://community.fly.io/t/swap-memory/2749/3
-fallocate -l 2048M /swapfile
+fallocate -l 3072M /swapfile
 chmod 0600 /swapfile
 mkswap /swapfile
 echo 10 > /proc/sys/vm/swappiness
