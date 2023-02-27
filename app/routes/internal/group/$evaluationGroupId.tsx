@@ -292,6 +292,7 @@ export default function EvaluationGroupView() {
               <Button type="submit">Mark Correct ctrl+c</Button>
               <Text fw="bold">Notes</Text>
               <Textarea
+                disabled={isLoading}
                 onBlur={updateNotes}
                 value={notes}
                 onChange={setNotes}
