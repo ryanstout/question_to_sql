@@ -1,6 +1,7 @@
 import datetime
 import os
 
+import sentry_sdk
 from decouple import config
 
 import python.utils.db
@@ -121,6 +122,7 @@ def fixup_sql(simple_schema: SimpleSchema, ai_sql: str) -> str | None:
         except SqlInspectError as e:
             # A SqlInspectError means the sql will not run correctly at run time. This is usually due to a non-existent
             # table or column being referenced, or just invalid sql.
+            sentry_sdk.capture_exception(e, extras={"ai_sql": ai_sql})
             log.warn("SQL is invalid", sql=ai_sql, error=e)
             return None
 

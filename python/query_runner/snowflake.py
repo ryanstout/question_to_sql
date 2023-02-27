@@ -3,8 +3,8 @@ from python.setup import log
 import re
 import typing as t
 
+import sentry_sdk
 import snowflake.connector
-from sentry_sdk import capture_exception
 from snowflake.connector.cursor import DictCursor, SnowflakeCursor
 
 from python.utils.batteries import log_execution_time, not_none
@@ -89,7 +89,7 @@ def get_query_results(cursor: SnowflakeCursor, sql: str, disable_query_protectio
         # Return the result of the query, not the uses
         return results
     except snowflake.connector.errors.ProgrammingError as e:
-        capture_exception(e)
+        sentry_sdk.capture_exception(e)
 
         # TODO I wonder if sentry logs the error and we don't need to do this?
         log.exception("snowflake connector programming error")

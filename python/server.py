@@ -12,6 +12,7 @@ application = Flask(__name__)
 from decouple import config
 
 # TODO import with side effects! is there a better way to do this?
+# TODO this seems to break depending on the location it's put in (i.e. is something else overriding excepthook)
 configure_sentry()
 
 

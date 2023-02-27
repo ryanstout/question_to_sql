@@ -8,6 +8,7 @@ from multiprocessing.pool import ThreadPool
 from threading import Lock
 from typing import Tuple
 
+import sentry_sdk
 from decouple import config
 
 import python.questions as questions
@@ -142,6 +143,7 @@ class Validator:
                         self.set_scores(question.id, 0, question.question)
 
                 except Exception as e:
+                    sentry_sdk.capture_exception(e)
                     # Some exception happened when generating or running the query, log it and fail the group
                     log.debug("Error running question", question=question.question, e=e)
                     self.set_scores(evaluation_group.id, 0, None)
@@ -160,6 +162,7 @@ class Validator:
                 os.system(f"diff {base_path}_old.json {base_path}_new.json > {base_path}.json.diff")
 
         except Exception as e:
+            sentry_sdk.capture_exception(e)
             # Some exception happened when generating or running the query, log it and fail the group
             log.debug("Error running query", e=e)
             self.set_scores(evaluation_group.id, 0, None)
