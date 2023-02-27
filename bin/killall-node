@@ -1,4 +1,7 @@
 #!/bin/bash
+
+# ps -f $(lsof -i :9229 -t)
+
 # for some reason node takes it's time to quit unless you force a -9 on it
 killall -9 node
 
