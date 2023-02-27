@@ -6,9 +6,13 @@ from python.query_runner import run_query
 from python.questions import question_with_data_source_to_sql
 from python.utils.environments import is_production
 from python.utils.logging import log
+from python.utils.sentry import configure_sentry
 
 application = Flask(__name__)
 from decouple import config
+
+# TODO import with side effects! is there a better way to do this?
+configure_sentry()
 
 
 @application.route("/healthcheck", methods=["GET"])

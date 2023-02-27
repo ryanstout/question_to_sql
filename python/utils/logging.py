@@ -5,8 +5,6 @@ import typing as t
 import structlog
 from decouple import config
 
-from python.utils.sentry import configure_sentry
-
 # we be monkey patching
 import colorama
 import pretty_traceback
@@ -90,6 +88,5 @@ def configure_logger():
 
 
 configure_logger()
-configure_sentry()
 
 log = structlog.get_logger()

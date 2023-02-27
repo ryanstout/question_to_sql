@@ -5,11 +5,14 @@ from decouple import config
 from sentry_sdk.integrations.flask import FlaskIntegration
 
 from python.utils.environments import is_production
+from python.utils.logging import log
 
 
 def configure_sentry():
     if not is_production():
         return
+
+    log.info("configuring sentry")
 
     # TODO https://github.com/getsentry/sentry-docs/pull/6364/files
     def filter_transactions(event, _hint):
@@ -23,8 +26,11 @@ def configure_sentry():
 
         return event
 
+    sentry_dsn = config("SENTRY_DSN", cast=str)
+    assert sentry_dsn, "SENTRY_DSN is not set"
+
     sentry_sdk.init(
-        dsn=t.cast(str, config("SENTRY_DSN", cast=str)),
+        dsn=t.cast(str, sentry_dsn),
         traces_sample_rate=0.1,
         integrations=[
             FlaskIntegration(),
