@@ -19,7 +19,8 @@ def _query_cache_key(data_source_id: int, sql: str) -> str:
 
 
 def _cached_query_result(data_source_id: int, sql: str) -> None | list[dict]:
-    cached_query_result = redis.get(_query_cache_key(data_source_id, sql))
+    cache_key = _query_cache_key(data_source_id, sql)
+    cached_query_result = redis.get(cache_key)
 
     if cached_query_result:
         log.debug("query cache hit")
@@ -29,13 +30,17 @@ def _cached_query_result(data_source_id: int, sql: str) -> None | list[dict]:
 
 
 def _cache_query_result(data_source_id: int, sql: str, result: list[dict]):
-    redis.setex(
-        _query_cache_key(data_source_id, sql),
-        # 48hr is completely arbitrary and is geared towards the import script
-        60 * 60 * 24 * 2,
-        # TODO since the result is returned as JSON, shouldn't we be able to store it as JSON?
-        pickle.dumps(result),
-    )
+    # TODO we need to wrap all redis calls in a protection block like this
+    try:
+        redis.setex(
+            _query_cache_key(data_source_id, sql),
+            # 48hr is completely arbitrary and is geared towards the import script
+            60 * 60 * 24 * 2,
+            # TODO since the result is returned as JSON, shouldn't we be able to store it as JSON?
+            pickle.dumps(result),
+        )
+    except Exception as e:
+        log.error("failed to cache query result: " + str(e))
 
 
 # TODO allow data_source record to be passed in
