@@ -107,9 +107,10 @@ if (isProduction()) {
     tracesSampleRate: 0.1,
     integrations: [new Sentry.Integrations.Prisma({ client: prisma })],
     beforeSendTransaction(event) {
-      if (event.transaction === "/healthcheck") {
+      if (event.transaction === "routes/healthcheck") {
         return null
       }
+
       return event
     },
   })
