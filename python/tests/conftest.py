@@ -8,10 +8,7 @@ os.environ["PYTHON_ENV"] = "test"
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 
-from python.setup import log
-
 import pytest
-
 
 @pytest.fixture(scope="module")
 def vcr_config():
@@ -24,9 +21,15 @@ def vcr_config():
         # "filter_query_parameters": ["signature", "timestamp"],
         "decode_compressed_response": True,
         "ignore_localhost": True,
+        "allowed_hosts": [
+            "localhost",
+            "0.0.0.0",
+            "127.0.0.1"
+        ]
         # if libraries use `ping` or something similar, this reduces duplicate recordings
         # "allow_playback_repeats": True,
     }
+
 # wipe redis on each run: make sure you are using a separate redis from dev!
 from python.utils.redis import application_redis_connection
 redis = application_redis_connection()
