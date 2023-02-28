@@ -1,9 +1,14 @@
+import pytest
+
+
+@pytest.mark.vcr
 def test_basic_query(client):
     response = client.post(
         "/query",
         json={
             "sql": "SELECT * FROM CUSTOMER ORDER BY created_at ASC LIMIT 1",
             "data_source_id": 1,
+            "allow_cached_queries": False,
         },
     )
 
