@@ -58,7 +58,7 @@ torchvision = [
 # torch = {version = "1.13.1", extras = ["cpu"]}
 
 waitress = "^2.1.2"
-sentry-sdk = { version = "^1.15.0", extras = ["flask"] }
+sentry-sdk = { version = "^1.16.0", extras = ["flask"] }
 
 deepmerge = "^1.1.0"
 autoflake = "^2.0.1"
