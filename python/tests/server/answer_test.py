@@ -14,8 +14,6 @@ def test_basic_answer(client):
         },
     )
 
-    breakpoint()
-
     # TODO this will be brittle, but I'm also curious when it will break
     assert response.json == {
         "data_source_id": 1,

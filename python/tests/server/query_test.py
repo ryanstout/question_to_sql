@@ -1,5 +1,7 @@
 import pytest
 
+# TODO this test requires all of the embeddings to be in place on-disk, which makes it harder to mock
+
 
 @pytest.mark.vcr
 def test_basic_query(client):

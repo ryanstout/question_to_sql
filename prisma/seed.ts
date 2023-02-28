@@ -1,5 +1,6 @@
-import { DataSourceType, PrismaClient } from "@prisma/client"
 import bcrypt from "bcryptjs"
+
+import { DataSourceType, PrismaClient } from "@prisma/client"
 
 const prisma = new PrismaClient()
 
@@ -38,12 +39,14 @@ async function seed() {
       businessId: business.id,
       type: DataSourceType.SNOWFLAKE,
       credentials: {
-        account: process.env.SNOWFLAKE_ACCOUNT,
-        username: process.env.SNOWFLAKE_USERNAME,
-        password: process.env.SNOWFLAKE_PASSWORD,
-        database: process.env.SNOWFLAKE_DATABASE,
-        schema: process.env.SNOWFLAKE_SCHEMA,
-        warehouse: process.env.SNOWFLAKE_WAREHOUSE,
+        // set to empty string so logic that relies on these fields existing works, even if the values are useless
+        // this is helpful for tests which have recorded values for snowflake
+        account: process.env.SNOWFLAKE_ACCOUNT || "",
+        username: process.env.SNOWFLAKE_USERNAME || "",
+        password: process.env.SNOWFLAKE_PASSWORD || "",
+        database: process.env.SNOWFLAKE_DATABASE || "",
+        schema: process.env.SNOWFLAKE_SCHEMA || "",
+        warehouse: process.env.SNOWFLAKE_WAREHOUSE || "",
       },
     },
   })
