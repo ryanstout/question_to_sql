@@ -1,5 +1,4 @@
 import datetime
-import os
 
 import sentry_sdk
 from decouple import config
@@ -8,7 +7,7 @@ import python.utils.db
 from python.schema.learned_ranker import LearnedRanker
 from python.schema.ranker import Ranker
 from python.schema.schema_builder import SchemaBuilder
-from python.schema.simple_schema_builder import SimpleSchemaBuilder
+from python.schema.simple_schema_builder import build_simple_schema
 from python.sql.exceptions import SqlInspectError
 from python.sql.sql_parser import SqlParser
 from python.sql.sql_resolve_and_fix import SqlResolveAndFix
@@ -28,6 +27,7 @@ def question_with_data_source_to_sql(data_source_id: int, question: str, engine:
         ranked_structure = LearnedRanker(data_source_id).rank(question)
     else:
         ranked_structure = Ranker(data_source_id).rank(question)
+
     log.debug("building schema")
 
     with log_execution_time("schema build"):
@@ -35,7 +35,7 @@ def question_with_data_source_to_sql(data_source_id: int, question: str, engine:
 
     log.debug("convert question and schema to sql")
     with log_execution_time("schema to sql"):
-        simple_schema = SimpleSchemaBuilder().build(db, data_source_id)
+        simple_schema = build_simple_schema(data_source_id)
         sql = _question_with_schema_to_sql(simple_schema, table_schema_limited_by_token_size, question, engine)
 
     log.debug("sql post transform", sql=sql)

@@ -1,4 +1,4 @@
-from python.schema.simple_schema_builder import SimpleSchemaBuilder
+from python.schema.simple_schema_builder import build_simple_schema
 from python.sql.sql_inspector import SqlInspector
 from python.sql.sql_parser import SqlParser
 from python.sql.types import DbElement, DbElementIds
@@ -15,7 +15,7 @@ def get_touch_points_ids(sql: str, data_source_id: int) -> list[DbElementIds]:
 
     Ex: ('order', 'financial_status', 'paid')
     """
-    simple_schema = SimpleSchemaBuilder().build(db, data_source_id)
+    simple_schema = build_simple_schema(data_source_id)
     ast = SqlParser().run(sql)
     inspector = SqlInspector(ast, simple_schema, SqlParser.in_dialect)
 
