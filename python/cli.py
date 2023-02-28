@@ -5,6 +5,7 @@ from python.importer import Importer
 from python.query_runner.snowflake import get_query_results, get_snowflake_cursor
 from python.questions import question_with_data_source_to_sql
 from python.utils.db import application_database_connection
+from python.utils.sql import normalize_fqn_quoting
 
 
 def table_output_with_format(array_of_dicts, table_format="md"):
@@ -58,25 +59,26 @@ def analysis(data_source_id: int, warehouse_name: str, database_name: str, schem
 
     cursor, _ = get_snowflake_cursor(data_source, without_context=True)
 
-    # In [86]: warehouse_list[0].keys()
-    # Out[86]: dict_keys(['name', 'state', 'type', 'size', 'running', 'queued', 'is_default', 'is_current', 'auto_suspend', 'auto_resume', 'available', 'provisioning', 'quiescing', 'other', 'created_on', 'resumed_on', 'updated_on', 'owner', 'comment', 'resource_monitor', 'actives', 'pendings', 'failed', 'suspended', 'uuid'])
-    warehouse_list = get_query_results(cursor, "SHOW WAREHOUSES", disable_query_protections=True)
+    if not warehouse_name:
+        # In [86]: warehouse_list[0].keys()
+        # Out[86]: dict_keys(['name', 'state', 'type', 'size', 'running', 'queued', 'is_default', 'is_current', 'auto_suspend', 'auto_resume', 'available', 'provisioning', 'quiescing', 'other', 'created_on', 'resumed_on', 'updated_on', 'owner', 'comment', 'resource_monitor', 'actives', 'pendings', 'failed', 'suspended', 'uuid'])
+        warehouse_list = get_query_results(cursor, "SHOW WAREHOUSES", disable_query_protections=True)
 
-    match len(warehouse_list):
-        case 0:
-            click.echo("no warehouses")
-            return
-        case 1:
-            warehouse = warehouse_list[0]
-            warehouse_name = warehouse["name"]
-            click.echo(f"only a single warehouse, selecting: {warehouse_name}")
-        case _:
-            click.echo("multiple warehouses, please pick ")
-            warehouse_headers = ["name", "state"]
-            click.echo(
-                markdown_table_output(list(f.pluck(warehouse_headers, warehouse_list)), headers=warehouse_headers)
-            )
-            return
+        match len(warehouse_list):
+            case 0:
+                click.echo("no warehouses")
+                return
+            case 1:
+                warehouse = warehouse_list[0]
+                warehouse_name = warehouse["name"]
+                click.echo(f"only a single warehouse, selecting: {warehouse_name}")
+            case _:
+                click.echo("multiple warehouses, please pick ")
+                warehouse_headers = ["name", "state"]
+                click.echo(
+                    markdown_table_output(list(f.pluck(warehouse_headers, warehouse_list)), headers=warehouse_headers)
+                )
+                return
 
     cursor.execute(f"use warehouse {warehouse_name};")
 
@@ -96,9 +98,11 @@ def analysis(data_source_id: int, warehouse_name: str, database_name: str, schem
         click.echo("need database & schema name to continue")
         return
 
+    click.echo(f"selecting database & schema: {database_name}.{schema_name}")
     cursor.execute(f"use {database_name}.{schema_name};")
 
     table_list = get_query_results(cursor, "SHOW TERSE TABLES", disable_query_protections=True)
+
     click.echo("\n\n# TABLE LIST\n\n")
     click.echo(f"Total count: {len(table_list)}\n\n")
     click.echo(markdown_table_output(table_list))
@@ -118,6 +122,13 @@ def analysis(data_source_id: int, warehouse_name: str, database_name: str, schem
 
     click.echo("\n\n# TABLE COUNT\n\n")
     click.echo(markdown_table_output(row_count_by_table))
+
+    table_names = [table["TABLE_NAME"] for table in row_count_by_table]
+    for name in table_names:
+        fqn = normalize_fqn_quoting(f"{database_name}.{schema_name}.{name}")
+        table_description = get_query_results(cursor, f"DESCRIBE TABLE {fqn}", disable_query_protections=True)
+        click.echo(f"\n\n# TABLE DESCRIPTION: {name}\n\n")
+        click.echo(markdown_table_output(table_description))
 
 
 @cli.command(help="create a vector index and related tables from a datasource")
