@@ -14,4 +14,4 @@ rm ./public/**/*.map
 rm ./build/*.map
 
 # run migrations on deploy, revert the deploy if something goes wrong
-prisma migrate deploy
+npx prisma migrate deploy
