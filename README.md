@@ -32,6 +32,12 @@ Upload stuff to prod ([helpful post](https://community.fly.io/t/scp-a-file-into-
 3. upload trained model `scp -r tmp/models root@knolbe-python.internal:/persisted-data/models`
 4. upload indexes `scp -r tmp/indexes root@knolbe-python.internal:/persisted-data/indexes`
 
+Increase persistence size (in gbs):
+
+```shell
+fly volumes extend vol_okgj5451oe8vy2wz -s 10 --config python.toml
+```
+
 ## [Docker](docker/readme.md)
 
 # Frontend
@@ -65,6 +71,12 @@ Get results from a datasource:
 
 ```shell
 http POST http://0.0.0.0:5000/query data_source_id:=1 'sql:="SELECT * FROM CUSTOMER LIMIT 10"'
+```
+
+You can also hit production:
+
+```shell
+http POST http://knolbe-python.fly.dev/question 'question:="my question"' data_source_id:=1
 ```
 
 ## CLI Tools

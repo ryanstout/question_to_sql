@@ -18,7 +18,8 @@
 
 # Docker
 
-- [ ] add git sha to build env https://artsy.github.io/blog/2018/09/10/Dockerhub-Stamping-Commits/
+- [ ] add git sha to build env https://artsy.github.io/blog/2018/09/10/Dockerhub-Stamping-Commits/ and https://community.fly.io/t/git-commit-sha-of-current-build/1870
+- [ ] Fix python release in sentry
 - [ ] we should not have to add prop-type to the package, but without it nivo is failing
 - [ ] can we only deploy the git version, not the local?
 - [ ] should add sentry versioning https://docs.sentry.io/platforms/javascript/guides/remix/sourcemaps/
@@ -48,6 +49,10 @@
 - [ ] npm alternative? https://pnpm.io/installation
 - [ ] cleaner stack traces with relative paths? https://github.com/tapjs/stack-utils
 
+# Javascript Infrastructure
+
+- [ ] implement timeouts across the stack, including fetches
+
 # Prisma
 
 - [ ] https://www.prisma.io/docs/concepts/components/prisma-client/working-with-prismaclient/logging
@@ -75,6 +80,11 @@
 - Cohere, Anthropic & OneA
 - https://twitter.com/ompemi/status/1628077623183126532
 
+# Python General
+
+- [ ] Stack trace on sentry seems to be limited
+- [ ] Sentry is not enabled locally, should use stdout DSN
+
 # Python Lang
 
 - [ ] explicitly version pip
@@ -84,6 +94,7 @@
 - [ ] typeguard for runtime type checking https://github.com/agronholm/typeguard
 - [ ] automatically remove unused imports https://github.com/PyCQA/isort/issues/1105
 - [ ] yeah agreed that pickle is fine, just confused as to why JSON didn't handle it correctly if it's all getting sent to the FE as JSON in the end :thinking_face: I'm guessing flask has a better default encoder? I have it on my personal TODO to investigate.
+- [ ] record mode in vcr doesn't work the same if run globally vs locally on a specific file
 
 # Python Testing
 
