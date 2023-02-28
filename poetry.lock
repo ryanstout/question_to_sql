@@ -954,6 +954,18 @@ ssh = ["paramiko"]
 tqdm = ["tqdm"]
 
 [[package]]
+name = "funcy"
+version = "1.18"
+description = "A fancy and practical functional tools"
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "funcy-1.18-py2.py3-none-any.whl", hash = "sha256:00ce91afc850357a131dc54f0db2ad8a1110d5087f1fa4480d7ea3ba0249f89d"},
+    {file = "funcy-1.18.tar.gz", hash = "sha256:15448d19a8ebcc7a585afe7a384a19186d0bd67cbf56fb42cd1fd0f76313f9b2"},
+]
+
+[[package]]
 name = "h11"
 version = "0.14.0"
 description = "A pure-Python, bring-your-own-I/O implementation of HTTP/1.1"
@@ -4092,4 +4104,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.10"
-content-hash = "7e8fa78fc562f63bd0a6bfb1fc462eab79f48f7fcafbae1d07824e9c20a76105"
+content-hash = "a82ab05b8ae6477a31a471d9d6a03b9d56a88bf95a7d008e3f1ace103c6db097"
