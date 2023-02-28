@@ -7,11 +7,9 @@ Takes in a set id and number of sets and splits using a mod on the id
 """
 
 import glob
-from typing import Tuple
 
 import numpy as np
 import torch
-from torch import Tensor
 from torch.utils.data import Dataset
 
 from python import utils
