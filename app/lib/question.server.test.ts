@@ -135,18 +135,24 @@ test("marks the query as invalid if it fails to execute", async () => {
   const pythonRequestSpy = vi
     .spyOn(pythonBackend, "pythonRequest")
     // generate SQL properly, then throw an exception when the SQL is executed
-    .mockReturnValueOnce(Promise.resolve({ sql: MOCKED_SQL_RESULT }))
-    // TODO should add more refined errors here when we've figured them out
-    .mockRejectedValueOnce(new Error("snowflake compilation error"))
+    .mockResolvedValueOnce({ sql: MOCKED_SQL_RESULT })
 
-  const questionResult = await createQuestion(
+  const createQuestionResult = await createQuestion(
     userId,
     dataSourceId,
     "This is a question that would fail to compile"
   )
 
+  expect(createQuestionResult.status).toBe("success")
+  expect(createQuestionResult.data).toBeNull()
+  expect(createQuestionResult.question.sql).not.toBeNull()
+
+  const runQuerySpy = vi
+    .spyOn(pythonBackend, "runQuery")
+    .mockRejectedValueOnce(new SyntaxError("snowflake compilation error"))
+
   const results = await getResultsFromQuestion({
-    questionId: questionResult.question.id,
+    questionId: createQuestionResult.question.id,
   })
 
   // the second call should throw an error, which should trigger an error
