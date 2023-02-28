@@ -1,6 +1,8 @@
 # A helper that builds the full schema with a cap on the number of value hints
 # for string fields. Builds the same data structure as ./ranker.py
 
+# TODO I don't think this is being used?
+
 
 class FullSchema:
     def build(self, db):

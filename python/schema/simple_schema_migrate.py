@@ -4,6 +4,8 @@ Migrate helper for moving tests from old format
 
 from python.sql.types import SimpleSchema
 
+# TODO can we remove this or move it into test/ helpers?
+
 
 def migrate(old_simple_schema):
     new_schema: SimpleSchema = {}
@@ -13,5 +15,3 @@ def migrate(old_simple_schema):
             new_schema[table_name]["columns"][column_name.lower()] = {"name": column_name}
 
     print(new_schema)
-
-    return None

@@ -3,7 +3,7 @@
 
 import numpy as np
 
-from python.sql.types import DbElement, DbElementIds
+from python.sql.types import DbElementIds
 from python.utils.logging import log
 
 

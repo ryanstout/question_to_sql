@@ -13,8 +13,8 @@ def table_output_with_format(array_of_dicts, table_format="md"):
 
     if table_format == "md":
         return markdown_table_output(array_of_dicts)
-    else:
-        return csv_table_output(array_of_dicts)
+
+    return csv_table_output(array_of_dicts)
 
 
 def markdown_table_output(array_of_dicts, headers: str | list[str] = "keys"):
@@ -132,8 +132,8 @@ def import_datasource(**kwargs):
 @cli.command(help="convert a natural language question to sql")
 @click.option("--data-source-id", type=int, required=True)
 @click.option("--question", type=str, required=True)
-def question(data_source_id, questionText):
-    sql = question_with_data_source_to_sql(data_source_id, questionText)
+def question(data_source_id, question_text):
+    sql = question_with_data_source_to_sql(data_source_id, question_text)
     click.echo(sql)
 
 
