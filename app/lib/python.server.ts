@@ -4,6 +4,17 @@ import invariant from "tiny-invariant"
 import { isMockedPythonServer } from "~/lib/environment"
 import { log } from "~/lib/logging"
 
+import * as Sentry from "@sentry/remix"
+
+export function throwIfNotPythonError(error: any) {
+  if (error instanceof SyntaxError) {
+    Sentry.captureException(error)
+    return
+  }
+
+  throw error
+}
+
 // runs SQL and gets a result, lower-level function which should not be run directly
 export async function runQuery(
   dataSourceId: number,

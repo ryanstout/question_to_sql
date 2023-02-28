@@ -5,7 +5,7 @@ import { EvaluationStatus, Prisma } from "@prisma/client"
 import { prisma } from "~/db.server"
 import f from "~/functional"
 import { log } from "~/lib/logging"
-import { runQuery } from "~/lib/python.server"
+import { runQuery, throwIfNotPythonError } from "~/lib/python.server"
 import { questionToSql } from "~/lib/question.server"
 
 const evaluationQuestionsInclude = {
@@ -37,9 +37,19 @@ export async function loadEvaluationQuestionGroup(evaluationGroupId: number) {
   if (lastQuestion && f.isBlank(evaluationGroup.correctSql)) {
     log.info("generating sql for evaluation question group")
 
-    const generatedSql =
-      lastQuestion.codexSql ??
-      (await questionToSql(evaluationGroup.dataSourceId, lastQuestion.question))
+    let generatedSql: string
+
+    try {
+      generatedSql =
+        lastQuestion.codexSql ??
+        (await questionToSql(
+          evaluationGroup.dataSourceId,
+          lastQuestion.question
+        ))
+    } catch (err: any) {
+      throwIfNotPythonError(err)
+      return evaluationGroup
+    }
 
     // cache generated SQL on the question
     if (!lastQuestion.codexSql) {
@@ -64,14 +74,21 @@ export async function loadEvaluationQuestionGroup(evaluationGroupId: number) {
   if (evaluationGroup.correctSql && f.isEmpty(evaluationGroup.results)) {
     log.info("result cache empty, pulling results from data source")
 
-    const results = await runQuery(
-      // TODO this is inefficient to include these objects on each update
-      //      but it avoids having to manage model state right now
-      evaluationGroup.dataSourceId,
-      evaluationGroup.correctSql,
-      // allow cached queries on training system, but not user side (yet)
-      true
-    )
+    let results: string
+
+    try {
+      results = await runQuery(
+        // TODO this is inefficient to include these objects on each update
+        //      but it avoids having to manage model state right now
+        evaluationGroup.dataSourceId,
+        evaluationGroup.correctSql,
+        // allow cached queries on training system, but not user side (yet)
+        true
+      )
+    } catch (err: any) {
+      throwIfNotPythonError(err)
+      return evaluationGroup
+    }
 
     evaluationGroup = await prisma.evaluationQuestionGroup.update({
       where: { id: evaluationGroupId },

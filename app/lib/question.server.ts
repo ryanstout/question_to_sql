@@ -6,23 +6,16 @@ import { FeedbackState } from "@prisma/client"
 import { prisma } from "~/db.server"
 import { isMockedPythonServer } from "~/lib/environment"
 import { log } from "~/lib/logging"
-import { pythonRequest, runQuery } from "~/lib/python.server"
-
-import * as Sentry from "@sentry/remix"
+import {
+  pythonRequest,
+  runQuery,
+  throwIfNotPythonError,
+} from "~/lib/python.server"
 
 export interface QuestionResult {
   question: Question
   status: "success" | "error"
   data: any[] | null
-}
-
-function throwIfNotPythonError(error: any) {
-  if (error instanceof SyntaxError) {
-    Sentry.captureException(error)
-    return
-  }
-
-  throw error
 }
 
 async function updateQuestionStateAndReturnError(
