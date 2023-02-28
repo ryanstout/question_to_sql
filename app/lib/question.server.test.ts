@@ -112,6 +112,25 @@ test("gets results from question ID", async () => {
   expect(results.data).toEqual(MOCKED_DATASOURCE_RESULTS)
 })
 
+test("marks the question as ungenerated if openai fails", async () => {
+  const pythonRequestSpy = vi
+    .spyOn(pythonBackend, "pythonRequest")
+    // TODO should add more refined errors here when we've figured them out
+    .mockRejectedValueOnce(new SyntaxError("bad json from server"))
+
+  const questionResult = await createQuestion(
+    userId,
+    dataSourceId,
+    "This is a question that would fail to generate"
+  )
+
+  expect(questionResult.status).toBe("error")
+  expect(questionResult.data).toBeNull()
+
+  expect(questionResult.question.sql).toBeNull()
+  expect(questionResult.question.feedbackState).toBe(FeedbackState.UNGENERATED)
+})
+
 test("marks the query as invalid if it fails to execute", async () => {
   const pythonRequestSpy = vi
     .spyOn(pythonBackend, "pythonRequest")

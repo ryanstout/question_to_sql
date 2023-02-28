@@ -4,8 +4,6 @@ import invariant from "tiny-invariant"
 import { isMockedPythonServer } from "~/lib/environment"
 import { log } from "~/lib/logging"
 
-import * as Sentry from "@sentry/remix"
-
 // runs SQL and gets a result, lower-level function which should not be run directly
 export async function runQuery(
   dataSourceId: number,
@@ -24,8 +22,6 @@ export async function runQuery(
 
   return response["results"]
 }
-
-class QueryRunError extends Error {}
 
 // TODO we need an openapi spec for the python server so we have full stack typing
 export async function pythonRequest(endpoint: string, requestParams: any) {
@@ -50,16 +46,6 @@ export async function pythonRequest(endpoint: string, requestParams: any) {
     body: JSON.stringify(requestParams),
   })
 
-  try {
-    const json = await response.json()
-    return json
-  } catch (e: any) {
-    // catch JSON parse errors and rethrow them with more context
-    if (e instanceof SyntaxError) {
-      Sentry.captureException(e)
-      throw new QueryRunError("Could not run generated SQL against data source")
-    } else {
-      throw e
-    }
-  }
+  const json = await response.json()
+  return json
 }

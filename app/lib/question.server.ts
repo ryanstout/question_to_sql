@@ -7,34 +7,42 @@ import { prisma } from "~/db.server"
 import { isMockedPythonServer } from "~/lib/environment"
 import { log } from "~/lib/logging"
 import { pythonRequest, runQuery } from "~/lib/python.server"
-import type { ResponseError } from "~/models/responseError.server"
 
 import * as Sentry from "@sentry/remix"
 
 export interface QuestionResult {
   question: Question
   status: "success" | "error"
-  error?: ResponseError | null
   data: any[] | null
 }
 
-export async function getQuestionRecord(
-  questionId: number,
-  userId: number
-): Promise<Question | null> {
-  // TODO should this be scoped to DataSource id instead?
-  return await prisma.question.findFirst({
+function throwIfNotPythonError(error: any) {
+  if (error instanceof SyntaxError) {
+    Sentry.captureException(error)
+    return
+  }
+
+  throw error
+}
+
+async function updateQuestionStateAndReturnError(
+  question: Question,
+  state: FeedbackState
+): Promise<QuestionResult> {
+  const updatedQuestion = await prisma.question.update({
     where: {
-      AND: {
-        id: {
-          equals: questionId,
-        },
-        userId: {
-          equals: userId,
-        },
-      },
+      id: question.id,
+    },
+    data: {
+      feedbackState: state,
     },
   })
+
+  return {
+    question: updatedQuestion,
+    status: "error",
+    data: null,
+  }
 }
 
 // TODO we should probably just allow a questionn record to be passed
@@ -63,10 +71,10 @@ export async function getResultsFromQuestion({
   invariant(retrievedQuestionRecord !== null, "question record not found")
   invariant(retrievedQuestionRecord.sql !== null, "sql is null")
 
-  try {
-    const targetSql =
-      retrievedQuestionRecord.userSql || retrievedQuestionRecord.sql
+  const targetSql =
+    retrievedQuestionRecord.userSql || retrievedQuestionRecord.sql
 
+  try {
     // this avoids making an additional request to openai
     const data = await runQuery(
       retrievedQuestionRecord.dataSourceId,
@@ -80,26 +88,12 @@ export async function getResultsFromQuestion({
       data: data,
     }
   } catch (e: any) {
-    // TODO add error refinement here
-    Sentry.captureException(e)
+    throwIfNotPythonError(e)
 
-    // if snowflake is not responding properly, SQL is malformed and it's an invalid query
-    retrievedQuestionRecord = await prisma.question.update({
-      data: {
-        feedbackState: FeedbackState.INVALID,
-      },
-      where: { id: questionId },
-    })
-
-    return {
-      question: retrievedQuestionRecord,
-      status: "error",
-      error: {
-        code: 500,
-        message: "Error running query in Snowflake",
-      },
-      data: null,
-    }
+    return await updateQuestionStateAndReturnError(
+      retrievedQuestionRecord,
+      FeedbackState.INVALID
+    )
   }
 }
 
@@ -131,7 +125,7 @@ export async function updateQuestion(
   }
 }
 
-// creates a question, but does not get the results
+// creates a question, generates sql, but does not get the results
 export async function createQuestion(
   userId: number,
   dataSourceId: number,
@@ -146,14 +140,25 @@ export async function createQuestion(
     },
   })
 
-  // TODO handle open AI failure here, although this is low pri since if `sql` is null, we can identify when openai fails
-  const sql = await questionToSql(dataSourceId, question)
-  log.debug("sql from python", { sql })
+  // we can identify when openai fails by empty sql, but setting the state directly is better
+  let sql: string | null = null
+
+  try {
+    sql = await questionToSql(dataSourceId, question)
+  } catch (e: any) {
+    throwIfNotPythonError(e)
+
+    return await updateQuestionStateAndReturnError(
+      questionRecord,
+      FeedbackState.UNGENERATED
+    )
+  }
+
+  log.debug("generated sql", { sql })
 
   questionRecord = await prisma.question.update({
     where: {
       id: questionRecord.id,
-      // TODO should add user filter here
     },
     data: {
       sql: sql,

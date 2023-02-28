@@ -27,7 +27,6 @@ import { prisma } from "~/db.server"
 import type { QuestionResult } from "~/lib/question.server"
 import {
   createQuestion,
-  getQuestionRecord,
   getResultsFromQuestion,
   updateQuestion,
 } from "~/lib/question.server"
@@ -40,6 +39,14 @@ export enum QuestionActions {
   UPDATE = "update",
   FEEDBACK = "feedback",
   DELETE = "delete",
+}
+
+function abortOnBackendError(questionResults: QuestionResult) {
+  if (questionResults.status === "error") {
+    throw new Response("backend server error", {
+      status: 500,
+    })
+  }
 }
 
 export async function action({ request }: ActionArgs) {
@@ -55,16 +62,17 @@ export async function action({ request }: ActionArgs) {
     const questionText = await parseQuestionText(request)
 
     // this does not run the query on snowflake, this will happen on redirect
-    const questionRecord = await createQuestion(
+    const questionResult = await createQuestion(
       user.id,
       dataSource.id,
       questionText
     )
 
-    // TODO shouldn't there be helpers for the route strings? Did we forget everything we learned from rails?
+    abortOnBackendError(questionResult)
+
     return redirect(
       $path("/question/:questionId?", {
-        questionId: questionRecord.question.id,
+        questionId: questionResult.question.id,
       })
     )
   }
@@ -88,6 +96,8 @@ export async function action({ request }: ActionArgs) {
 
     const questionResult = await updateQuestion(question, userSql)
 
+    abortOnBackendError(questionResult)
+
     return json(questionResult)
   }
 
@@ -97,7 +107,7 @@ export async function action({ request }: ActionArgs) {
       feedback: z.nativeEnum(FeedbackState),
     })
 
-    let questionRecord = await prisma.question.findFirst({
+    let questionRecord = await prisma.question.findFirstOrThrow({
       where: {
         userId: user.id,
         id: questionId,
@@ -139,19 +149,21 @@ export async function loader({ params, request }: LoaderArgs) {
     return null
   }
 
-  const questionRecord = await getQuestionRecord(questionId, user.id)
+  const questionRecord = await prisma.question.findFirstOrThrow({
+    where: {
+      userId: user.id,
+      id: questionId,
+    },
+  })
 
-  if (!questionRecord) {
-    throw new Response("Question not found", { status: 404 })
-  }
+  // TODO we should handle pulling question record consistently and present a 404, need a helper for this
+  // if (!questionRecord) {
+  //   throw new Response("Question not found", { status: 404 })
+  // }
 
   const questionResults = await getResultsFromQuestion({ questionRecord })
 
-  if (questionResults.status === "error") {
-    throw new Response(questionResults.error?.message, {
-      status: questionResults.error?.code,
-    })
-  }
+  abortOnBackendError(questionResults)
 
   return json(questionResults)
 }
