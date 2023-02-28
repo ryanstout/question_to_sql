@@ -20,6 +20,7 @@ from python.utils.openai_rate_throttled import openai_throttled
 db = python.utils.db.application_database_connection()
 
 use_learned_ranker = config("ENABLE_LEARNED_RANKER", default=True, cast=bool)
+retry_openai_variants = config("ENABLE_OPENAI_VARIANT_RETRY", default=False, cast=bool)
 
 
 def question_with_data_source_to_sql(data_source_id: int, question: str, engine: str = "code-davinci-002") -> str:
@@ -35,17 +36,17 @@ def question_with_data_source_to_sql(data_source_id: int, question: str, engine:
     log.debug("convert question and schema to sql")
     with log_execution_time("schema to sql"):
         simple_schema = SimpleSchemaBuilder().build(db, data_source_id)
-        sql = question_with_schema_to_sql(simple_schema, table_schema_limited_by_token_size, question, engine)
+        sql = _question_with_schema_to_sql(simple_schema, table_schema_limited_by_token_size, question, engine)
 
     log.debug("sql post transform", sql=sql)
 
     return sql
 
 
-def question_with_schema_to_sql(
+def _question_with_schema_to_sql(
     simple_schema: SimpleSchema, schema: str, question: str, engine: str = "code-davinci-002"
 ) -> str:
-    prompt = create_prompt(schema, question)
+    prompt = _create_prompt(schema, question)
 
     log.debug("sending prompt to openai", prompt=prompt)
 
@@ -56,6 +57,7 @@ def question_with_schema_to_sql(
 
     run_count = 0
     temperature = 0.0
+
     while True:
         with log_execution_time("openai completion"):
 
@@ -86,23 +88,27 @@ def question_with_schema_to_sql(
         log.debug("sql pre transform", ai_sql=ai_sql)
 
         # Verify that the ai sql is valud
-        ai_sql = fixup_sql(simple_schema, ai_sql)
+        ai_sql = _fixup_sql(simple_schema, ai_sql)
+
         if ai_sql:
             # If we got back None, try the next result
             break
-        else:
-            # If we got back None, try the next result
-            run_count += 1
 
-            # If openAI is generating invalid sql queries, we could increase N and work our way down, but this will
-            # run us out of tokens pretty quickly. Instead we bump the temperature a bit and try again.
-            #
-            # TODO: if OpenAI ever bumps the token limits, we should switch to taking N. Might be worth creating a
-            # smaller prompt and then trying to generate more results.
-            temperature += 0.03
+        if not retry_openai_variants:
+            break
 
-            if run_count > 4:
-                break
+        # If we got back None, try the next result
+        run_count += 1
+
+        # If openAI is generating invalid sql queries, we could increase N and work our way down, but this will
+        # run us out of tokens pretty quickly. Instead we bump the temperature a bit and try again.
+        #
+        # TODO: if OpenAI ever bumps the token limits, we should switch to taking N. Might be worth creating a
+        # smaller prompt and then trying to generate more results.
+        temperature += 0.03
+
+        if run_count > 4:
+            break
 
     if ai_sql is None:
         raise ValueError("OpenAI failed to generate a valid SQL query")
@@ -110,7 +116,7 @@ def question_with_schema_to_sql(
     return ai_sql
 
 
-def fixup_sql(simple_schema: SimpleSchema, ai_sql: str) -> str | None:
+def _fixup_sql(simple_schema: SimpleSchema, ai_sql: str) -> str | None:
     """
     Returns fixed sql if it is valid, otherwise returns None
     """
@@ -127,7 +133,7 @@ def fixup_sql(simple_schema: SimpleSchema, ai_sql: str) -> str | None:
             return None
 
 
-def create_prompt(
+def _create_prompt(
     schema: str,
     question: str,
     use_global_instruct: bool = True,
