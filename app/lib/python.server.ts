@@ -7,6 +7,8 @@ import { log } from "~/lib/logging"
 import * as Sentry from "@sentry/remix"
 
 export function throwIfNotPythonError(error: any) {
+  // import { FetchError } from "@remix-run/web-fetch/dist/src/errors/fetch-error"
+  // || error instanceof FetchError
   if (error instanceof SyntaxError) {
     Sentry.captureException(error)
     return
