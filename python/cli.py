@@ -1,7 +1,10 @@
 import click
-from importer import Importer
 
+import python.utils.functional as f
+from python.importer import Importer
+from python.query_runner.snowflake import get_query_results, get_snowflake_cursor
 from python.questions import question_with_data_source_to_sql
+from python.utils.db import application_database_connection
 
 
 def table_output_with_format(array_of_dicts, table_format="md"):
@@ -42,7 +45,6 @@ def cli(verbose):
 
 
 # TODO this is hacky and broken, we need to decide on a functional library
-"""
 @cli.command(help="Inspect a data source before importing")
 @click.option("--data-source-id", required=True, type=int)
 @click.option("--warehouse-name", type=str)
@@ -72,7 +74,7 @@ def analysis(data_source_id: int, warehouse_name: str, database_name: str, schem
             click.echo("multiple warehouses, please pick ")
             warehouse_headers = ["name", "state"]
             click.echo(
-                markdown_table_output(list(R.pluck(warehouse_headers, warehouse_list)), headers=warehouse_headers)
+                markdown_table_output(list(f.pluck(warehouse_headers, warehouse_list)), headers=warehouse_headers)
             )
             return
 
@@ -97,37 +99,25 @@ def analysis(data_source_id: int, warehouse_name: str, database_name: str, schem
     cursor.execute(f"use {database_name}.{schema_name};")
 
     table_list = get_query_results(cursor, "SHOW TERSE TABLES", disable_query_protections=True)
-    print("\n\n# TABLE LIST\n\n")
-    print(f"Total count: {len(table_list)}\n\n")
+    click.echo("\n\n# TABLE LIST\n\n")
+    click.echo(f"Total count: {len(table_list)}\n\n")
     click.echo(markdown_table_output(table_list))
 
     # the INFORMATION_SCHEMA is really valuable! It caches row count data, and a bunch of other stuff
     # https://stackoverflow.com/questions/59058877/query-to-get-the-row-counts-of-all-the-tables-in-a-database-in-snowflake
     row_count_by_table = get_query_results(
         cursor,
-        f"SELECT table_name, row_count FROM {database_name}.INFORMATION_SCHEMA.TABLES",
+        f"""
+        SELECT table_name, row_count
+        FROM {database_name}.INFORMATION_SCHEMA.TABLES
+        WHERE table_schema = '{schema_name}'
+        ORDER BY ROW_COUNT
+        """,
         disable_query_protections=True,
     )
 
-    table_counts = get_query_results(
-        cursor, f"select * from tables where table_schema = '{schema_name}';", disable_query_protections=True
-    )
-
-    def get_table_count(cursor, table_name):
-        return get_query_results(cursor, f"select count(*) as count from {table_name}", disable_query_protections=True)[
-            0
-        ]["COUNT"]
-
-    count_table = []
-    for name in R.pluck("name", table_list):
-        try:
-            count_table.append({"count": get_table_count(cursor, name), "name": name})
-        except Exception:
-            click.echo(f"failed to get table count for {name}")
-
-    print("\n\n# TABLE COUNT\n\n")
-    click.echo(markdown_table_output(count_table))
-"""
+    click.echo("\n\n# TABLE COUNT\n\n")
+    click.echo(markdown_table_output(row_count_by_table))
 
 
 @cli.command(help="create a vector index and related tables from a datasource")
