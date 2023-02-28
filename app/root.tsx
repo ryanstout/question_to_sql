@@ -32,6 +32,7 @@ export async function loader({ request }: LoaderArgs) {
     ENV: {
       SENTRY_DSN: process.env.SENTRY_DSN,
       LOG_LEVEL: process.env.LOG_LEVEL,
+      NODE_ENV: process.env.NODE_ENV,
     },
     // TODO this seems strange... is this used anywhere? Why wouldn't you just use `getUser`?
     // We make the user available in root, then all children can useMatchesData to
