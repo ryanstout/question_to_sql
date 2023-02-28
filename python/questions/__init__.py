@@ -21,8 +21,14 @@ db = python.utils.db.application_database_connection()
 use_learned_ranker = config("ENABLE_LEARNED_RANKER", default=True, cast=bool)
 retry_openai_variants = config("ENABLE_OPENAI_VARIANT_RETRY", default=False, cast=bool)
 
+DEFAULT_ENGINE = "code-davinci-002"
 
-def question_with_data_source_to_sql(data_source_id: int, question: str, engine: str = "code-davinci-002") -> str:
+if config("USE_CHATGPT_MODEL", default=False, cast=bool):
+    # NOTE: Doesn't work atm
+    DEFAULT_ENGINE = "text-chat-davinci-002-20230126"
+
+
+def question_with_data_source_to_sql(data_source_id: int, question: str, engine: str = DEFAULT_ENGINE) -> str:
     if use_learned_ranker:
         ranked_structure = LearnedRanker(data_source_id).rank(question)
     else:
