@@ -12,11 +12,13 @@ import { Form, useFetcher, useLoaderData } from "@remix-run/react"
 import {
   ActionIcon,
   Button,
+  Center,
   Checkbox,
   Grid,
   Stack,
   Text,
   Textarea,
+  createStyles,
 } from "@mantine/core"
 import { useInputState } from "@mantine/hooks"
 
@@ -41,6 +43,15 @@ import f from "~/functional"
 import { log } from "~/lib/logging"
 
 import { IconTrash } from "@tabler/icons-react"
+
+const useStyles = createStyles((theme) => ({
+  columnDivider: {
+    border: 0,
+    borderLeft: 1,
+    borderStyle: "solid",
+    borderColor: theme.colors.gray[3],
+  },
+}))
 
 type EvaluationQuestionGroupWithQuestionsAndDataSource =
   EvaluationQuestionGroup & {
@@ -233,7 +244,7 @@ export default function EvaluationGroupView() {
             value={question.id}
           />
           <ActionIcon color="red" type="submit">
-            <IconTrash size={16} />
+            <IconTrash size={18} />
           </ActionIcon>
         </Form>
       ),
@@ -256,12 +267,16 @@ export default function EvaluationGroupView() {
     )
   }
 
+  const { classes } = useStyles()
+
   return (
     <>
-      <Grid.Col span={3}>
+      <Grid.Col span={3} className={classes.columnDivider}>
         <Text mb={15}>
-          {evaluationQuestionGroup.dataSource.name} #
-          {evaluationQuestionGroup.dataSourceId}
+          <Center>
+            DataSource: {evaluationQuestionGroup.dataSource.name} #
+            {evaluationQuestionGroup.dataSourceId}
+          </Center>
         </Text>
         <DataTable<lastQuestionType>
           minHeight={150}
@@ -270,7 +285,7 @@ export default function EvaluationGroupView() {
           columns={dataColumns}
         />
       </Grid.Col>
-      <Grid.Col span={7}>
+      <Grid.Col span={7} className={classes.columnDivider}>
         <Stack>
           <QuestionBox
             isLoading={isLoading}
