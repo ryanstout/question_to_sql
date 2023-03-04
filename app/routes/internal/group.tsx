@@ -157,6 +157,7 @@ export default function EvaluationGroupSelection() {
         />
         <Box sx={{ height: "100%" }}>
           <DataTable
+            minHeight={150}
             striped
             highlightOnHover
             records={filteredEvaluationGroupList}

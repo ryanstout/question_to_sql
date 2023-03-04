@@ -176,6 +176,7 @@ export function QuestionSelection({
         </Button>
         <Box sx={{ height: "100%" }}>
           <DataTable
+            minHeight={150}
             withBorder
             borderRadius="sm"
             withColumnBorders
