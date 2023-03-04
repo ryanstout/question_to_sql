@@ -21,7 +21,7 @@ pip = "^23.0.1"
 # TODO torch does not support 3.10 yet!
 python = "~3.10"
 sqlglot = "^10.4.3"
-snowflake-connector-python = "^2.9.0"
+snowflake-connector-python = "^3.0.0"
 python-decouple = "^3.7"
 openai = { extras = ["embeddings"], version = "^0.26.5" }
 ipython = "^8.8.0"
