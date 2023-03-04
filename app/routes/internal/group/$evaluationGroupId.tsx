@@ -264,6 +264,7 @@ export default function EvaluationGroupView() {
           {evaluationQuestionGroup.dataSourceId}
         </Text>
         <DataTable<lastQuestionType>
+          minHeight={150}
           striped
           records={evaluationQuestionGroup.evaluationQuestions}
           columns={dataColumns}
