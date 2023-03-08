@@ -22,7 +22,7 @@ pip = "^23.0.1"
 python = "~3.10"
 sqlglot = "^10.4.3"
 snowflake-connector-python = "^3.0.0"
-python-decouple = "^3.7"
+python-decouple = "^3.8"
 openai = { extras = ["embeddings"], version = "^0.26.5" }
 ipython = "^8.8.0"
 faiss-cpu = "^1.7.3"

@@ -2651,14 +2651,14 @@ six = ">=1.5"
 
 [[package]]
 name = "python-decouple"
-version = "3.7"
+version = "3.8"
 description = "Strict separation of settings from code."
 category = "main"
 optional = false
 python-versions = "*"
 files = [
-    {file = "python-decouple-3.7.tar.gz", hash = "sha256:e88a8d6bdf3b07d471a854099e455e20a6fa7a4d6ecf8631b250e3db654336e6"},
-    {file = "python_decouple-3.7-py3-none-any.whl", hash = "sha256:1596dad2670cca5b1f87d087d9adb6a1958c590df346b85d4b19a9d6f0d52cef"},
+    {file = "python-decouple-3.8.tar.gz", hash = "sha256:ba6e2657d4f376ecc46f77a3a615e058d93ba5e465c01bbe57289bfb7cce680f"},
+    {file = "python_decouple-3.8-py3-none-any.whl", hash = "sha256:d0d45340815b25f4de59c974b855bb38d03151d81b037d9e3f463b0c9f8cbd66"},
 ]
 
 [[package]]
@@ -3206,6 +3206,10 @@ optional = false
 python-versions = ">=3.7"
 files = [
     {file = "snowflake-connector-python-3.0.0.tar.gz", hash = "sha256:17411b811492fe460a5033e17fa7ae33478ba88a958d0b070ba0bd6594910881"},
+    {file = "snowflake_connector_python-3.0.0-1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:2e000296e41a03eeada1827bafa2374f10b7d30ecb8c5bdc5a7a9464965a34c7"},
+    {file = "snowflake_connector_python-3.0.0-1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:2949fb08ef627f9ec52a1cb34db222a58dcdae47f7377a09d54f3537e85a3e32"},
+    {file = "snowflake_connector_python-3.0.0-1-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:4b40f2378d1dd3af69d2806341d730dc488cb1837cec77df0a02b2eee684015b"},
+    {file = "snowflake_connector_python-3.0.0-1-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:8e3341c83ccad53bf5c39b7cbfbb01dfbfef9f8b457a9b10d8defbfffd66a172"},
     {file = "snowflake_connector_python-3.0.0-cp310-cp310-macosx_10_14_x86_64.whl", hash = "sha256:551300e4c2d39d370c8a8c4b826ca717b63d8e4fb814a3e240c0fe28ee23886c"},
     {file = "snowflake_connector_python-3.0.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:9df2f0cfb69c98362025cabacbb5df280422a1f988289c5b93df59f6d74a360f"},
     {file = "snowflake_connector_python-3.0.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:8fb51c663b5c92b70ee2169a42717941b3192f32e925fea0f4f2b25e045ecba6"},
@@ -4122,4 +4126,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.10"
-content-hash = "fcf18f8d84d47dee127e4788e02184ce7d0a75b341ea75ed1cace71406f0509a"
+content-hash = "34be9dbca18aed83bba359f4ed8a3147c4629e7f2eeb1b358ba94878356e6295"
