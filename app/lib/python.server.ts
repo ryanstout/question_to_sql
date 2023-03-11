@@ -1,6 +1,8 @@
 // NOTE this file is tightly coupled to the question.server, but extracted out so we can easily mock it in tests
 import invariant from "tiny-invariant"
 
+import axios from "axios"
+
 import { isMockedPythonServer } from "~/lib/environment"
 import { log } from "~/lib/logging"
 
@@ -51,14 +53,17 @@ export async function pythonRequest(endpoint: string, requestParams: any) {
 
   // TODO if the request takes too long, this just times out and doesn't respond
   //      need to use axios or something to get a timeout, fetch doesn't have one :/
-  const response = await fetch(postURL, {
+  const response = await axios(postURL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(requestParams),
+    data: requestParams,
+
+    // fly.io has a 60s proxy timeout
+    timeout: 59_000,
   })
 
-  const json = await response.json()
+  const json = await response.data
   return json
 }
