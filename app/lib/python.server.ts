@@ -1,7 +1,7 @@
 // NOTE this file is tightly coupled to the question.server, but extracted out so we can easily mock it in tests
 import invariant from "tiny-invariant"
 
-import axios from "axios"
+import axios, { AxiosError } from "axios"
 
 import { isMockedPythonServer } from "~/lib/environment"
 import { log } from "~/lib/logging"
@@ -9,9 +9,7 @@ import { log } from "~/lib/logging"
 import * as Sentry from "@sentry/remix"
 
 export function throwIfNotPythonError(error: any) {
-  // import { FetchError } from "@remix-run/web-fetch/dist/src/errors/fetch-error"
-  // || error instanceof FetchError
-  if (error instanceof SyntaxError) {
+  if (error instanceof SyntaxError || error instanceof AxiosError) {
     Sentry.captureException(error)
     return
   }
