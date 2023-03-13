@@ -3,7 +3,7 @@ from contextlib import ContextDecorator
 from time import perf_counter
 from typing import Optional, TypeAlias, TypeVar, Union
 
-from utils.logging import log
+from python.utils.logging import log
 
 
 def unique(values):
