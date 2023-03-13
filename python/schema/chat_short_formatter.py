@@ -17,6 +17,8 @@ def create_short_format(data_source_id: int):
         unqualified_name = sql.unqualified_table_name(table.fullyQualifiedName)
         output += f"table: {unqualified_name.lower()}\n"
 
+        assert table.columns is not None
+
         for column in table.columns:
             output += f" {column.name.lower().replace('_', ' ')}\n"
 
