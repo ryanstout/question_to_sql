@@ -1,5 +1,6 @@
 import datetime
 import re
+import typing as t
 
 import sentry_sdk
 from decouple import config
@@ -89,6 +90,10 @@ def _question_with_prompt(
                     presence_penalty=0,
                     frequency_penalty=0,
                 )
+
+                # TODO adjust the `ChoicesItem` to include turbo responses
+                result = t.cast(dict, result)
+
                 ai_sql = result["choices"][0]["message"]["content"]
 
                 # Extract inside of backticks if backticks are present
