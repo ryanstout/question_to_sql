@@ -16,7 +16,7 @@ from python.utils.sql import unqualified_table_name
 from python.utils.tokens import count_tokens
 
 from prisma import Prisma
-from prisma.models import DataSourceTableColumn
+from prisma.models import DataSourceTableColumn, DataSourceTableDescription
 
 # from transformers import GPT2Tokenizer
 
@@ -40,21 +40,21 @@ TableSchema = t.List[TableRank]
 
 
 class SchemaBuilder:
-    def __init__(self, db: Prisma, engine: str = "code-davinci-002"):
+    available_tokens: int
+    original_available_tokens: int
+
+    def __init__(self, db: Prisma):
         self.db: Prisma = db
         self.cached_columns = {}
         self.cached_table_column_ids = {}
-        self.cached_tables = {}
+        self.cached_tables: dict[int, DataSourceTableDescription] = {}
         self.tokens_so_far = 0
 
-        if engine == "text-chat-davinci-002-20230126":
-            # chatgpt
-            self.token_count_limit = 4_000 - 1_024
-        else:
-            # codex
-            self.token_count_limit = 7_500 - 1_024
-
-    def build(self, data_source_id: int, ranked_schema: SCHEMA_RANKING_TYPE) -> str:
+    def build(self, data_source_id: int, ranked_schema: SCHEMA_RANKING_TYPE, available_tokens: int) -> str:
+        # The available tokens is determiend based on the engine and the amount of tokens used for the rest of the
+        # prompt
+        self.available_tokens = available_tokens
+        self.original_available_tokens = available_tokens
         self.cache_columns_and_tables(data_source_id)
 
         return self.generate_sql_from_element_rank(ranked_schema)
@@ -96,7 +96,10 @@ class SchemaBuilder:
         column = self.get_data_source_table_column(column_id)
 
         if re.search("^VARCHAR", column.type):
-            col_type = "VARCHAR"
+            if SqlParser.in_dialect == "postgres":
+                col_type = "VARCHAR"
+            else:
+                col_type = "TEXT"
         elif re.search("^TIMESTAMP_N?TZ", column.type):
             col_type = "TIMESTAMP"
         elif re.search("^VARIANT", column.type):
@@ -106,6 +109,8 @@ class SchemaBuilder:
                 # NUMBER(38,0) is how int's get encoded in snowflake via fivetran
                 col_type = column.type.replace("NUMBER(38,0)", "INTEGER")
                 col_type = col_type.replace("NUMBER", "NUMERIC")
+            elif SqlParser.in_dialect == "snowflake":
+                col_type = column.type.replace("NUMBER(38,0)", "NUMBER")
             else:
                 # Don't replace it if it's snowflake
                 col_type = column.type
@@ -129,7 +134,7 @@ class SchemaBuilder:
             rendered_choices = f" -- possible values include: {rendered_choice_list}"
 
         # `column1 datatype(length) column_contraint,`
-        return f"\t{column.name.lower()} {col_type.lower()},{rendered_choices}"
+        return f" {column.name.lower()} {col_type.lower()},{rendered_choices}"
 
     def generate_sql_table_describe(self, table_rank: TableRank) -> str:
         column_sql = []
@@ -182,7 +187,7 @@ class SchemaBuilder:
         }
 
     def create_column_rank(self, column_rank: ElementRank) -> ColumnRank:
-        column_id = column_rank["column_id"]
+        column_id = column_rank.column_id
         if not column_id:
             raise ValueError("column_id is required")
         column = self.get_data_source_table_column(column_id)
@@ -193,17 +198,17 @@ class SchemaBuilder:
             "hints": [],
         }
 
-        value_hit = column_rank["value_hint"]
+        value_hint = column_rank.value_hint
 
-        if value_hit:
-            result["hints"].append(value_hit)
+        self.add_hint(result, value_hint)
 
         return result
 
     def add_tokens(self, token_str: str, add_extra: int = 0):
         # Add to the count based on the number of tokens in the string,
         # add_extra is used to add in counts for things like line breaks
-        self.tokens_so_far += count_tokens(token_str) + add_extra
+        count = count_tokens(token_str)
+        self.tokens_so_far += count + add_extra
 
     def generate_sql_from_element_rank(self, ranked_schema: SCHEMA_RANKING_TYPE) -> str:
         # we need to transform the ranking schema into a list of table
@@ -211,19 +216,22 @@ class SchemaBuilder:
         sql = ""
 
         for element_rank in ranked_schema:
-            if self.tokens_so_far > self.token_count_limit:
+            if self.tokens_so_far > self.available_tokens:
+                log.debug("Passed available token limit")
                 break
 
             # does the table already exist in table ranks?
             table_rank = next(
-                (table_rank for table_rank in table_ranks if table_rank["table_id"] == element_rank["table_id"]), None
+                (table_rank for table_rank in table_ranks if table_rank["table_id"] == element_rank.table_id), None
             )
 
             if not table_rank:
-                table_id = element_rank["table_id"]
-                table_rank = self.create_table_rank(element_rank["table_id"])
+                table_id = element_rank.table_id
+                table_rank = self.create_table_rank(element_rank.table_id)
                 table_ranks.insert(0, table_rank)
-                self.add_tokens(f"CREATE TABLE {self.cached_tables[table_id]} (\n \n);\n")
+                self.add_tokens(
+                    f"CREATE TABLE {unqualified_table_name(self.cached_tables[table_id].fullyQualifiedName).lower()} (\n \n);\n"
+                )
 
                 # Option to add all columns as soon as we see the table
                 # column_ids_for_table = self.cached_table_column_ids[table_id]
@@ -232,9 +240,9 @@ class SchemaBuilder:
                 #         ElementRank(table_id=table_id, column_id=column_id, value_hint=None, score=0.0), table_rank
                 #     )
 
-            if element_rank["column_id"]:
+            if element_rank.column_id:
 
-                column_id = element_rank["column_id"]
+                column_id = element_rank.column_id
 
                 # does the column exist in the table_rank object?
                 column_rank = next(
@@ -244,21 +252,32 @@ class SchemaBuilder:
 
                 if column_rank:
                     # add the hint to the column_rank
-                    value_hint = element_rank["value_hint"]
-                    if value_hint and value_hint not in column_rank["hints"]:
-                        if len(column_rank["hints"]) == 0:
-                            self.add_tokens(f" -- possible values include: {value_hint}")
-                        else:
-                            self.add_tokens(f", {value_hint}")
-
-                        column_rank["hints"].append(value_hint)
+                    value_hint = element_rank.value_hint
+                    self.add_hint(column_rank, value_hint)
                 else:
                     self.add_column_to_table(element_rank, table_rank)
+                    if self.tokens_so_far > self.available_tokens:
+                        log.debug("Passed available token limit")
+                        break
 
         sql = self.generate_sql_describe(table_ranks)
         token_count = count_tokens(sql)
-        log.debug("schema token count", token_count=token_count)
+        log.debug("schema token count", token_count=token_count, available=self.original_available_tokens)
         return sql
+
+    def add_hint(self, column_rank: ColumnRank, value_hint: str | None):
+        if value_hint:
+            if value_hint and value_hint not in column_rank["hints"]:
+                if len(column_rank["hints"]) == 0:
+                    self.add_tokens(f" -- possible values include: {value_hint!r}")
+                elif len(column_rank["hints"]) < 6:
+                    self.add_tokens(f", {value_hint!r}")
+
+                if self.tokens_so_far > self.available_tokens:
+                    log.debug("Passed available token limit")
+
+                if len(column_rank["hints"]) < 6:
+                    column_rank["hints"].append(value_hint)
 
     def add_column_to_table(self, element_rank, table_rank):
         column_rank = self.create_column_rank(element_rank)
@@ -267,7 +286,7 @@ class SchemaBuilder:
         # Add the tokens for the column strings without the hints
         column_sql = self.generate_column_describe(column_rank["column_id"], [])
         if column_sql:
-            self.add_tokens(column_sql, 1)
+            self.add_tokens(column_sql, 2)
 
 
 if __name__ == "__main__":
@@ -279,4 +298,4 @@ if __name__ == "__main__":
 
         # generate via: `poetry run python -m python.schema.ranker "What product sells best in Montana?"`
 
-        print(SchemaBuilder(_db).build(datasource.id, ranks))
+        print(SchemaBuilder(_db).build(datasource.id, ranks, 7000))

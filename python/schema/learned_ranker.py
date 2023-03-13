@@ -71,15 +71,15 @@ class LearnedRanker:
             rankings: list[ElementRank] = [*table_ranks, *column_ranks, *values_ranks]
 
             # Sort rankings by score
-            rankings.sort(key=lambda x: x["score"], reverse=True)
+            rankings.sort(key=lambda x: x.score, reverse=True)
 
             # Print with table and column names
             if os.getenv("DEBUG_RANKER"):
                 for ranking in rankings:
                     db_element = convert_db_element_ids_to_db_element(
-                        DbElementIds(ranking["table_id"], ranking["column_id"], ranking["value_hint"])
+                        DbElementIds(ranking.table_id, ranking.column_id, ranking.value_hint)
                     )
-                    log.debug("rank", score=ranking["score"], element=db_element)
+                    log.debug("rank", score=ranking.score, element=db_element)
 
         return rankings
 

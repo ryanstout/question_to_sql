@@ -17,7 +17,7 @@ from python.utils.db import application_database_connection
 
 # Taking in the question, generate the following data structure to pass to
 # the schema builder:
-class ElementRank(t.TypedDict):
+class ElementRank(t.NamedTuple):
     table_id: int
     column_id: t.Union[int, None]
     value_hint: t.Union[str, None]
@@ -133,15 +133,15 @@ class Ranker:
         )
 
         # Sort rankings by score
-        rankings.sort(key=lambda x: x["score"], reverse=True)
+        rankings.sort(key=lambda x: x.score, reverse=True)
 
         # Print with table and column names
         if os.getenv("DEBUG_RANKER"):
             for ranking in rankings:
                 db_element = convert_db_element_ids_to_db_element(
-                    DbElementIds(ranking["table_id"], ranking["column_id"], ranking["value_hint"])
+                    DbElementIds(ranking.table_id, ranking.column_id, ranking.value_hint)
                 )
-                log.debug("rank", score=ranking["score"], element=db_element)
+                log.debug("rank", score=ranking.score, element=db_element)
 
         t2 = time.time()
         log.debug("Ranking fetch: ", time=t2 - t1)
@@ -176,6 +176,26 @@ class Ranker:
     def pull_assoc(self, scores_and_assocs, assoc_idx):
         # Grabs the table, column, or value from the association tuple
         return [score_and_assoc[1][assoc_idx] for score_and_assoc in scores_and_assocs]
+
+
+def dedup_schema_rankings(rankings: SCHEMA_RANKING_TYPE) -> SCHEMA_RANKING_TYPE:
+    """
+    Takes a schema ranking list and removes any duplicate table, column, and value hint pairs
+    """
+    seen = set()
+    final: SCHEMA_RANKING_TYPE = []
+    for ranking in rankings:
+        if (ranking.table_id, ranking.column_id, ranking.value_hint) not in seen:
+            final.append(ranking)
+            seen.add((ranking.table_id, ranking.column_id, ranking.value_hint))
+
+    return final
+
+
+def merge_schema_rankings(rankings1: SCHEMA_RANKING_TYPE, rankings2: SCHEMA_RANKING_TYPE) -> SCHEMA_RANKING_TYPE:
+    rankings = rankings1 + rankings2
+    rankings.sort(key=lambda x: x.score, reverse=True)
+    return dedup_schema_rankings(rankings)
 
 
 if __name__ == "__main__":

@@ -52,7 +52,7 @@ from sqlglot.errors import ParseError
 from python.sql.exceptions import SqlParseError
 from python.sql.nodes.base import Base
 from python.sql.nodes.builder import add_child
-from python.sql.types import SimpleSchema, SqlState
+from python.sql.types import DbTouchPointCounts, SimpleSchema, SqlState
 from python.utils.logging import log
 
 
@@ -93,5 +93,5 @@ class SqlInspector:
         # Start building the tree, first node atm should be a SELECT
         self.root = add_child(self.start_state, [], ast)
 
-    def touches(self):
+    def touches(self) -> DbTouchPointCounts:
         return self.root.state["touches"]
