@@ -145,8 +145,12 @@ class OpenAIThrottled:
 
         # add padding to handle max response
         # TODO is there a reason we shouldn't add this padding to the embedding as well?
-        token_count = count_tokens(kwargs["prompt"]) + 1024
-        completion_call = _backoff_decorator(openai.Completion.create)
+        if "model" in kwargs and kwargs["model"] == "gpt-3.5-turbo":
+            token_count = sum([count_tokens(message["content"]) for message in kwargs["messages"]]) + 1024
+            completion_call = _backoff_decorator(openai.ChatCompletion.create)
+        else:
+            token_count = count_tokens(kwargs["prompt"]) + 1024
+            completion_call = _backoff_decorator(openai.Completion.create)
 
         with self._safe_api_request(_base_consumption_request() | {"codex_tokens": token_count}):
             # TODO should make this more generic and avoid tying to completion directly

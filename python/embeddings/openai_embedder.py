@@ -1,7 +1,6 @@
-from python.setup import log
-
 import numpy as np
 
+from python.utils.logging import log
 from python.utils.openai_rate_throttled import openai_throttled
 
 

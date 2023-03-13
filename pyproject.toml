@@ -23,11 +23,11 @@ python = "~3.10"
 sqlglot = "^10.4.3"
 snowflake-connector-python = "^3.0.0"
 python-decouple = "^3.8"
-openai = { extras = ["embeddings"], version = "^0.26.5" }
+openai = { extras = ["embeddings"], version = "^0.27.1" }
 ipython = "^8.8.0"
 faiss-cpu = "^1.7.3"
 xxhash = "^3.2.0"
-tiktoken = "^0.1.2"
+tiktoken = "^0.3.0"
 sentence-transformers = "^2.2.2"
 structlog = "^22.3.0"
 click = "^8.1.3"

@@ -1,9 +1,14 @@
 import datetime
+import re
 
 import sentry_sdk
 from decouple import config
 
 import python.utils.db
+from python.prompts.chat_prompt import ChatPrompt
+from python.prompts.codex_prompt import CodexPrompt
+from python.prompts.prompt import Prompt
+from python.questions.indexes_and_models import IndexesAndModels
 from python.schema.learned_ranker import LearnedRanker
 from python.schema.ranker import Ranker
 from python.schema.schema_builder import SchemaBuilder
@@ -13,6 +18,7 @@ from python.sql.sql_parser import SqlParser
 from python.sql.sql_resolve_and_fix import SqlResolveAndFix
 from python.sql.types import SimpleSchema
 from python.utils.batteries import log_execution_time
+from python.utils.indexes_and_models import application_indexes_and_models
 from python.utils.logging import log
 from python.utils.openai_rate_throttled import openai_throttled
 
@@ -25,36 +31,36 @@ DEFAULT_ENGINE = "code-davinci-002"
 
 if config("USE_CHATGPT_MODEL", default=False, cast=bool):
     # NOTE: Doesn't work atm
-    DEFAULT_ENGINE = "text-chat-davinci-002-20230126"
+    DEFAULT_ENGINE = "gpt-3.5-turbo"
+
+
+# Instantiate a singleton instance to load all indexes and models into ram once per process
+indexes_and_models = application_indexes_and_models()
 
 
 def question_with_data_source_to_sql(data_source_id: int, question: str, engine: str = DEFAULT_ENGINE) -> str:
-    if use_learned_ranker:
-        ranked_structure = LearnedRanker(data_source_id).rank(question)
-    else:
-        ranked_structure = Ranker(data_source_id).rank(question)
-
+    ranked_schema = indexes_and_models.ranker(data_source_id).rank(question)
     log.debug("building schema")
 
-    with log_execution_time("schema build"):
-        table_schema_limited_by_token_size = SchemaBuilder(db, engine).build(data_source_id, ranked_structure)
+    if engine == "gpt-3.5-turbo":
+        prompt = ChatPrompt(engine, data_source_id, ranked_schema, question).generate()
+    else:
+        prompt = CodexPrompt(engine, data_source_id, ranked_schema, question).generate()
 
     log.debug("convert question and schema to sql")
     with log_execution_time("schema to sql"):
         simple_schema = build_simple_schema(data_source_id)
-        sql = _question_with_schema_to_sql(simple_schema, table_schema_limited_by_token_size, question, engine)
+        sql = _question_with_prompt(simple_schema, prompt, engine)
 
     log.debug("sql post transform", sql=sql)
 
     return sql
 
 
-def _question_with_schema_to_sql(
-    simple_schema: SimpleSchema, schema: str, question: str, engine: str = "code-davinci-002"
+def _question_with_prompt(
+    simple_schema: SimpleSchema, prompt: str | list[dict[str, str]], engine: str = "code-davinci-002"
 ) -> str:
-    prompt = _create_prompt(schema, question)
-
-    log.debug("sending prompt to openai", prompt=prompt)
+    # log.debug("sending prompt to openai", prompt=prompt)
 
     stops = [";", "\n\n"]
     if engine == "text-chat-davinci-002-20230126":
@@ -65,32 +71,55 @@ def _question_with_schema_to_sql(
     temperature = 0.0
 
     while True:
+        ai_sql = ""
         with log_execution_time("openai completion"):
 
             # See OpenAI completion docs for details on parameters:
             # https://platform.openai.com/docs/api-reference/completions/create
-            result = openai_throttled.complete(
-                engine=engine,
-                # engine="code-davinci-002",
-                # engine="text-chat-davinci-002-20230126",  # leaked chatgpt model
-                prompt=prompt,
-                max_tokens=1024,  # was 256
-                temperature=temperature,
-                top_p=1,
-                presence_penalty=0,
-                frequency_penalty=0,
-                best_of=1,
-                # logprobs=4,
-                n=1,
-                stream=False,
-                # tells the model to stop generating a response when it gets to the end of the SQL
-                stop=stops,
-            )
+            if engine == "gpt-3.5-turbo":
 
-        ai_sql = result["choices"][0]["text"]
+                print("RUN GPT 3.5 GENERATE")
+                result = openai_throttled.complete(
+                    model=engine,
+                    messages=prompt,
+                    temperature=temperature,
+                    top_p=1,
+                    n=1,
+                    max_tokens=1000,
+                    presence_penalty=0,
+                    frequency_penalty=0,
+                )
+                ai_sql = result["choices"][0]["message"]["content"]
 
-        ai_sql = f"SELECT {ai_sql};"
+                # Extract inside of backticks if backticks are present
+                if "```" in ai_sql:
+                    content_between_backticks = re.findall(r"```(.*?)```", ai_sql, re.M | re.S)
+                    ai_sql = content_between_backticks[0]
+            else:
 
+                result = openai_throttled.complete(
+                    engine=engine,
+                    # engine="code-davinci-002",
+                    # engine="text-chat-davinci-002-20230126",  # leaked chatgpt model
+                    prompt=prompt,
+                    max_tokens=1024,  # was 256
+                    temperature=temperature,
+                    top_p=1,
+                    presence_penalty=0,
+                    frequency_penalty=0,
+                    best_of=1,
+                    # logprobs=4,
+                    n=1,
+                    stream=False,
+                    # tells the model to stop generating a response when it gets to the end of the SQL
+                    stop=stops,
+                )
+
+                ai_sql = result["choices"][0]["text"]
+                ai_sql = f"SELECT {ai_sql};"
+            print("RESULTS: ", result)
+
+        ai_sql = ai_sql.replace("`", '"')  # sometimes we get backticks instead of quotes
         log.debug("sql pre transform", ai_sql=ai_sql)
 
         # Verify that the ai sql is valud

@@ -39,7 +39,11 @@ def question():
     question_text = json_data["question"]
     data_source_id = json_data["data_source_id"]
 
-    sql = question_with_data_source_to_sql(data_source_id, question_text)
+    engine = "code-davinci-002"
+    if config("USE_CHATGPT_MODEL", default=False, cast=bool):
+        engine = "gpt-3.5-turbo"
+
+    sql = question_with_data_source_to_sql(data_source_id, question_text, engine=engine)
 
     return jsonify({"question": question_text, "data_source_id": data_source_id, "sql": sql})
 
