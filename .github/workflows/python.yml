@@ -28,6 +28,7 @@ env:
   MODEL_DATA_PATH: tmp/models
   DATASETS_PATH: tmp/datasets
   VALIDATION_PATH: tmp/validation
+  FEW_SHOT_EMBEDDINGS_PATH: tmp/few_shot
 
 jobs:
   # TODO why can't we define runs-on this for the entire workflow?
