@@ -78,8 +78,6 @@ def _question_with_prompt(
             # See OpenAI completion docs for details on parameters:
             # https://platform.openai.com/docs/api-reference/completions/create
             if engine == "gpt-3.5-turbo":
-
-                print("RUN GPT 3.5 GENERATE")
                 result = openai_throttled.complete(
                     model=engine,
                     messages=prompt,

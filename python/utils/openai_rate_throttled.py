@@ -145,7 +145,7 @@ class OpenAIThrottled:
 
         # add padding to handle max response
         # TODO is there a reason we shouldn't add this padding to the embedding as well?
-        if "model" in kwargs and kwargs["model"] == "gpt-3.5-turbo":
+        if kwargs.get("model") == "gpt-3.5-turbo":
             token_count = sum([count_tokens(message["content"]) for message in kwargs["messages"]]) + 1024
             completion_call = _backoff_decorator(openai.ChatCompletion.create)
         else:

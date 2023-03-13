@@ -23,6 +23,7 @@ class ChatPrompt(Prompt):
         self.comments = ""
 
     def available_tokens(self) -> int:
+        # 300 extra buffer, since SchemaBuilder doesn't match exactly
         return 4_096 - 1_024 - 300
 
     def generate(self) -> list[dict]:

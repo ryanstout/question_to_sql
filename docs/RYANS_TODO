@@ -5,7 +5,13 @@
 - [x] ILIKE and REGEX_ILIKE should get converted to ILIKE(LOWER({..}), "%something%"{.lower()})
 - [x] Try generating mysql instead of postgres, mysql doesn't have as many extensions, might help keep things in bounds for snowflake more.
 - [ ] Use ChatGPT and ChatShortFormatter schema format shorthand to recursively get the required fields for a query.
+- [ ] SchemaBuilder still doesn't hit the target tokens very well
+- [ ] Convert NOW's back for Snowflake to Postgres
+
+Sql Glot Magic Fixes:
+
 - [ ] Ambigious columns can happen when one column that gets used is present in the schema, but a column with the same name is also present in another used table. This can probably be fixed with some sqlglot magic
+- [ ] Fix issue with non-aggregrate columns not being included in GROUP BY
 
 SqlInspector:
 
