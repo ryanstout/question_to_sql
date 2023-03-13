@@ -6,6 +6,7 @@ by attempting to parse in other dialects, then converting to snowflake (currentl
 
 import re
 
+from decouple import config
 from sqlglot import parse_one, transpile
 from sqlglot.errors import ParseError
 
@@ -16,9 +17,11 @@ class SqlParser:
     # TODO why aren't these function params? Feels like this is more of a data transformation step which could be a
     #      simple functional style thing
 
-    in_dialect = "postgres"
     # in_dialect = "tsql"
-    # in_dialect = "snowflake"
+    if config("USE_CHATGPT_MODEL", default=False, cast=bool):
+        in_dialect = "snowflake"
+    else:
+        in_dialect = "postgres"
     out_dialect = "snowflake"
 
     def run(self, sql: str):
