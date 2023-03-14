@@ -2,6 +2,7 @@ from typing import Any, Dict, List
 
 from sqlglot import exp
 
+from python.sql.nodes.anonymous import Anonymous
 from python.sql.nodes.base import Base
 from python.sql.nodes.column import Column
 from python.sql.nodes.column_alias import ColumnAlias
@@ -123,14 +124,14 @@ def add_child(state: SqlState, add_to: List["Base"], start_node: exp.Expression)
             # Special case for COUNT(*) where we don't count the star as touches
             node = CountStar(state)
 
-        case exp.Column(args={"this": exp.Star() as star_exp, **rest}):
+        case exp.Column(args={"this": exp.Star(), **rest}):
             # Qualified star shows up in a column
             table_alias = rest.get("table")
             table_alias = table_alias.args.get("this") if table_alias else None
 
             node = Star(state, table_alias)
 
-        case exp.Star() as star_exp:
+        case exp.Star():
             node = Star(state, None)
 
         case exp.Filter() as filter_exp:
@@ -151,6 +152,26 @@ def add_child(state: SqlState, add_to: List["Base"], start_node: exp.Expression)
             node = InNode(state, in_exprs)
             add_children(state, node, {"column": column_exp})
             add_children(state, node, rest)
+
+        case exp.Anonymous(args={"this": this_node, "expressions": expressions, **anon_args}) as anon_node:
+            if isinstance(this_node, str):
+                # in snowflake, things like DATEADD come in like this:
+                # (ANONYMOUS this: DATEADD, expressions:
+                #         (COLUMN this:
+                #         (IDENTIFIER this: MONTH, quoted: False))
+                # We want to avoid parsing the COLUMN (this is likely a bug/oversight on the sqlglot side)
+                node = Anonymous(new_state(state, {"node": anon_node}))
+
+                # Remove the first expression if its a column
+                match expressions:
+                    case [exp.Column(), *rest_exp]:
+                        expressions = rest_exp
+
+                add_children(state, node, {"expressions": expressions})  # type: ignore
+                add_children(state, node, anon_args)
+            else:
+                node = Anonymous(new_state(state, {"node": anon_node}))
+                add_children(state, node, anon_node.args)
 
         case exp.Expression() as expression:
             # Handle all other nodes, this combines the returned tables and
