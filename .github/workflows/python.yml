@@ -55,8 +55,8 @@ jobs:
         shell: bash
         continue-on-error: true
         run: |
-          black --version
-          black --check .
+          poetry run black --version
+          poetry run black --check .
       - name: import sorting
         shell: bash
         run: poetry run isort **/*.py -c -v
