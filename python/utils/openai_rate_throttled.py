@@ -39,6 +39,7 @@ def all_retryable_openai_errors() -> list[t.Type[OpenAIError]]:
     openai_error_subclasses.remove(openai.error.InvalidAPIType)
     openai_error_subclasses.remove(openai.error.AuthenticationError)
     openai_error_subclasses.remove(openai.error.PermissionError)
+    openai_error_subclasses.remove(openai.error.InvalidRequestError)
 
     return openai_error_subclasses
 
@@ -145,7 +146,7 @@ class OpenAIThrottled:
 
         # add padding to handle max response
         # TODO is there a reason we shouldn't add this padding to the embedding as well?
-        if kwargs.get("model") == "gpt-3.5-turbo":
+        if kwargs.get("model") in ["gpt-3.5-turbo", "gpt-4", "gpt-4-32k"]:
             token_count = sum([count_tokens(message["content"]) for message in kwargs["messages"]]) + 1024
             completion_call = _backoff_decorator(openai.ChatCompletion.create)
         else:

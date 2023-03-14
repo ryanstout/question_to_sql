@@ -45,8 +45,8 @@ class SchemaBuilder:
 
     def __init__(self, db: Prisma):
         self.db: Prisma = db
-        self.cached_columns = {}
-        self.cached_table_column_ids = {}
+        self.cached_columns: dict[int, DataSourceTableColumn] = {}
+        self.cached_table_column_ids: dict[int, list[int]] = {}
         self.cached_tables: dict[int, DataSourceTableDescription] = {}
         self.tokens_so_far = 0
 
@@ -169,6 +169,7 @@ class SchemaBuilder:
                                 }
                             },
                             {"name": "ID"},
+                            {"name": "CREATED_AT"},  # TODO: temporary workaround for ambigious columns issue
                         ]
                     },
                 ],
@@ -198,8 +199,8 @@ class SchemaBuilder:
             "hints": [],
         }
 
+        # Also add a hint if the ElementRank includes a value hint
         value_hint = column_rank.value_hint
-
         self.add_hint(result, value_hint)
 
         return result
@@ -226,12 +227,11 @@ class SchemaBuilder:
             )
 
             if not table_rank:
-                table_id = element_rank.table_id
                 table_rank = self.create_table_rank(element_rank.table_id)
                 table_ranks.insert(0, table_rank)
-                self.add_tokens(
-                    f"CREATE TABLE {unqualified_table_name(self.cached_tables[table_id].fullyQualifiedName).lower()} (\n \n);\n"
-                )
+                rendered_table_name = unqualified_table_name(table_rank["fully_qualified_name"]).lower()
+
+                self.add_tokens(f"CREATE TABLE {rendered_table_name} (\n \n);\n")
 
                 # Option to add all columns as soon as we see the table
                 # column_ids_for_table = self.cached_table_column_ids[table_id]
@@ -256,9 +256,10 @@ class SchemaBuilder:
                     self.add_hint(column_rank, value_hint)
                 else:
                     self.add_column_to_table(element_rank, table_rank)
-                    if self.tokens_so_far > self.available_tokens:
-                        log.debug("Passed available token limit")
-                        break
+
+                if self.tokens_so_far > self.available_tokens:
+                    log.debug("Passed available token limit")
+                    break
 
         sql = self.generate_sql_describe(table_ranks)
         token_count = count_tokens(sql)
@@ -266,20 +267,16 @@ class SchemaBuilder:
         return sql
 
     def add_hint(self, column_rank: ColumnRank, value_hint: str | None):
-        if value_hint:
-            if value_hint and value_hint not in column_rank["hints"]:
-                if len(column_rank["hints"]) == 0:
-                    self.add_tokens(f" -- possible values include: {value_hint!r}")
-                elif len(column_rank["hints"]) < 6:
-                    self.add_tokens(f", {value_hint!r}")
+        if value_hint and value_hint not in column_rank["hints"]:
+            if len(column_rank["hints"]) == 0:
+                self.add_tokens(f" -- possible values include: {value_hint!r}")
+            elif len(column_rank["hints"]) < 6:
+                self.add_tokens(f", {value_hint!r}")
 
-                if self.tokens_so_far > self.available_tokens:
-                    log.debug("Passed available token limit")
+            if len(column_rank["hints"]) < 6:
+                column_rank["hints"].append(value_hint)
 
-                if len(column_rank["hints"]) < 6:
-                    column_rank["hints"].append(value_hint)
-
-    def add_column_to_table(self, element_rank, table_rank):
+    def add_column_to_table(self, element_rank: ElementRank, table_rank: TableRank):
         column_rank = self.create_column_rank(element_rank)
         table_rank["columns"].append(column_rank)
 

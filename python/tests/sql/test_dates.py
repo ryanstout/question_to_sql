@@ -6,8 +6,8 @@ from python.tests.sql.fixtures.pens_schema import pens_schema
 
 def test_now():
     # `CURRENT_TIMESTAMP() - INTERVAL '1 month'` should be used instead
-    unused_question = "how many text messages did we send last month?"
-    unused_query = """
+    # "how many text messages did we send last month?"
+    query = """
   SELECT
     COUNT(*) AS fufilled
   FROM fulfillment

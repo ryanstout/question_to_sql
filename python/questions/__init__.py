@@ -4,6 +4,7 @@ import typing as t
 
 import sentry_sdk
 from decouple import config
+from sqlglot.errors import ParseError
 
 import python.utils.db
 from python.prompts.chat_prompt import ChatPrompt
@@ -31,7 +32,6 @@ retry_openai_variants = config("ENABLE_OPENAI_VARIANT_RETRY", default=False, cas
 DEFAULT_ENGINE = "code-davinci-002"
 
 if config("USE_CHATGPT_MODEL", default=False, cast=bool):
-    # NOTE: Doesn't work atm
     DEFAULT_ENGINE = "gpt-3.5-turbo"
 
 
@@ -43,7 +43,7 @@ def question_with_data_source_to_sql(data_source_id: int, question: str, engine:
     ranked_schema = indexes_and_models.ranker(data_source_id).rank(question)
     log.debug("building schema")
 
-    if engine == "gpt-3.5-turbo":
+    if engine in ["gpt-3.5-turbo", "gpt-4", "gpt-4-32k"]:
         prompt = ChatPrompt(engine, data_source_id, ranked_schema, question).generate()
     else:
         prompt = CodexPrompt(engine, data_source_id, ranked_schema, question).generate()
@@ -64,9 +64,6 @@ def _question_with_prompt(
     # log.debug("sending prompt to openai", prompt=prompt)
 
     stops = [";", "\n\n"]
-    if engine == "text-chat-davinci-002-20230126":
-        stops.append("<|im_end|>")  # chatgpt message end token
-        log.debug("using chatgpt model")
 
     run_count = 0
     temperature = 0.0
@@ -77,7 +74,7 @@ def _question_with_prompt(
 
             # See OpenAI completion docs for details on parameters:
             # https://platform.openai.com/docs/api-reference/completions/create
-            if engine == "gpt-3.5-turbo":
+            if engine in ["gpt-3.5-turbo", "gpt-4", "gpt-4-32k"]:
                 result = openai_throttled.complete(
                     model=engine,
                     messages=prompt,
@@ -163,9 +160,15 @@ def _fixup_sql(simple_schema: SimpleSchema, ai_sql: str) -> str | None:
         try:
             sql = SqlResolveAndFix().run(ai_sql, simple_schema)
             return sql
+        except ParseError:
+            # Sqlglot parse error, sometimes this is a message from chatgpt on why it couldn't generate things.
+            return ai_sql
         except SqlInspectError as e:
             # A SqlInspectError means the sql will not run correctly at run time. This is usually due to a non-existent
             # table or column being referenced, or just invalid sql.
             sentry_sdk.capture_exception(e, extras={"ai_sql": ai_sql})
             log.warn("SQL is invalid", sql=ai_sql, error=e)
             return None
+        except RuntimeError:
+            # SqlGlot has some errors that don't get wrapped and come back as a runtime error
+            return ai_sql

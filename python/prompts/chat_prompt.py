@@ -132,7 +132,7 @@ class ChatPrompt(Prompt):
                 "",
                 # f"{comments}Rules for building SQL queries: ",
                 f"Rules: ",
-                f"{rule_prefix()}Return `SELECT 'unsure'` if the SQL for the question can not be generated",
+                # f"{rule_prefix()}Return `SELECT 'unsure';` if the SQL for the question can not be generated",
                 # f"{rule_prefix()}Do case insensitive matches using LOWER unless the case matters or it matches a possible value",
                 f"{rule_prefix()}When matching a string, use LOWER or ILIKE unless it matches a listed possible value",
                 # f"{rule_prefix()}Calculate lifetime of a customer by taking the duration between the first and most recent order for a customer. ",
@@ -141,7 +141,7 @@ class ChatPrompt(Prompt):
                 # In snowflake, Count(*), etc.. are not allowed directly in a ORDER BY or HAVING, they have to be in the
                 # SELECT expression first, then accessed by alias.
                 f"{rule_prefix()}COUNT's used in ORDER BY or HAVING should appear in the SELECT first.",
-                f"{rule_prefix()}Any columns used must be in the Schema",
+                # f"{rule_prefix()}Any columns used must be in the Schema",
                 f"{rule_prefix()}Assume the current date is {current_date}",
                 f"{rule_prefix()}use NOW() instead of dates",
                 # f"{rule_prefix()}Don't alias tables unless necessary",
