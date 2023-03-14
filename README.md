@@ -102,7 +102,7 @@ poetry run python python/answer.py \
 
 ## Train Table, Column, and Value Rankers
 
-```
+```shell
 # Build the dataset and train the models
 python -m python.ranker.train
 
@@ -114,7 +114,7 @@ TRAIN_ONLY=1 python -m python.ranker.train
 
 As more evaluation quesitons are added, the few shot embeddings can be updated (and used to provide better few shot examples)
 
-```
+```shell
 python -m python.prompts.few_shot_embeddings.builder
 ```
 

@@ -1,4 +1,5 @@
 - [ ] snowflake async stack trace fix https://github.com/hightouchio/snowflake-connector-nodejs/blob/e059b8cb897891a12e30b078faa327bd2282f2f5/lib/http/base.js#L98
+- [ ] use pdm instead of peotry? https://pdm.fming.dev/latest/
 
 # UI
 
@@ -82,6 +83,8 @@
 
 # Python General
 
+- [ ] setup sentry on cli and other scripts `configure_sentry`
+- [ ] in prod rich traceback is getting installed somehow... `rg '\binstall\(' --no-ignore-vcs`
 - [ ] Stack trace on sentry seems to be limited
 - [ ] Sentry is not enabled locally, should use stdout DSN
 

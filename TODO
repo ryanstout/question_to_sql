@@ -84,6 +84,7 @@ If most of the queries break, they will distrust the queries very quickly. We wa
 - [ ] SQL dialect issues / SQLGlot issues
   - [ ] determine which errors in the DB are triggering this, sometimes it's just a bad model output
   - [ ] write test cases for failures
+- [ ] run `python -m python.prompts.few_shot_embeddings.builder` on a cron
 
 # What are additional UI improvements?
 

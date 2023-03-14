@@ -30,8 +30,10 @@ class RankerDataset(Dataset):
         # Currently we can fit all training in ram, so bring it into a single numpy array
         numpy_files = glob.glob(f"{datasets_path}/ranker/{dataset_element_type}/{dataset_partition}_*.npz")
 
+        # TODO what are these for?
         xs = []
         ys = []
+
         for numpy_file in numpy_files:
             data = np.load(numpy_file)
             xs.append(data["x"])

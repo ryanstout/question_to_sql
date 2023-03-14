@@ -1,0 +1,7 @@
+#!/bin/bash
+# Description: node repl with bun
+
+# TODO load up console.ts instead of a raw console
+# TODO make sure bun-repl is installed first
+
+bun x bun-repl

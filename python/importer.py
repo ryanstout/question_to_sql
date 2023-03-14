@@ -8,8 +8,8 @@ from multiprocessing.pool import ThreadPool
 import query_runner
 import utils
 
-import python.utils.sql as sql
 from python.embeddings.embedding_builder import EmbeddingBuilder
+from python.utils import sql
 
 from prisma.models import DataSource, DataSourceTableDescription
 from prisma.types import (

@@ -1,0 +1,4 @@
+#!/bin/bash
+# Description: search all locally installed packages file paths
+
+fd "$@ --hidden --no-ignore-vcs --type=d .venv --exclude="*.dist-info"
