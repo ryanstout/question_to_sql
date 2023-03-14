@@ -91,6 +91,13 @@ def test_sum_propagation():
     assert inspector.touches() == {("table1", None, None): 1, ("table1", "col1", None): 1}
 
 
+# https://knolbe.sentry.io/issues/4002618863/?project=4504730283606016&query=is%3Aunresolved&referrer=issue-stream
+def test_unsure():
+    query = """
+    SELECT 'unsure'
+    """
+
+
 # def test_where_clause_equals_string():
 #     inspector = SqlInspector(
 #         """
