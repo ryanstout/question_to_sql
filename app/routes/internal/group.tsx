@@ -14,7 +14,7 @@ import {
   useNavigate,
 } from "@remix-run/react"
 
-import { Box, Button, Checkbox, Grid } from "@mantine/core"
+import { Box, Button, Checkbox, Grid, Text } from "@mantine/core"
 import { getHotkeyHandler, useHotkeys } from "@mantine/hooks"
 
 import type {
@@ -132,7 +132,18 @@ export default function EvaluationGroupSelection() {
           .slice(0, QUESTION_PREVIEW_LIMIT)
           .join(", ")
 
-        return f.isEmpty(questionString) ? <i>No questions</i> : questionString
+        const isCorrect = record.status === EvaluationStatus.CORRECT
+        const rowDisplay = f.isEmpty(questionString) ? (
+          <i>No questions</i>
+        ) : (
+          questionString
+        )
+
+        if (isCorrect) {
+          return <Text color="green">{questionString}</Text>
+        } else {
+          return rowDisplay
+        }
       },
     },
   ]
