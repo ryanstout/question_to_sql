@@ -102,12 +102,6 @@ poetry run python python/answer.py \
 
 ## Train Table, Column, and Value Rankers
 
-First, update the dataset to include the latest examples:
-
-```shell
-python -m python.ranker.dataset_generator.dataset_generator
-```
-
 Then train the ranker:
 
 ```shell
