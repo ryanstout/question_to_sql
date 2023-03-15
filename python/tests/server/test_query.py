@@ -1,6 +1,6 @@
 import pytest
 
-# TODO this test requires all of the embeddings to be in place on-disk, which makes it harder to mock
+# TODO this test requires a valid local schema to be in place, which is tied to faise
 
 
 @pytest.mark.vcr
