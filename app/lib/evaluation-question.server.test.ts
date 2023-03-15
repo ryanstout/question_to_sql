@@ -11,7 +11,10 @@ import {
 // TODO this is terrible, we should try to use transactions instead :/
 //      https://www.simplethread.com/isolated-integration-testing-with-remix-vitest-and-prisma/
 async function truncateDB() {
-  const tableNames = [Prisma.ModelName.EvaluationQuestionGroup]
+  const tableNames = [
+    Prisma.ModelName.EvaluationQuestion,
+    Prisma.ModelName.EvaluationQuestionGroup,
+  ]
 
   for (const tableName of tableNames) {
     // if (tableName === "_prisma_migrations") {
@@ -28,7 +31,7 @@ async function truncateDB() {
   }
 }
 
-beforeAll(async () => {
+beforeEach(async () => {
   await truncateDB()
 })
 
@@ -54,6 +57,26 @@ it("cascades evaluation question group deletion", async () => {
 })
 
 it("does not clear evaluation question group cache when an earlier question is deleted", async () => {})
+
+it("does not create duplicate questions if the text is the same", async () => {
+  const questionText = "how many people are there?"
+  const questionGroup =
+    await evaluationQuestion.createBlankEvaluationQuestionGroup(dataSourceId)
+
+  const firstQuestion = await evaluationQuestion.createQuestion(
+    questionGroup.id,
+    questionText
+  )
+
+  const secondQuestion = await evaluationQuestion.createQuestion(
+    questionGroup.id,
+    questionText
+  )
+
+  expect(firstQuestion.id).toEqual(secondQuestion.id)
+  expect(await prisma.evaluationQuestion.count()).toBe(1)
+  expect(await prisma.evaluationQuestionGroup.count()).toBe(1)
+})
 
 it("clears evaluation question group cache when the last question is deleted", async () => {
   mockPythonServer()

@@ -199,14 +199,30 @@ export async function createQuestion(
       where: { id: evaluationGroupId },
     })
 
+  await clearEvaluationQuestionGroupCache(evaluationGroup.id)
+
+  // first, try to find a question with the same exact text
+  const matchingQuestions = await prisma.evaluationQuestion.findMany({
+    where: {
+      question: questionText,
+      evaluationQuestionGroupId: evaluationGroup.id,
+    },
+  })
+
+  if (matchingQuestions.length > 1) {
+    log.error("found multiple matching questions", { questionText })
+  }
+
+  if (matchingQuestions.length > 0) {
+    return matchingQuestions[0]
+  }
+
   const question = await prisma.evaluationQuestion.create({
     data: {
       question: questionText,
       evaluationQuestionGroupId: evaluationGroup.id,
     },
   })
-
-  await clearEvaluationQuestionGroupCache(evaluationGroup.id)
 
   return question
 }
