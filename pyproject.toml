@@ -1,11 +1,16 @@
 [tool.poetry]
-name = "nlpquery"
+name = "knolbe_py"
 version = "0.1.0"
 description = ""
 authors = ["Ryan Stout <ryanstout@gmail.com>"]
 readme = "README.md"
-# for the `nlp` cli tool, this includes the `python` folder
-# packages = [{ include = "python" }]
+
+# you can include additional folders as a package in order to use them in a script
+# ala `packages = [{ include = "python" }]` but those folders MUST exist anytime
+# `poetry install` is run, which makes incrementally building the docker image in
+# layers more challenging. Because of this we've segregated the CLI tool to a separate folder
+[tool.poetry.scripts]
+nlp = "knolbe_py.cli:cli"
 
 # TODO update to 3.11 when pytorch supports it https://github.com/pytorch/pytorch/issues/86566
 # TODO extract to internal notes before removing
@@ -87,9 +92,6 @@ pylint-pytest = "^1.1.2"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.poetry.scripts]
-nlp = "python.cli:cli"
 
 [tool.pytest.ini_options]
 log_cli = true
