@@ -1,5 +1,6 @@
 import pytorch_lightning as pl
 import torch
+import torch.backends.mps
 from decouple import config
 from torch import nn
 from torch.nn import functional as F
@@ -57,9 +58,11 @@ class ColumnRankerModel(pl.LightningModule):
     def train_model(cls):
         ranker_data = RankerDataModule("columns", batch_size=256)
 
-        # model
+        is_mps = torch.backends.mps.is_available() and torch.backends.mps.is_built()
+
         model = ColumnRankerModel()
-        model.to("mps")
+        if is_mps:
+            model.to("mps")
 
         # training
         trainer = pl.Trainer(
