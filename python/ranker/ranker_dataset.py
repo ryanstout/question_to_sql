@@ -36,6 +36,7 @@ class RankerDataset(Dataset):
 
         for numpy_file in numpy_files:
             data = np.load(numpy_file)
+            # TODO what are x & y in these files?
             xs.append(data["x"])
             ys.append(data["y"])
 

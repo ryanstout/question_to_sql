@@ -2,6 +2,9 @@
 
 import json
 
+# TODO surprised this isn't an ipython magic
+from pprint import pprint as pp
+
 import IPython
 from decouple import config
 

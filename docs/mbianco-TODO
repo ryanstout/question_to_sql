@@ -116,6 +116,10 @@
 - [ ] should get table count all in one query using INFORMATION_SCEMA
 - [ ] should avoid running queries on tables with a ton of data
 
+# Fly.io
+
+- [ ] would be nice if we could set the default shell https://community.fly.io/t/ssh-niceties/4410
+
 ---
 
 questions = all_questions_marked_as_correct

@@ -56,6 +56,7 @@ def _patched_rows_to_lines(rows: t.List[PaddedRow], color: bool = False) -> t.It
             yield line
 
 
+# installs via `sys.excepthook`
 pretty_traceback.formatting._rows_to_lines = _patched_rows_to_lines
 pretty_traceback.install(
     # https://github.com/mbarkhau/pretty-traceback/blob/b5e06b2022a806127b1b7b5ba7972afb84e48e08/src/pretty_traceback/hook.py#L41

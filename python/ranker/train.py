@@ -2,7 +2,8 @@
 Generate training data (from the local db) and train the Learned Ranker model
 """
 
-import os
+# TODO should move to the cli interface
+
 import shutil
 
 from decouple import config
@@ -15,7 +16,7 @@ from python.ranker.values_ranker_model import ValuesRankerModel
 datasets_path = config("DATASETS_PATH")
 
 
-if not os.getenv("TRAIN_ONLY"):
+if config("TRAIN_ONLY", default=False, cast=bool):
     # Clear previous dataset files
     shutil.rmtree(f"{datasets_path}/ranker", ignore_errors=True)
 
