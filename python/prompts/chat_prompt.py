@@ -89,7 +89,7 @@ class ChatPrompt(Prompt):
         """
         Returns a messsage represenation of the schema with associated prologue
         """
-        schema = SchemaBuilder(db).build(self.data_source_id, self.ranked_schema, available_tokens)
+        schema = SchemaBuilder().build(self.data_source_id, self.ranked_schema, available_tokens)
 
         return [
             {

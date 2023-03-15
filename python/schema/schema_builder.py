@@ -15,11 +15,7 @@ from python.utils.logging import log
 from python.utils.sql import unqualified_table_name
 from python.utils.tokens import count_tokens
 
-from prisma import Prisma
 from prisma.models import DataSourceTableColumn, DataSourceTableDescription
-
-# from transformers import GPT2Tokenizer
-
 
 # TODO looks like we cannot set default values on typeddict: https://github.com/python/mypy/issues/6131
 
@@ -27,24 +23,26 @@ from prisma.models import DataSourceTableColumn, DataSourceTableDescription
 class ColumnRank(t.TypedDict):
     column_id: int
     name: str
-    hints: t.List[str]
+    hints: list[str]
 
 
 class TableRank(t.TypedDict):
     table_id: int
     fully_qualified_name: str
-    columns: t.List[ColumnRank]
+    columns: list[ColumnRank]
 
 
-TableSchema = t.List[TableRank]
+TableSchema = list[TableRank]
+
+
+db = application_database_connection()
 
 
 class SchemaBuilder:
     available_tokens: int
     original_available_tokens: int
 
-    def __init__(self, db: Prisma):
-        self.db: Prisma = db
+    def __init__(self):
         self.cached_columns: dict[int, DataSourceTableColumn] = {}
         self.cached_table_column_ids: dict[int, list[int]] = {}
         self.cached_tables: dict[int, DataSourceTableDescription] = {}
@@ -61,7 +59,7 @@ class SchemaBuilder:
 
     # Precache all of the tables and columns for faster lookup
     def cache_columns_and_tables(self, data_source_id: int) -> None:
-        tables = self.db.datasourcetabledescription.find_many(where={"dataSourceId": data_source_id})
+        tables = db.datasourcetabledescription.find_many(where={"dataSourceId": data_source_id})
 
         if len(tables) == 0:
             log.warn("no tables found for data source, cannot cache", data_source_id=data_source_id)
@@ -69,7 +67,7 @@ class SchemaBuilder:
         for table in tables:
             self.cached_tables[table.id] = table
 
-        columns = self.db.datasourcetablecolumn.find_many(where={"dataSourceId": data_source_id})
+        columns = db.datasourcetablecolumn.find_many(where={"dataSourceId": data_source_id})
 
         for column in columns:
             table_id = column.dataSourceTableDescriptionId
@@ -156,7 +154,7 @@ class SchemaBuilder:
         table = self.cached_tables[table_id]
 
         # we want to include the primary key and all foreign keys by default as columns
-        id_columns = self.db.datasourcetablecolumn.find_many(
+        id_columns = db.datasourcetablecolumn.find_many(
             where={
                 "AND": [
                     {"dataSourceTableDescriptionId": table_id},
@@ -169,7 +167,7 @@ class SchemaBuilder:
                                 }
                             },
                             {"name": "ID"},
-                            {"name": "CREATED_AT"},  # TODO: temporary workaround for ambigious columns issue
+                            {"name": "CREATED_AT"},  # TODO: temporary workaround for ambiguous columns issue
                         ]
                     },
                 ],
@@ -205,6 +203,9 @@ class SchemaBuilder:
 
         return result
 
+    # TODO I think what we should do here is recalculate the token count each time we add something to the schema tree
+    #      and throw an exception if we go over the limit. I think part of the issue here is we are semi-rendering the
+    #      content in a way that doesn't match reality.
     def add_tokens(self, token_str: str, add_extra: int = 0):
         # Add to the count based on the number of tokens in the string,
         # add_extra is used to add in counts for things like line breaks
@@ -241,7 +242,6 @@ class SchemaBuilder:
                 #     )
 
             if element_rank.column_id:
-
                 column_id = element_rank.column_id
 
                 # does the column exist in the table_rank object?
@@ -268,6 +268,7 @@ class SchemaBuilder:
 
     def add_hint(self, column_rank: ColumnRank, value_hint: str | None):
         if value_hint and value_hint not in column_rank["hints"]:
+            # TODO I don't understand why we rendering the hint here if it is empty
             if len(column_rank["hints"]) == 0:
                 self.add_tokens(f" -- possible values include: {value_hint!r}")
             elif len(column_rank["hints"]) < 6:
@@ -287,12 +288,9 @@ class SchemaBuilder:
 
 
 if __name__ == "__main__":
-    _db = application_database_connection()
-    datasource = _db.datasource.find_first(where={"id": 2})
+    _data_source_id = 2
+    ranks = Ranker(_data_source_id).rank("What product sells best in Montana?")
 
-    if datasource:
-        ranks = Ranker(2).rank("What product sells best in Montana?")
+    # generate via: `poetry run python -m python.schema.ranker "What product sells best in Montana?"`
 
-        # generate via: `poetry run python -m python.schema.ranker "What product sells best in Montana?"`
-
-        print(SchemaBuilder(_db).build(datasource.id, ranks, 7000))
+    print(SchemaBuilder().build(_data_source_id, ranks, 7000))

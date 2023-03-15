@@ -1,5 +1,5 @@
 """
-Provides a class to create prompts based on the user's question and the schema. Since codex and chatgpt models require 
+Provides a class to create prompts based on the user's question and the schema. Since codex and chatgpt models require
 different prompt formats, we extract them into seperate classes to generate the correct prompts.
 """
 
@@ -131,7 +131,7 @@ class Prompt:
         """
         Returns a string represenation of the schema with associated prologue
         """
-        schema = SchemaBuilder(db).build(self.data_source_id, self.ranked_schema, available_tokens)
+        schema = SchemaBuilder().build(self.data_source_id, self.ranked_schema, available_tokens)
 
         return [
             f"{self.comments}Schema: {SqlParser.in_dialect.capitalize()} SQL schema",

@@ -65,7 +65,7 @@ class log_execution_time(ContextDecorator):
     # ob = cProfile.Profile()
     # ob.enable()
     with log_execution_time("schema build"):
-        table_schema_limited_by_token_size = SchemaBuilder(db, engine).build(data_source_id, ranked_structure)
+        table_schema_limited_by_token_size = SchemaBuilder(engine).build(data_source_id, ranked_structure)
     # ob.disable()
     # sec = io.StringIO()
     # sortby = SortKey.CUMULATIVE
