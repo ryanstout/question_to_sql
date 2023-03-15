@@ -24,7 +24,7 @@ class ChatPrompt(Prompt):
 
     def available_tokens(self) -> int:
         # extra buffer, since SchemaBuilder doesn't match exactly
-        extra_buffer_for_schema_builder = 600
+        extra_buffer_for_schema_builder = 750
         completion_tokens = 1_024
         return 4_096 - completion_tokens - extra_buffer_for_schema_builder
 
