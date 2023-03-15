@@ -270,9 +270,7 @@ export default function EvaluationGroupView() {
   const { classes } = useStyles()
 
   return (
-    // include `id` to force a complete rerender when the group changes
-    // https://stackoverflow.com/questions/75317212/remix-run-how-to-reload-all-child-components-of-a-component-loaded-through-an
-    <div key={evaluationQuestionGroup.id}>
+    <>
       <Grid.Col span={3} className={classes.columnDivider}>
         <Text mb={15}>
           <Center>
@@ -287,7 +285,13 @@ export default function EvaluationGroupView() {
           columns={dataColumns}
         />
       </Grid.Col>
-      <Grid.Col span={7} className={classes.columnDivider}>
+      <Grid.Col
+        // include `id` to force a complete rerender when the group changes
+        // https://stackoverflow.com/questions/75317212/remix-run-how-to-reload-all-child-components-of-a-component-loaded-through-an
+        key={evaluationQuestionGroup.id}
+        span={7}
+        className={classes.columnDivider}
+      >
         <Stack>
           <QuestionBox
             isLoading={isLoading}
@@ -327,7 +331,7 @@ export default function EvaluationGroupView() {
           <DataDisplay data={evaluationQuestionGroup.results} />
         </Stack>
       </Grid.Col>
-    </div>
+    </>
   )
 }
 
