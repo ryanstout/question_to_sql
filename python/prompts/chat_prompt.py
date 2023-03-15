@@ -146,6 +146,7 @@ class ChatPrompt(Prompt):
                 # f"{rule_prefix()}Any columns used must be in the Schema",
                 f"{rule_prefix()}Assume the current date is {current_date}",
                 f"{rule_prefix()}use NOW() instead of dates",
+                f"{rule_prefix()}Don't use CTE's",
                 # f"{rule_prefix()}Don't alias tables unless necessary",
                 # f"{rule_prefix()}GROUP BY clauses should include all fields from the SELECT clause",
                 "",
