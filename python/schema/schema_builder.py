@@ -101,7 +101,8 @@ class SchemaBuilder:
         elif re.search("^TIMESTAMP_N?TZ", column.type):
             col_type = "TIMESTAMP"
         elif re.search("^VARIANT", column.type):
-            return None  # skip this column
+            # skip this column, it's a (we think) JSON blob
+            return None
         elif re.search("^NUMBER", column.type):
             if SqlParser.in_dialect == "postgres":
                 # NUMBER(38,0) is how int's get encoded in snowflake via fivetran
@@ -187,8 +188,10 @@ class SchemaBuilder:
 
     def create_column_rank(self, column_rank: ElementRank) -> ColumnRank:
         column_id = column_rank.column_id
+
         if not column_id:
             raise ValueError("column_id is required")
+
         column = self.get_data_source_table_column(column_id)
 
         result: ColumnRank = {
@@ -197,24 +200,31 @@ class SchemaBuilder:
             "hints": [],
         }
 
+        # Add the tokens for the column strings without the hints, the tokens for the hints are added later
+        column_sql = self.generate_column_describe(result["column_id"], [])
+        if column_sql:
+            # extra 1 token for newline
+            self.add_tokens(column_sql, 1)
+
         # Also add a hint if the ElementRank includes a value hint
         value_hint = column_rank.value_hint
         self.add_hint(result, value_hint)
 
         return result
 
-    # TODO I think what we should do here is recalculate the token count each time we add something to the schema tree
-    #      and throw an exception if we go over the limit. I think part of the issue here is we are semi-rendering the
-    #      content in a way that doesn't match reality.
+    # we have to calculate the tokens incrementally as we go for speed's sake
+    # if we calculated the entire schema token count on each iteration, it can cause the builder to take > 25s
+    # as opposed to < 1s
     def add_tokens(self, token_str: str, add_extra: int = 0):
         # Add to the count based on the number of tokens in the string,
         # add_extra is used to add in counts for things like line breaks
         count = count_tokens(token_str)
         self.tokens_so_far += count + add_extra
 
+    # main generation entry point
     def generate_sql_from_element_rank(self, ranked_schema: SCHEMA_RANKING_TYPE) -> str:
         # we need to transform the ranking schema into a list of table
-        table_ranks: t.List[TableRank] = []
+        table_ranks: list[TableRank] = []
         sql = ""
 
         for element_rank in ranked_schema:
@@ -230,8 +240,8 @@ class SchemaBuilder:
             if not table_rank:
                 table_rank = self.create_table_rank(element_rank.table_id)
                 table_ranks.insert(0, table_rank)
-                rendered_table_name = unqualified_table_name(table_rank["fully_qualified_name"]).lower()
 
+                rendered_table_name = unqualified_table_name(table_rank["fully_qualified_name"]).lower()
                 self.add_tokens(f"CREATE TABLE {rendered_table_name} (\n \n);\n")
 
                 # Option to add all columns as soon as we see the table
@@ -262,8 +272,10 @@ class SchemaBuilder:
                     break
 
         sql = self.generate_sql_describe(table_ranks)
+
         token_count = count_tokens(sql)
         log.debug("schema token count", token_count=token_count, available=self.original_available_tokens)
+
         return sql
 
     def add_hint(self, column_rank: ColumnRank, value_hint: str | None):
@@ -280,11 +292,6 @@ class SchemaBuilder:
     def add_column_to_table(self, element_rank: ElementRank, table_rank: TableRank):
         column_rank = self.create_column_rank(element_rank)
         table_rank["columns"].append(column_rank)
-
-        # Add the tokens for the column strings without the hints
-        column_sql = self.generate_column_describe(column_rank["column_id"], [])
-        if column_sql:
-            self.add_tokens(column_sql, 2)
 
 
 if __name__ == "__main__":

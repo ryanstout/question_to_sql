@@ -196,8 +196,8 @@ class Prompt:
         # The generator will only be present if we've enabled adding few shot
         if self.few_shot_generator:
             return self.few_shot_generator.generate(current_question)
-        else:
-            return ([], [], [])
+
+        return ([], [], [])
 
     def question(self):
         return [

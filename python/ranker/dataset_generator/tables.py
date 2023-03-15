@@ -5,6 +5,7 @@ import numpy as np
 
 from python.ranker.dataset_generator.scores_to_numpy import table_scores_to_numpy
 
+# TODO we should make sure there are no import side effects
 np.set_printoptions(edgeitems=10, linewidth=180)
 
 from decouple import config
