@@ -6,22 +6,19 @@ import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 
 from python.ranker.ranker_dataset import RankerDataset
+from python.ranker.types import DatasetElementType
 
 
 class RankerDataModule(pl.LightningDataModule):
-    def __init__(self, dataset_element_type: str, batch_size: int = 32, num_workers: int = 0):
-        # :param dataset_element_type: "table" | "column" | "value"
+    def __init__(self, dataset_element_type: DatasetElementType, batch_size: int = 32, num_workers: int = 0):
         super().__init__()
 
         self.batch_size = batch_size
         self.num_workers = num_workers
 
-        device = "cpu"
-        # device = "mps"
-
-        self.train_dataset = RankerDataset(dataset_element_type, "train", device=device)
-        self.test_dataset = RankerDataset(dataset_element_type, "test", device=device)
-        self.val_dataset = RankerDataset(dataset_element_type, "validation", device=device)
+        self.train_dataset = RankerDataset(dataset_element_type, "train")
+        self.test_dataset = RankerDataset(dataset_element_type, "test")
+        self.val_dataset = RankerDataset(dataset_element_type, "validation")
 
     def train_dataloader(self):
         return DataLoader(self.train_dataset, batch_size=self.batch_size, num_workers=self.num_workers)

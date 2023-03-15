@@ -16,7 +16,7 @@ from python.ranker.values_ranker_model import ValuesRankerModel
 datasets_path = config("DATASETS_PATH")
 
 
-if config("TRAIN_ONLY", default=False, cast=bool):
+if not config("TRAIN_ONLY", default=False, cast=bool):
     # Clear previous dataset files
     shutil.rmtree(f"{datasets_path}/ranker", ignore_errors=True)
 

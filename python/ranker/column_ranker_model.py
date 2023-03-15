@@ -6,6 +6,7 @@ from torch import nn
 from torch.nn import functional as F
 
 from python.ranker.ranker_datamodule import RankerDataModule
+from python.utils.torch import device_type
 
 models_path = config("MODEL_DATA_PATH")
 
@@ -58,11 +59,8 @@ class ColumnRankerModel(pl.LightningModule):
     def train_model(cls):
         ranker_data = RankerDataModule("columns", batch_size=256)
 
-        is_mps = torch.backends.mps.is_available() and torch.backends.mps.is_built()
-
         model = ColumnRankerModel()
-        if is_mps:
-            model.to("mps")
+        model.to(device_type())
 
         # training
         trainer = pl.Trainer(

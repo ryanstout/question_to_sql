@@ -21,9 +21,11 @@ from python.utils.batteries import not_none
 from python.utils.db import application_database_connection
 from python.utils.logging import log
 
+from prisma.enums import EvaluationStatus
 from prisma.models import EvaluationQuestion, EvaluationQuestionGroup
 
-datasets_path = config("DATASETS_PATH")
+datasets_path = config("DATASETS_PATH", cast=str)
+assert datasets_path is not None, "DATASETS_PATH must be set"
 
 db = application_database_connection()
 
@@ -37,9 +39,7 @@ class DatasetGenerator:
     # :param mod_by: The mod by value to use to split the dataset
     # :param set_indexes: When any index matches the mod, we include it in this dataset split
     def run(self, dataset_name: str, mod_by: int, set_indexes: List[int]):
-        if not isinstance(datasets_path, str):
-            raise ValueError("DATASETS_PATH must be set")
-
+        # TODO why is this call happening here? unrelated?
         os.makedirs(f"{datasets_path}/ranker", exist_ok=True)
 
         self.dataset_name = dataset_name

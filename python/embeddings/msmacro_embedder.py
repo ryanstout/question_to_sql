@@ -3,18 +3,17 @@ import torch
 from sentence_transformers import SentenceTransformer, util
 from torch import Tensor
 
+from python.utils.torch import device_type
+
 
 class MSMarcoEmbedder:
     def __init__(self):
-        device = "cpu"
-        # device = 'mps'  # Move to M1 Mac GPU
-
         self.model = SentenceTransformer(
             # 'msmarco-distilbert-base-v4',
             # 'all-MiniLM-L6-v2',
             "all-mpnet-base-v2",  # dot-score, Large model, good for semantic search
             # 'msmarco-distilbert-base-tas-b', # dot product
-            device=device,
+            device=device_type(),
         )  # use cosine
 
     def encode(self, content: str) -> np.ndarray:
