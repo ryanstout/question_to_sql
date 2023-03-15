@@ -13,16 +13,30 @@ npm run dev
 
 # Deployment
 
+Autodeploys are configured with GitHub actions. Essentially then run:
+
+````shell
+fly deploy --config {python,node}.toml
+```
+
+It's better to let GH actions do the deploy, if you deploy locally *everything in your local directory* will be included in the build (including unstaged changes!).
+
 Attach the python app to the database:
 
 ```shell
 fly pg attach knolbe-db --config python.toml --database-name knolbe
-```
+````
 
 Proxy to the prod DB for inspection:
 
 ```shell
 fly proxy 5431:5432 -a knolbe-db
+```
+
+Want to open up a console?
+
+````shell
+fly ssh console -C /bin/bash --config python.toml
 ```
 
 Upload stuff to prod ([helpful post](https://community.fly.io/t/scp-a-file-into-a-persistent-volume/2729))
@@ -36,7 +50,7 @@ Increase persistence size (in gbs):
 
 ```shell
 fly volumes extend vol_okgj5451oe8vy2wz -s 10 --config python.toml
-```
+````
 
 ## [Docker](docker/readme.md)
 
@@ -100,7 +114,9 @@ poetry run python python/answer.py \
   --question "What are the top orders of all time?"
 ```
 
-## Train Table, Column, and Value Rankers
+## Training
+
+### Table, Column, and Value Rankers
 
 Then train the ranker:
 
@@ -112,7 +128,7 @@ python -m python.ranker.train
 TRAIN_ONLY=1 python -m python.ranker.train
 ```
 
-# Few Shot Embeddings
+### Few Shot Embeddings
 
 As more evaluation quesitons are added, the few shot embeddings can be updated (and used to provide better few shot examples)
 
