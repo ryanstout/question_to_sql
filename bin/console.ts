@@ -1,6 +1,7 @@
 #!/usr/bin/env tsn
 import { prisma } from "app/db.server"
 import { log } from "app/lib/logging"
+import { createUser } from "app/models/user.server"
 
 import { loadEnv } from "@remix-run/dev/dist/env"
 
@@ -122,4 +123,9 @@ async function exampleQuestion() {
   return await prisma.question.findFirst()
 }
 
-repl({ prisma, prismaClient: require("@prisma/client"), exampleQuestion })
+repl({
+  prisma,
+  prismaClient: require("@prisma/client"),
+  exampleQuestion,
+  createUser,
+})
