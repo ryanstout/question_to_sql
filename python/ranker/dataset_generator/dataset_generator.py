@@ -9,23 +9,19 @@ correctSql don't overlap)
 import os
 from typing import List
 
-from decouple import config
-
 from python.ranker.dataset_generator.columns import create_column_training_examples
 from python.ranker.dataset_generator.tables import create_table_training_examples
+from python.ranker.dataset_generator.utils import ranker_datasets_path
 from python.ranker.dataset_generator.values import create_value_training_examples
 from python.ranker.training_ranker import TrainingRanker
+from python.ranker.types import DatasetPartitionType
 from python.sql.types import DbElementIds, ElementIdsAndScores, ElementScores
 from python.sql.utils.touch_points import get_touch_points_ids
 from python.utils.batteries import not_none
 from python.utils.db import application_database_connection
 from python.utils.logging import log
 
-from prisma.enums import EvaluationStatus
 from prisma.models import EvaluationQuestion, EvaluationQuestionGroup
-
-datasets_path = config("DATASETS_PATH", cast=str)
-assert datasets_path is not None, "DATASETS_PATH must be set"
 
 db = application_database_connection()
 
@@ -33,14 +29,14 @@ db = application_database_connection()
 class DatasetGenerator:
     rankings: dict[DbElementIds, ElementScores]
     touch_points: list[DbElementIds]
-    dataset_name: str
+    dataset_name: DatasetPartitionType
 
     # :param dataset_name: The name of the dataset to write to (e.g. "train", "test", "validation")
     # :param mod_by: The mod by value to use to split the dataset
     # :param set_indexes: When any index matches the mod, we include it in this dataset split
-    def run(self, dataset_name: str, mod_by: int, set_indexes: List[int]):
+    def run(self, dataset_name: DatasetPartitionType, mod_by: int, set_indexes: List[int]):
         # TODO why is this call happening here? unrelated?
-        os.makedirs(f"{datasets_path}/ranker", exist_ok=True)
+        os.makedirs(f"{ranker_datasets_path()}/ranker", exist_ok=True)
 
         self.dataset_name = dataset_name
         set_indexes_in_clause = ",".join([str(idx) for idx in set_indexes])
@@ -48,6 +44,9 @@ class DatasetGenerator:
         question_groups = db.evaluationquestiongroup.query_raw(
             f"SELECT * FROM \"EvaluationQuestionGroup\" WHERE (id % {mod_by}) IN ({set_indexes_in_clause}) AND status='CORRECT';"
         )
+
+        if len(question_groups) == 0:
+            raise ValueError(f"No question groups found for dataset generation {set_indexes}")
 
         for question_group in question_groups:
             self.process_question_group(question_group)
@@ -88,9 +87,3 @@ class DatasetGenerator:
         create_table_training_examples(self.dataset_name, question.id, table_scores, table_touch_point_ids)
         create_column_training_examples(self.dataset_name, question.id, column_scores, column_touch_point_ids)
         create_value_training_examples(self.dataset_name, question.id, value_scores, value_touch_point_ids)
-
-
-if __name__ == "__main__":
-    DatasetGenerator().run("train", 10, list(range(0, 7)))
-    DatasetGenerator().run("test", 10, list(range(7, 8)))
-    DatasetGenerator().run("validation", 10, list(range(8, 9)))

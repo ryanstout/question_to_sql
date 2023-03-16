@@ -10,16 +10,13 @@ from decouple import config
 
 from python.ranker.column_ranker_model import ColumnRankerModel
 from python.ranker.dataset_generator.dataset_generator import DatasetGenerator
+from python.ranker.dataset_generator.utils import ranker_datasets_path
 from python.ranker.table_ranker_model import TableRankerModel
 from python.ranker.values_ranker_model import ValuesRankerModel
 
-# TODO should move this to a constant that others import
-datasets_path = config("DATASETS_PATH")
-
-
 if not config("TRAIN_ONLY", default=False, cast=bool):
     # Clear previous dataset files
-    shutil.rmtree(f"{datasets_path}/ranker", ignore_errors=True)
+    shutil.rmtree(f"{ranker_datasets_path()}/ranker", ignore_errors=True)
 
     # Generate the training data
     # We need to split the evaluationQuestions into 3 groups, but based on the evaluationQuestionGroup.

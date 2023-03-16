@@ -5,10 +5,9 @@ from decouple import config
 from torch import nn
 from torch.nn import functional as F
 
+from python.ranker.dataset_generator.utils import ranker_models_path
 from python.ranker.ranker_datamodule import RankerDataModule
 from python.utils.torch import device_type
-
-models_path = config("MODEL_DATA_PATH")
 
 
 class ColumnRankerModel(pl.LightningModule):
@@ -64,7 +63,7 @@ class ColumnRankerModel(pl.LightningModule):
 
         # training
         trainer = pl.Trainer(
-            default_root_dir=f"{models_path}/column_ranker", max_epochs=1000
+            default_root_dir=f"{ranker_models_path()}/column_ranker", max_epochs=1000
         )  # gpus=4, num_nodes=8, precision=16, limit_train_batches=0.5)
         trainer.fit(model, datamodule=ranker_data)
 

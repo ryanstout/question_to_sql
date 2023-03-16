@@ -1,12 +1,10 @@
 import pytorch_lightning as pl
 import torch
-from decouple import config
 from torch import nn
 from torch.nn import functional as F
 
+from python.ranker.dataset_generator.utils import ranker_models_path
 from python.ranker.ranker_datamodule import RankerDataModule
-
-models_path = config("MODEL_DATA_PATH")
 
 
 class ValuesRankerModel(pl.LightningModule):
@@ -51,7 +49,7 @@ class ValuesRankerModel(pl.LightningModule):
 
         # training
         trainer = pl.Trainer(
-            default_root_dir=f"{models_path}/values_ranker"
+            default_root_dir=f"{ranker_models_path()}/values_ranker"
         )  # gpus=4, num_nodes=8, precision=16, limit_train_batches=0.5)
         trainer.fit(model, datamodule=ranker_data)
 

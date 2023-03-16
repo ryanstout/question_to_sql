@@ -10,17 +10,12 @@ import glob
 
 import numpy as np
 import torch
-from decouple import config
 from torch.utils.data import Dataset
 
-from python import utils
+from python.ranker.dataset_generator.utils import ranker_datasets_path
 from python.ranker.types import DatasetElementType, DatasetPartitionType
+from python.utils.logging import log
 from python.utils.torch import device_type
-
-db = utils.db.application_database_connection()
-
-
-datasets_path = config("DATASETS_PATH")
 
 
 class RankerDataset(Dataset):
@@ -30,9 +25,13 @@ class RankerDataset(Dataset):
         dataset_partition: DatasetPartitionType,
     ):
         # Currently we can fit all training in ram, so bring it into a single numpy array
-        numpy_files = glob.glob(f"{datasets_path}/ranker/{dataset_element_type}/{dataset_partition}_*.npz")
+        numpy_files = glob.glob(f"{ranker_datasets_path()}/ranker/{dataset_element_type}/{dataset_partition}_*.npz")
 
-        # TODO what are these for?
+        log.info(
+            "loading numpy files", files=numpy_files, element_type=dataset_element_type, partition=dataset_partition
+        )
+
+        # TODO what do x & y represent?
         xs = []
         ys = []
 

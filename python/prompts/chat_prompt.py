@@ -133,7 +133,7 @@ class ChatPrompt(Prompt):
             rules = [
                 "",
                 # f"{comments}Rules for building SQL queries: ",
-                f"Rules: ",
+                "Rules: ",
                 # f"{rule_prefix()}Return `SELECT 'unsure';` if the SQL for the question can not be generated",
                 # f"{rule_prefix()}Do case insensitive matches using LOWER unless the case matters or it matches a possible value",
                 f"{rule_prefix()}When matching a string, use LOWER or ILIKE unless it matches a listed possible value",

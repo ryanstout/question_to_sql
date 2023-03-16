@@ -12,6 +12,7 @@ from python.ranker.dataset_generator.scores_to_numpy import (
     table_scores_to_numpy,
     values_scores_to_numpy,
 )
+from python.ranker.dataset_generator.utils import ranker_models_path
 from python.ranker.table_ranker_model import TableRankerModel
 from python.ranker.training_ranker import TrainingRanker
 from python.ranker.values_ranker_model import ValuesRankerModel
@@ -20,8 +21,6 @@ from python.sql.types import DbElementIds, ElementIdsAndScores
 from python.sql.utils.touch_points import convert_db_element_ids_to_db_element
 from python.utils.batteries import log_execution_time
 from python.utils.logging import log
-
-models_path = config("MODEL_DATA_PATH")
 
 
 class LearnedRanker:
@@ -41,7 +40,7 @@ class LearnedRanker:
         self.values_ranker_model.eval()
 
     def get_latest_checkpoint(self, model_name: str) -> str:
-        logs_dir = f"{models_path}/{model_name}_ranker/lightning_logs"
+        logs_dir = f"{ranker_models_path()}/{model_name}_ranker/lightning_logs"
         checkpoints = glob.glob(os.path.join(logs_dir, "version_*", "checkpoints", "epoch=*.ckpt"))
         if not checkpoints:
             raise ValueError(f"No checkpoints found in {logs_dir}")

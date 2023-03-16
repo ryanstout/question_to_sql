@@ -4,6 +4,7 @@ from random import sample
 import numpy as np
 
 from python.ranker.dataset_generator.scores_to_numpy import table_scores_to_numpy
+from python.ranker.types import DatasetPartitionType
 
 # TODO we should make sure there are no import side effects
 np.set_printoptions(edgeitems=10, linewidth=180)
@@ -16,7 +17,7 @@ datasets_path = config("DATASETS_PATH")
 
 
 def create_table_training_examples(
-    dataset_name: str,
+    dataset_name: DatasetPartitionType,
     question_id: int,
     table_rankings: dict[DbElementIds, ElementScores],
     table_touch_point_ids: dict[DbElementIds, int],
