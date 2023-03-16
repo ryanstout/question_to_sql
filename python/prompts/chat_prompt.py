@@ -179,6 +179,7 @@ class ChatPrompt(Prompt):
             rule_num: int = 0
 
             def rule_prefix():
+                return ""
                 nonlocal rule_num
                 rule_num += 1
                 return f"{rule_num}. "
@@ -194,20 +195,20 @@ class ChatPrompt(Prompt):
                 "Rules: ",
                 # f"{rule_prefix()}Return `SELECT 'unsure';` if the SQL for the question can not be generated",
                 # f"{rule_prefix()}Do case insensitive matches using LOWER unless the case matters or it matches a possible value",
-                f"{rule_prefix()}When matching a string, use LOWER or ILIKE unless it matches a listed possible value",
+                f"{rule_prefix()}When matching a string, use LOWER or ILIKE unless it matches a listed possible value.",
                 # f"{rule_prefix()}Calculate lifetime of a customer by taking the duration between the first and most recent order for a customer. ",
-                f"{rule_prefix()}If we're returning a day, always also return the month and year",
-                f"{rule_prefix()}Add ORDER BY to every SELECT",  # makes things deterministic
+                f"{rule_prefix()}If we're returning a day, always also return the month and year.",
+                f"{rule_prefix()}Add ORDER BY to every SELECT.",  # makes things deterministic
                 # In snowflake, Count(*), etc.. are not allowed directly in a ORDER BY or HAVING, they have to be in the
                 # SELECT expression first, then accessed by alias.
                 f"{rule_prefix()}COUNT's used in ORDER BY or HAVING should appear in the SELECT first.",
                 # f"{rule_prefix()}Any columns used must be in the Schema",
-                f"{rule_prefix()}Assume the current date is {current_date}",
-                f"{rule_prefix()}Use {now_function} instead of dates",
-                f"{rule_prefix()}Don't use CTE's",
-                f"{rule_prefix()}The SQL Query should start with `SELECT` and not `WITH`",
-                f"{rule_prefix()}The SQL Query should be in {SqlParser.in_dialect.capitalize()} dialect",
-                f"{rule_prefix()}Qualify all columns with the table name",  # prevents ambigious columns issue
+                f"{rule_prefix()}Assume the current date is {current_date}.",
+                f"{rule_prefix()}Use {now_function} instead of dates.",
+                f"{rule_prefix()}Don't use CTE's.",
+                f"{rule_prefix()}The SQL Query should start with `SELECT` and not `WITH`.",
+                f"{rule_prefix()}The SQL Query should be in {SqlParser.in_dialect.capitalize()} dialect.",
+                f"{rule_prefix()}Qualify all columns with the table name.",  # prevents ambigious columns issue
                 # f"{rule_prefix()}Look at the Schema to decide what tables and columns to use. (Don't use any that aren't in the Schema)",
                 # f"{rule_prefix()}When generating a SQL Query, any columns must be on the correct table in the provided Schema!",
                 # f"{rule_prefix()}All columns must be on its associated table in the Schema!",

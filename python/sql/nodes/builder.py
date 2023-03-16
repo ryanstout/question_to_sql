@@ -92,7 +92,7 @@ def add_child(state: SqlState, add_to: List["Base"], start_node: exp.Expression)
                     pass
 
             if len(other) > 0:
-                raise ValueError(f"Unknown arg on join: {join_exp!r}")
+                raise ValueError(f"Unknown arg on join: {other!r}")
 
             # TODO: Handle join kind's
             # "kind": join_kind,
