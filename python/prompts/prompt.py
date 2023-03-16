@@ -35,7 +35,7 @@ class Prompt:
         user_question: str,
         use_global_instruct: bool = False,
         use_rules: bool = True,
-        use_few_shot: bool = True,
+        use_few_shot: bool = False,
         use_comments: bool = True,
         use_backticks: bool = False,
     ):

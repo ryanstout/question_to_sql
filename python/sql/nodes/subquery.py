@@ -1,3 +1,5 @@
+from pprint import pprint
+
 from python.sql.nodes.base import Base
 from python.sql.nodes.select import Select
 from python.sql.types import ColumnsType, SqlState, TablesType
@@ -46,12 +48,12 @@ class Subquery(Base):
         child_select = self.children["select"][0]
 
         if not isinstance(child_select, Select):
-            raise Exception(f"Subquery select not instance of Select(): {child_select = }")
+            raise ValueError(f"Subquery select not instance of Select(): {child_select = }")
 
         child_select_cols = child_select.filtered_columns()
 
-        # Filter out qualified columns
-        columns: ColumnsType = {k: v for (k, v) in child_select_cols.items() if k[0] is None}
+        # Any qualified columns become unqualified when passing through a subquery (aka, we use their unqualified name)
+        columns: ColumnsType = {(None, k[1]): v for (k, v) in child_select_cols.items()}
 
         # Add aliased versions of the columns
         if self.alias:

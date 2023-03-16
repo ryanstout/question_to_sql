@@ -61,3 +61,37 @@ FROM "order"
 # ORDER BY
 # orders_per_product DESC NULLS FIRST
 # LIMIT 10;"""
+
+
+def test_vendor_issue():
+    query = """SELECT vendor, COUNT(*) AS num_same_vendor_orders, COUNT(*) * 1.0 / total_repeat_orders AS likelihood
+FROM (
+    SELECT o.id AS order_id, p.vendor
+    FROM order o
+    JOIN order_line ol ON o.id = ol.order_id
+    JOIN product p ON ol.product_id = p.id
+    WHERE o.customer_id IN (
+        SELECT customer_id
+        FROM order
+        WHERE created_at >= DATEADD('year', -2, CURRENT_TIMESTAMP())
+        GROUP BY customer_id
+        HAVING COUNT(*) > 1
+    )
+) AS repeat_orders
+JOIN (
+    SELECT COUNT(*) AS total_repeat_orders
+    FROM order
+    WHERE customer_id IN (
+        SELECT customer_id
+        FROM order
+        WHERE created_at >= DATEADD('year', -2, CURRENT_TIMESTAMP())
+        GROUP BY customer_id
+        HAVING COUNT(*) > 1
+    )
+) AS total_orders
+GROUP BY vendor, total_repeat_orders
+ORDER BY likelihood DESC;"""
+
+    result = SqlResolveAndFix().run(query, pens_schema)
+    print("RESULT: ", result)
+    # assert result == """SELECT\n  "ORDER".id,\n  total_price\nFROM "ORDER"\nLIMIT 5"""

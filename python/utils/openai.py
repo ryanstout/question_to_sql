@@ -17,6 +17,7 @@ def is_chat_engine(engine: OpenAIEngineOptions) -> bool:
 def openai_engine() -> OpenAIEngineOptions:
     if config("USE_CHATGPT_MODEL", default=False, cast=bool):
         log.debug("using chat model")
-        return "gpt-3.5-turbo"
+        # return "gpt-3.5-turbo"
+        return "gpt-4"
 
     return OPENAI_DEFAULT_ENGINE

@@ -31,13 +31,13 @@ class RankerDataset(Dataset):
             "loading numpy files", files=numpy_files, element_type=dataset_element_type, partition=dataset_partition
         )
 
-        # TODO what do x & y represent?
+        # The standard x (features) and y (target values) in ML for a dataset:
+        # https://enjoymachinelearning.com/blog/x-and-y-in-machine-learning/
         xs = []
         ys = []
 
         for numpy_file in numpy_files:
             data = np.load(numpy_file)
-            # TODO what are x & y in these files?
             xs.append(data["x"])
             ys.append(data["y"])
 

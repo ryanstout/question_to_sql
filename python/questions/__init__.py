@@ -94,7 +94,7 @@ def _question_with_prompt(
 
                 # Extract inside of backticks if backticks are present
                 if "```" in ai_sql:
-                    content_between_backticks = re.findall(r"```(.*?)```", ai_sql, re.M | re.S)
+                    content_between_backticks = re.findall(r"```(?:sql)?(.*?)```", ai_sql, re.M | re.S)
                     ai_sql = content_between_backticks[0]
             else:
 
