@@ -89,3 +89,22 @@ def test_inner_join_with_aliases_without_as():
         ("line_items", "quantity", None): 1,
         ("orders", "total_dollars", None): 1,
     }
+
+
+# https://knolbe.sentry.io/issues/3991381422/?project=4504730283606016&query=is%3Aunresolved&referrer=issue-stream
+def test_ambigious_columns():
+    # TODO fails because created at is ambigious
+    #      this is on daniel's DB
+    sql = """
+    SELECT
+  COUNT(*) AS classic_century_sold
+FROM "ORDER"
+JOIN order_line
+  ON order_line.order_id = "ORDER".id
+JOIN product
+  ON product.id = order_line.product_id
+WHERE
+  product.title ILIKE '%Cross Classic Century%'
+  AND created_at > CURRENT_TIMESTAMP() - INTERVAL '1 year'
+    """
+
