@@ -30,8 +30,17 @@ orders_per_product DESC NULLS FIRST LIMIT 10;
 
 
 def test_fix_case():
+    # print(pens_schema["order"])
+    result = SqlResolveAndFix().run(
+        """SELECT
+  COUNT(*) AS total_orders
+FROM "order"
+""",
+        pens_schema,
+    )
+    assert result == 'SELECT\n  COUNT(*) AS total_orders\nFROM "ORDER"'
+
     result = SqlResolveAndFix().run("""SELECT order.id, total_price FROM order LIMIT 5;""", pens_schema)
-    print(f"{result!r}")
     assert result == """SELECT\n  "ORDER".id,\n  total_price\nFROM "ORDER"\nLIMIT 5"""
 
 

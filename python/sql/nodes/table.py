@@ -76,3 +76,7 @@ class Table(Base):
                     self._columns[(table[0].name, column_name_lower)] = [column_ref]
 
         return self._columns
+
+    def resolve(self):
+        # We need to resolve table so the capitalization correction will run even if .tables is never called
+        self.columns()
