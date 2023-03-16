@@ -17,6 +17,8 @@ utilities=(
   zsh
   tmux
   unzip
+  # no `tre-command` on ubuntu
+  tree
   # for prisma
   ca-certificates openssl
 )
@@ -52,11 +54,11 @@ node_install_only_prisma() {
 
   # TODO use better randomized folder name
   prisma_tmp_dir=$(mktemp -d)
-  pushd $prisma_tmp_dir
-  npm i prisma@$PRISMA_VERSION @prisma/client@$PRISMA_VERSION
-  popd
+  pushd "$prisma_tmp_dir" || exit
+  npm i "prisma@$PRISMA_VERSION" "@prisma/client@$PRISMA_VERSION"
+  popd || exit
 
   # intentionally do not delete node_modules, this is needed for production
-  cp -r $prisma_tmp_dir/node_modules node_modules
-  rm -rf $prisma_tmp_dir
+  cp -r "$prisma_tmp_dir/node_modules" node_modules
+  rm -rf "$prisma_tmp_dir"
 }
