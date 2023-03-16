@@ -92,6 +92,18 @@ JOIN (
 GROUP BY vendor, total_repeat_orders
 ORDER BY likelihood DESC;"""
 
-    result = SqlResolveAndFix().run(query, pens_schema)
-    print("RESULT: ", result)
-    # assert result == """SELECT\n  "ORDER".id,\n  total_price\nFROM "ORDER"\nLIMIT 5"""
+    SqlResolveAndFix().run(query, pens_schema)
+
+
+def test_subquery_as_passthrough():
+    query = """SELECT customer_id
+FROM order
+JOIN (
+    SELECT customer.id AS customer_id, SUM(order.total_price) AS customer_total_spent
+    FROM customer
+    JOIN order ON customer.id = order.customer_id
+    LIMIT 15
+) AS top_customers ON order.customer_id = top_customers.customer_id
+"""
+
+    SqlResolveAndFix().run(query, pens_schema)

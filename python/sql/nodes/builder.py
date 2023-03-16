@@ -78,7 +78,7 @@ def add_child(state: SqlState, add_to: List["Base"], start_node: exp.Expression)
 
         case exp.Join(
             args={
-                "this": exp.Table() as join_table_exp,
+                "this": exp.Expression() as join_table_exp,
                 "on": exp.Expression() as on_expression,
                 **other,
             }

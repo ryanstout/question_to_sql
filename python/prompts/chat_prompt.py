@@ -207,6 +207,7 @@ class ChatPrompt(Prompt):
                 f"{rule_prefix()}Don't use CTE's",
                 f"{rule_prefix()}The SQL Query should start with `SELECT` and not `WITH`",
                 f"{rule_prefix()}The SQL Query should be in {SqlParser.in_dialect.capitalize()} dialect",
+                f"{rule_prefix()}Qualify all columns with the table name",  # prevents ambigious columns issue
                 # f"{rule_prefix()}Look at the Schema to decide what tables and columns to use. (Don't use any that aren't in the Schema)",
                 # f"{rule_prefix()}When generating a SQL Query, any columns must be on the correct table in the provided Schema!",
                 # f"{rule_prefix()}All columns must be on its associated table in the Schema!",
