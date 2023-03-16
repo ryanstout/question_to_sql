@@ -4,16 +4,13 @@ from random import sample
 import numpy as np
 
 from python.ranker.dataset_generator.scores_to_numpy import table_scores_to_numpy
+from python.ranker.dataset_generator.utils import ranker_datasets_path
 from python.ranker.types import DatasetPartitionType
-
-# TODO we should make sure there are no import side effects
-np.set_printoptions(edgeitems=10, linewidth=180)
-
-from decouple import config
-
 from python.sql.types import DbElementIds, ElementScores
 
-datasets_path = config("DATASETS_PATH")
+# TODO we should make sure there are no import side effects
+# TODO also, is this just debug/development config or does it have any production use?
+np.set_printoptions(edgeitems=10, linewidth=180)
 
 
 def create_table_training_examples(
@@ -55,5 +52,5 @@ def create_table_training_examples(
     # print(np.concatenate((x, y_exp), axis=1))
 
     if x.shape[0] > 0:
-        os.makedirs(f"{datasets_path}/ranker/tables", exist_ok=True)
-        np.savez_compressed(f"{datasets_path}/ranker/tables/{dataset_name}_{question_id}.npz", x=x, y=y)
+        os.makedirs(f"{ranker_datasets_path()}/ranker/tables", exist_ok=True)
+        np.savez_compressed(f"{ranker_datasets_path()}/ranker/tables/{dataset_name}_{question_id}.npz", x=x, y=y)

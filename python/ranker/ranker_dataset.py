@@ -42,7 +42,9 @@ class RankerDataset(Dataset):
             ys.append(data["y"])
 
         if not xs or not ys:
-            raise ValueError("not enough training data, add more evaluation questions")
+            raise ValueError(
+                f"not enough training data for {dataset_element_type}.{dataset_partition}, add more evaluation questions"
+            )
 
         self.xs = torch.from_numpy(np.concatenate(xs, axis=0))
         self.ys = torch.from_numpy(np.concatenate(ys, axis=0))

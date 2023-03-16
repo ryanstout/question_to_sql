@@ -2,13 +2,12 @@ import os
 from random import sample
 
 import numpy as np
-from decouple import config
 
 from python.ranker.dataset_generator.scores_to_numpy import values_scores_to_numpy
+from python.ranker.dataset_generator.utils import ranker_datasets_path
+from python.ranker.types import DatasetPartitionType
 from python.sql.types import DbElementIds, ElementScores
 from python.utils.logging import log
-
-datasets_path = config("DATASETS_PATH")
 
 
 def find_matching_db_element_case_insensitive(
@@ -38,7 +37,7 @@ def find_matching_db_element_case_insensitive(
 
 
 def create_value_training_examples(
-    dataset_name: str,
+    dataset_name: DatasetPartitionType,
     question_id: int,
     value_rankings: dict[DbElementIds, ElementScores],
     value_touch_point_ids: dict[DbElementIds, int],
@@ -79,5 +78,5 @@ def create_value_training_examples(
     y = np.array(ys, dtype=np.float32)
 
     if x.shape[0] > 0:
-        os.makedirs(f"{datasets_path}/ranker/values", exist_ok=True)
-        np.savez_compressed(f"{datasets_path}/ranker/values/{dataset_name}_{question_id}.npz", x=x, y=y)
+        os.makedirs(f"{ranker_datasets_path()}/ranker/values", exist_ok=True)
+        np.savez_compressed(f"{ranker_datasets_path()}/ranker/values/{dataset_name}_{question_id}.npz", x=x, y=y)
