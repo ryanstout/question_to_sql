@@ -6,22 +6,23 @@ by attempting to parse in other dialects, then converting to snowflake (currentl
 
 import re
 
-from decouple import config
 from sqlglot import parse_one, transpile
 from sqlglot.errors import ParseError
 
 from python.utils.logging import log
+from python.utils.openai import is_chat_engine, openai_engine
+
+
+def _default_in_sql_dialect():
+    if is_chat_engine(openai_engine()):
+        return "snowflake"
+
+    return "postgres"
 
 
 class SqlParser:
-    # TODO why aren't these function params? Feels like this is more of a data transformation step which could be a
-    #      simple functional style thing
-
-    # in_dialect = "tsql"
-    if config("USE_CHATGPT_MODEL", default=False, cast=bool):
-        in_dialect = "snowflake"
-    else:
-        in_dialect = "postgres"
+    # TODO should convert to class params, or just an input into `run`
+    in_dialect = _default_in_sql_dialect()
     out_dialect = "snowflake"
 
     def run(self, sql: str):

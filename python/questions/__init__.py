@@ -22,6 +22,7 @@ from python.sql.types import SimpleSchema
 from python.utils.batteries import log_execution_time
 from python.utils.indexes_and_models import application_indexes_and_models
 from python.utils.logging import log
+from python.utils.openai import OpenAIEngineOptions, is_chat_engine, openai_engine
 from python.utils.openai_rate_throttled import openai_throttled
 
 db = python.utils.db.application_database_connection()
@@ -29,27 +30,29 @@ db = python.utils.db.application_database_connection()
 use_learned_ranker = config("ENABLE_LEARNED_RANKER", default=True, cast=bool)
 retry_openai_variants = config("ENABLE_OPENAI_VARIANT_RETRY", default=False, cast=bool)
 
-DEFAULT_ENGINE = "code-davinci-002"
-
-if config("USE_CHATGPT_MODEL", default=False, cast=bool):
-    DEFAULT_ENGINE = "gpt-3.5-turbo"
-
-
 # Instantiate a singleton instance to load all indexes and models into ram once per process
 indexes_and_models = application_indexes_and_models()
 
 
-def question_with_data_source_to_sql(data_source_id: int, question: str, engine: str = DEFAULT_ENGINE) -> str:
+def question_with_data_source_to_sql(
+    data_source_id: int, question: str, engine: OpenAIEngineOptions | None = None
+) -> str:
     ranked_schema = indexes_and_models.ranker(data_source_id).rank(question)
+
     log.debug("building schema")
 
-    if engine in ["gpt-3.5-turbo", "gpt-4", "gpt-4-32k"]:
-        prompt = ChatPrompt(engine, data_source_id, ranked_schema, question).generate()
-    else:
-        prompt = CodexPrompt(engine, data_source_id, ranked_schema, question).generate()
+    if not engine:
+        engine = openai_engine()
 
-    log.debug("convert question and schema to sql")
-    with log_execution_time("schema to sql"):
+    if is_chat_engine(engine):
+        prompt_generator = ChatPrompt(engine, data_source_id, ranked_schema, question)
+    else:
+        prompt_generator = CodexPrompt(engine, data_source_id, ranked_schema, question)
+
+    with log_execution_time("prompt generation"):
+        prompt = prompt_generator.generate()
+
+    with log_execution_time("question to sql"):
         simple_schema = build_simple_schema(data_source_id)
         sql = _question_with_prompt(simple_schema, prompt, engine)
 
@@ -59,10 +62,8 @@ def question_with_data_source_to_sql(data_source_id: int, question: str, engine:
 
 
 def _question_with_prompt(
-    simple_schema: SimpleSchema, prompt: str | list[dict[str, str]], engine: str = "code-davinci-002"
+    simple_schema: SimpleSchema, prompt: str | list[dict[str, str]], engine: OpenAIEngineOptions
 ) -> str:
-    # log.debug("sending prompt to openai", prompt=prompt)
-
     stops = [";", "\n\n"]
 
     run_count = 0
@@ -74,7 +75,7 @@ def _question_with_prompt(
 
             # See OpenAI completion docs for details on parameters:
             # https://platform.openai.com/docs/api-reference/completions/create
-            if engine in ["gpt-3.5-turbo", "gpt-4", "gpt-4-32k"]:
+            if is_chat_engine(engine):
                 result = openai_throttled.complete(
                     model=engine,
                     messages=prompt,
@@ -99,8 +100,6 @@ def _question_with_prompt(
 
                 result = openai_throttled.complete(
                     engine=engine,
-                    # engine="code-davinci-002",
-                    # engine="text-chat-davinci-002-20230126",  # leaked chatgpt model
                     prompt=prompt,
                     max_tokens=1024,  # was 256
                     temperature=temperature,
