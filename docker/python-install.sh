@@ -13,7 +13,7 @@ packages=(
 )
 packages=("${packages[@]}" "${utilities[@]}")
 
-apt-get -y install  tre-command --no-install-recommends ${packages[@]}
+apt-get -y install --no-install-recommends ${packages[@]}
 
 poetry_version=$(grep -o '^poetry.*' .tool-versions | grep -o "[0-9.]\+")
 
