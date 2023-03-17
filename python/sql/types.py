@@ -96,6 +96,7 @@ class SqlState(TypedDict):
 
     schema: SimpleSchema
     select: "Select | None"  # The Select node will update to self for root
+    parent: "Select | None"  # The parent select node (for nested selects)
     branch: str
     node: exp.Expression
     dialect: str  # 'postgres' | 'snowflake'

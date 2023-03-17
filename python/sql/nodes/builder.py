@@ -19,10 +19,10 @@ from python.sql.nodes.table import Table
 from python.sql.types import SqlState
 
 
-def new_state(previous_state: SqlState, new_state: Dict[str, Any]) -> SqlState:
+def new_state(previous_state: SqlState, new_state_dict: Dict[str, Any]) -> SqlState:
     # Returns a new state dict with the new_state merged in
     state: SqlState = previous_state.copy()  # shallow clone
-    state.update(new_state)  # type: ignore
+    state.update(new_state_dict)  # type: ignore
 
     return state
 
@@ -38,12 +38,16 @@ def add_child(state: SqlState, add_to: List["Base"], start_node: exp.Expression)
     match start_node:
         case exp.Select() as select_expr:
             state = state.copy()
-            node = Select(new_state(state, {"node": select_expr, "select": select_expr}))
+            new_select_state = new_state(state, {"node": select_expr})
+            node = Select(new_select_state)
+
+            # Track the parent select as we work into subqueries
+            new_select_state["parent"] = new_select_state["select"]
 
             # The state should have the select point to itself
-            state["select"] = node
+            new_select_state["select"] = node
 
-            parse_select_args(state, node, select_expr.args)
+            parse_select_args(new_select_state, node, select_expr.args)
         case exp.Table(args={"this": exp.Identifier(args={"this": table_name}), **rest}) as table_exp:
             # See if an alias is set
             alias_node = rest.get("alias")

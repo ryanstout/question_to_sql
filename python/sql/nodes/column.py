@@ -27,32 +27,37 @@ class Column(Base):
 
     def columns(self) -> ColumnsType:
         if not self._columns:
+            # Walk up the parent selects looking for the column
             parent_select = self.state["select"]
-            if parent_select:
+            while True:
+                if parent_select:
+                    columns = parent_select.inner_columns()
 
-                columns = parent_select.inner_columns()
+                    key = (self.table_alias, self.name)
+                    column = columns.get(key)
 
-                key = (self.table_alias, self.name)
-                column = columns.get(key)
+                    # See if the column exists on the SELECT at this point, only return
+                    # the matched column
+                    if column is not None:
+                        # Rename the column to the correct casing from the schema
+                        self.correct_case(column)
 
-                # See if the column exists on the SELECT at this point, only return
-                # the matched column
-                if column is not None:
-                    # Rename the column to the correct casing from the schema
-                    self.correct_case(column)
+                        # Cache the column once it's resolved to prevent stack
+                        # explosion
+                        self._columns = {key: column}
+                        return {key: column}
+                    else:
+                        if os.environ.get("SQL_PARSING_DEBUG"):
+                            print("COLUMNS: ")
+                            for key, column in columns.items():
+                                print(key, column)
 
-                    # Cache the column once it's resolved to prevent stack
-                    # explosion
-                    self._columns = {key: column}
-                    return {key: column}
+                        # Couldn't find the column in the current select, walk up parent selects looking for the column
+                        parent_select = parent_select.state["parent"]
+
                 else:
-                    if os.environ.get("SQL_PARSING_DEBUG"):
-                        print("COLUMNS: ")
-                        for key, column in columns.items():
-                            print(key, column)
+                    # We reached the root without finding the column
                     raise ColumnNotFoundError(f"Unable to resolve column ({self.table_alias}.{self.name})")
-            else:
-                raise ValueError("Parent select not assigned")
 
         return self._columns
 

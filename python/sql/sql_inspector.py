@@ -84,6 +84,7 @@ class SqlInspector:
         self.start_state = {
             "node": ast,
             "select": None,
+            "parent": None,
             "schema": schema,
             "branch": "select",
             "dialect": dialect,
