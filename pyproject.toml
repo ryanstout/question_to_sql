@@ -32,7 +32,7 @@ openai = { extras = ["embeddings"], version = "^0.27.1" }
 ipython = "^8.8.0"
 faiss-cpu = "^1.7.3"
 xxhash = "^3.2.0"
-tiktoken = "^0.3.1"
+tiktoken = "^0.3.2"
 sentence-transformers = "^2.2.2"
 structlog = "^22.3.0"
 click = "^8.1.3"
