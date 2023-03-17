@@ -107,3 +107,90 @@ JOIN (
 """
 
     SqlResolveAndFix().run(query, pens_schema)
+
+
+def test_order_id_not_found():
+    query = """SELECT
+  COUNT(*) AS orders_per_month,
+  EXTRACT(MONTH FROM "order".created_at) AS month,
+  EXTRACT(YEAR FROM "order".created_at) AS year
+FROM "order"
+JOIN order_line
+  ON order_line.order_id = "order".id
+JOIN product_variant
+  ON product_variant.id = order_line.variant_id
+JOIN product
+  ON product.id = product_variant.product_id
+WHERE
+  product.title = 'Cross Bailey Fountain Pen - Black Lacquer'
+  AND "order".created_at >= NOW() - INTERVAL '5 years'
+  AND EXISTS (
+    SELECT *
+    FROM order_line
+    JOIN product_variant
+      ON product_variant.id = order_line.variant_id
+    JOIN product
+      ON product.id = product_variant.product_id
+    WHERE
+      product.title = 'Cross Bailey Medalist Ballpoint Pen'
+      AND order_line.order_id = "order".id
+  )
+GROUP BY
+  month,
+  year
+ORDER BY
+  orders_per_month DESC NULLS FIRST;"""
+
+    SqlResolveAndFix().run(query, pens_schema)
+
+
+def test_where_can_access_select_expressoins():
+    query = """SELECT
+  EXTRACT(MONTH FROM "order".created_at) AS month,
+FROM "order"
+WHERE
+  month = 1;"""
+
+    SqlResolveAndFix().run(query, pens_schema)
+
+
+def test_missing_month1():
+    query = """SELECT
+  EXTRACT(MONTH FROM "order".created_at) AS month,
+  EXTRACT(YEAR FROM "order".created_at) AS year
+FROM "order"
+WHERE
+    month = 1
+;"""
+
+    SqlResolveAndFix().run(query, pens_schema)
+
+
+def test_missing_month():
+    query = """SELECT
+  COUNT(*) AS order_count,
+  EXTRACT(MONTH FROM "order".created_at) AS month,
+  EXTRACT(YEAR FROM "order".created_at) AS year
+FROM "order"
+JOIN order_line
+  ON order_line.order_id = "order".id
+JOIN product_variant
+  ON product_variant.id = order_line.variant_id
+JOIN product
+  ON product.id = product_variant.product_id
+WHERE
+  product.title = 'Cross Classic Century Chrome Ballpoint & Fountain Pen Set'
+  AND (
+    (month = 1 AND year = 2023)
+    OR (month = 12 AND year = 2022)
+    OR (month = 1 AND year = 2022)
+    OR (month = 12 AND year = 2021)
+  )
+GROUP BY
+  month,
+  year
+ORDER BY
+  year DESC,
+  month DESC;"""
+
+    SqlResolveAndFix().run(query, pens_schema)

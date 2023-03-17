@@ -26,10 +26,10 @@ def test_few_shot_example():
     assert rankings == [
         DbElement(table="TABLE1", column=None, value=None),
         DbElement(table="TABLE2", column=None, value=None),
-        DbElement(table="TABLE1", column="COLUMN2", value=None),
-        DbElement(table="TABLE2", column="COLUMN4", value=None),
         DbElement(table="TABLE1", column="COLUMN1", value=None),
         DbElement(table="TABLE2", column="COLUMN3", value=None),
+        DbElement(table="TABLE1", column="COLUMN2", value=None),
+        DbElement(table="TABLE2", column="COLUMN4", value=None),
     ]
 
 

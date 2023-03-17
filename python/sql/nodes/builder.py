@@ -224,11 +224,12 @@ def parse_select_args(state: SqlState, node: "Base", expr: Dict[str, exp.Express
             # Add each join one by one
             add_children(state, node, {"join": join_list})
             parse_select_args(state, node, rest)
+        case {"expressions": expressions, **rest}:
+            # Sometimes expressions are a list, sometimes they are a single node
+            add_children(state, node, {"expressions": expressions})
+            parse_select_args(state, node, rest)
         case {"where": exp.Expression() as where_expression, **rest}:
             add_children(state, node, {"where": where_expression})
-            parse_select_args(state, node, rest)
-        case {"expressions": [exp.Expression()] as expressions, **rest}:
-            add_children(state, node, {"expressions": expressions})
             parse_select_args(state, node, rest)
         case rest:
             add_children(state, node, rest)
