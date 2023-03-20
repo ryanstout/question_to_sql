@@ -133,7 +133,7 @@ class SchemaBuilder:
             rendered_choices = f" -- possible values include: {rendered_choice_list}"
 
         # `column1 datatype(length) column_contraint,`
-        return f"  {column.name.lower()} {col_type.lower()},{rendered_choices}"
+        return f" {column.name.lower()} {col_type.lower()},{rendered_choices}"
 
     def generate_sql_table_describe(self, table_rank: TableRank) -> str:
         column_sql = []
