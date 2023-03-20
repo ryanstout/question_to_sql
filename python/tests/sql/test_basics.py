@@ -199,3 +199,22 @@ def test_concat():
         ("table1", "col1", None): 1,
         ("table1", "col2", None): 1,
     }
+
+
+def test_equals_in_lower():
+    inspector = SqlInspector(
+        """ 
+        SELECT col1 FROM table1 WHERE LOWER(col1) = 'foo'; 
+        """,
+        {
+            "table1": {
+                "name": "table1",
+                "columns": {"id": {"name": "id"}, "col1": {"name": "col1"}, "col2": {"name": "col2"}},
+            }
+        },
+    )
+    assert inspector.touches() == {
+        ("table1", None, None): 1,
+        ("table1", "col1", None): 2,
+        ("table1", "col1", "foo"): 1,
+    }
