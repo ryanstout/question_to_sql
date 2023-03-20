@@ -21,6 +21,12 @@ fly deploy --config {python,node}.toml
 
 It's better to let GH actions do the deploy, if you deploy locally *everything in your local directory* will be included in the build (including unstaged changes!).
 
+Want to force an app to restart?
+
+```shell
+flyctl apps restart knolbe-python
+```
+
 Attach the python app to the database:
 
 ```shell
