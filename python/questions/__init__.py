@@ -66,15 +66,6 @@ def _question_with_prompt(
 ) -> str:
     stops = [";", "\n\n"]
 
-    # Write out prompt to a temporary file for inspection/debugging
-    with open("prompt.txt", "w") as f:
-        if isinstance(prompt, str):
-            prompt_str = prompt
-        else:
-            parts = [p["content"] for p in prompt]
-            prompt_str = "\n".join(parts)
-        f.write(prompt_str)
-
     run_count = 0
     temperature = 0.0
 
