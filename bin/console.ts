@@ -3,6 +3,7 @@ import { prisma } from "app/db.server"
 import { log } from "app/lib/logging"
 import { createUser } from "app/models/user.server"
 
+// TODO for some reason this is not available on prod and `npm i` did NOT give me the modules I needed!
 import { loadEnv } from "@remix-run/dev/dist/env"
 
 // TODO wrap this up into a nice little config function

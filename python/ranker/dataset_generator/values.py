@@ -40,6 +40,7 @@ def create_value_training_examples(
     dataset_name: DatasetPartitionType,
     question_id: int,
     value_rankings: dict[DbElementIds, ElementScores],
+    # touch points are only outputted on =, not likes
     value_touch_point_ids: dict[DbElementIds, int],
 ):
     values_scores: list[ElementScores] = []
@@ -55,8 +56,9 @@ def create_value_training_examples(
         db_element = find_matching_db_element_case_insensitive(value_rankings, db_element)
 
         if db_element not in value_rankings:
-            log.error("Touch point not found: ", db_element=db_element)
+            log.error("touch point not found", db_element=db_element)
         else:
+            log.debug("touch point found", db_element=db_element)
             element_scores = value_rankings[db_element]
             del value_rankings[db_element]
             values_scores.append(element_scores)

@@ -1,8 +1,38 @@
-# NLP Query
+# AI SQL Generator Tuned for Snowflake
 
-A BI tool that lets you dig into your data using natural language
+Myself, @ryanstout and @kduraiswami built a product to convert natural language questions into SQL queries. We built this for a set of early users who were using Snowflake, although we designed the system to work with any SQL/columnar database.
 
-# Development
+After many user interviews we decided not to move forward with the product (it'll be a business, but not a big one). If you want more information about the user interviews we did, I'm (@iloveitaly) happy to share, just drop me an email.
+
+Dispite being a short hackathon-style project, there's some really interesting code in here that we wanted to publish for the community.
+
+## Video Walkthrough
+
+- Stack
+  - Postgres / Prisma
+  - Redis
+  - Python
+  - Node: Remix + Mantine
+  - Snowflake
+- DevProd
+  - Trunk.io
+  - ENV var structure
+  - GH Actions
+  - bin/
+  - Formatters
+- Python
+  - Schema normalizer
+  - Embeddings database
+  - SQL Parsing
+  - Prisma
+  - OpenAI throttler
+- Deployment
+  - Fly.io
+  - Docker images
+    - Helper scripts
+  - Prisma generation
+
+## Development
 
 All local installation is documented in:
 
@@ -11,7 +41,7 @@ bin/setup.sh
 npm run dev
 ```
 
-# Deployment
+## Deployment
 
 Autodeploys are configured with GitHub actions. Essentially then run:
 
@@ -50,7 +80,15 @@ Upload stuff to prod ([helpful post](https://community.fly.io/t/scp-a-file-into-
 1. auth your machine `flyctl ssh issue --agent`
 2. Get wireguard setup and connected
 3. upload trained model `scp -r tmp/models root@knolbe-python.internal:/persisted-data/models`
-4. upload indexes `scp -r tmp/indexes root@knolbe-python.internal:/persisted-data/indexes`
+4. upload indexes `scp -r tmp/indexes/ root@knolbe-python.internal:/persisted-data/indexes`
+
+Use `-o StrictHostKeyChecking=no` to get around weird host errors:
+
+```shell
+Host knolbe-python.internal
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+```
 
 Increase persistence size (in gbs):
 
@@ -130,6 +168,8 @@ Then train the ranker:
 # Build the dataset and train the models
 python -m python.ranker.train
 
+cp /tmp/datasets/ranker/values/validation_23.npz /tmp/datasets/ranker/values/tes1.npz
+
 # or to just train on the previous dataset
 TRAIN_ONLY=1 python -m python.ranker.train
 ```
@@ -148,7 +188,7 @@ python -m python.prompts.few_shot_embeddings.builder
 
 - API responses do not return raw SQL, everything comes back as a JSON object
   - Unsure if this is just the specific API we are using or if it is a limitation of Snowflake
-- You'll get a `Table 'ABANDONED_CHECKOUTS' does not exist or not authorized.` if you don't specify a specific schema when
+- You'll get a `Table 'ABANDONED_CHECKOUTS' does not exist or not authorized.` if you don't specify a specific schema when connecting.
 
 # Connections
 
