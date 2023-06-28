@@ -126,7 +126,7 @@ jobs:
       # TODO add staging deploy in the future if on dev branch
       - name: 🚀 Deploy Production
         if: ${{ github.ref == 'refs/heads/main' }}
-        uses: superfly/flyctl-actions@1.3
+        uses: superfly/flyctl-actions@1.4
         with:
           args: "deploy --config python.toml"
         env:
