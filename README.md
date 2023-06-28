@@ -8,8 +8,6 @@ Dispite being a short hackathon-style project, there's some really interesting c
 
 ## Video Walkthrough
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/ivWyM-yQdmc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-
 [![Question to SQL YouTube Video](https://img.youtube.com/vi/ivWyM-yQdmc/0.jpg)](https://www.youtube.com/watch?v=ivWyM-yQdmc)
 
 - Stack
