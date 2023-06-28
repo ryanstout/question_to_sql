@@ -8,7 +8,7 @@
 #   https://github.com/schickling/dockerfiles/blob/master/mysql-backup-s3/Dockerfile
 
 # TODO extract node version from tool-versions
-FROM python:3.10.9-slim-bullseye
+FROM python:3.11.4-slim-bullseye
 
 ENV APP_DIR=/app
 WORKDIR $APP_DIR
