@@ -1,6 +1,6 @@
 # AI SQL Generator Tuned for Snowflake
 
-Myself (@iloveitaly), @ryanstout and @kduraiswami built a product to convert natural language questions into SQL queries. We built this for a set of early users who were using Snowflake, although we designed the system to work with any SQL/columnar database.
+[@iloveitaly](https://github.com/iloveitaly), [@ryanstout](https://github.com/ryanstout) and [@kduraiswami](https://github.com/kduraiswami) built a product to convert natural language questions into SQL queries. We built this for a set of early users who were using Snowflake, although we designed the system to work with any SQL/columnar database.
 
 After many user interviews we decided not to move forward with the product (it'll be a business, but not a big one). If you want more information about the user interviews we did, I'm (@iloveitaly) happy to share, just drop me an email.
 
