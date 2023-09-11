@@ -20,7 +20,7 @@ jobs:
     name: ⬣ ESLint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/node-setup
 
       - name: 🔬 Lint
@@ -30,7 +30,7 @@ jobs:
     name: ʦ TypeScript
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/node-setup
 
       - name: 🔎 Type check
@@ -40,7 +40,7 @@ jobs:
     name: Dependency Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/node-setup
 
       - name: Dependency Check
@@ -58,7 +58,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/node-setup
         with:
           setup-db: true
@@ -79,7 +79,7 @@ jobs:
 
     if: false
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/node-setup
         with:
           setup-db: true
@@ -111,7 +111,7 @@ jobs:
         uses: styfle/cancel-workflow-action@0.11.0
 
       - name: ⬇️ Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: 👀 Read app name
         uses: SebRollen/toml-action@v1.0.2
