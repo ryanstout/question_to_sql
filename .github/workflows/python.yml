@@ -38,7 +38,7 @@ jobs:
     # https://stackoverflow.com/questions/71679568/github-actions-ignore-or-exclude-dependabot-pull-requests
     if: ${{ github.triggering_actor != 'dependabot[bot]' }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/python-setup
 
       - name: lint
@@ -49,7 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.triggering_actor != 'dependabot[bot]' }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/python-setup
       - name: code formatting
         shell: bash
@@ -66,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.triggering_actor != 'dependabot[bot]' }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/python-setup
 
       - name: 🔎 Type check
@@ -94,7 +94,7 @@ jobs:
         env:
           POSTGRES_PASSWORD: postgres
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/python-setup
       - run: DATABASE_URL=$TEST_DATABASE_URL poetry run npx prisma migrate reset --force
 
@@ -114,7 +114,7 @@ jobs:
         uses: styfle/cancel-workflow-action@0.11.0
 
       - name: ⬇️ Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: 👀 Read app name
         uses: SebRollen/toml-action@v1.0.2
